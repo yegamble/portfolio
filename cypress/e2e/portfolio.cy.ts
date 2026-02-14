@@ -7,8 +7,27 @@ describe('Portfolio Site', () => {
     cy.title().should('contain', 'Yosef Gamble');
   });
 
-  it('should display the sticky header with name and title', () => {
+  it('should display the sticky header with navigation', () => {
     cy.get('header').should('be.visible');
+    cy.get('nav[aria-label="Main navigation"]').should('exist');
+  });
+
+  it('should display large name in the hero section', () => {
+    cy.get('section').first().within(() => {
+      cy.contains('Yosef Gamble').should('be.visible');
+      cy.contains('Senior Full-Stack Engineer').should('be.visible');
+    });
+  });
+
+  it('should show name in navbar after scrolling past hero', () => {
+    // Initially the nav name container should be hidden (aria-hidden=true)
+    cy.get('header [aria-hidden="true"]').should('exist');
+
+    // Scroll well past the hero section to ensure it is fully out of viewport
+    cy.get('#experience').scrollIntoView();
+
+    // After scrolling, the nav name should become visible
+    cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
     cy.get('header').should('contain.text', 'Yosef Gamble');
     cy.get('header').should('contain.text', 'Senior Full-Stack Engineer');
   });
@@ -57,6 +76,12 @@ describe('Portfolio Site', () => {
       cy.get('a').filter('[href="https://github.com/yegamble"]').should('exist');
       cy.get('a')
         .filter('[href="https://linkedin.com/in/yosefgamble"]')
+        .should('exist');
+      cy.get('a')
+        .filter('[href="mailto:yegamble@gmail.com"]')
+        .should('exist');
+      cy.get('a')
+        .filter('[href="mailto:yosef.gamble@protonmail.com"]')
         .should('exist');
     });
   });

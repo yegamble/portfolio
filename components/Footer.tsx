@@ -38,7 +38,7 @@ export default function Footer() {
         </a>
         <a
           className="transition-colors hover:text-text-primary"
-          href="mailto:hello@yosefgamble.com"
+          href="mailto:yegamble@gmail.com"
         >
           <span className="sr-only">Email</span>
           <svg
@@ -50,6 +50,21 @@ export default function Footer() {
           >
             <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
             <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+          </svg>
+        </a>
+        <a
+          className="transition-colors hover:text-text-primary"
+          href="mailto:yosef.gamble@protonmail.com"
+        >
+          <span className="sr-only">Secure email</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="h-6 w-6"
+            aria-hidden="true"
+          >
+            <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3A5.25 5.25 0 0012 1.5zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5zM12 13.5a1.5 1.5 0 00-.75 2.803V17.25a.75.75 0 001.5 0v-.947A1.5 1.5 0 0012 13.5z" clipRule="evenodd" />
           </svg>
         </a>
       </div>

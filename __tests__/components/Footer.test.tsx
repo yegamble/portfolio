@@ -8,7 +8,7 @@ describe('Footer', () => {
     expect(screen.getByText(/coded in/i)).toBeInTheDocument();
   });
 
-  it('should render social links (GitHub, LinkedIn, Email)', () => {
+  it('should render social links (GitHub, LinkedIn, Email, Secure Email)', () => {
     render(<Footer />);
     expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute(
       'href',
@@ -18,9 +18,13 @@ describe('Footer', () => {
       'href',
       'https://linkedin.com/in/yosefgamble'
     );
-    expect(screen.getByRole('link', { name: /email/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^email$/i })).toHaveAttribute(
       'href',
-      'mailto:hello@yosefgamble.com'
+      'mailto:yegamble@gmail.com'
+    );
+    expect(screen.getByRole('link', { name: /secure email/i })).toHaveAttribute(
+      'href',
+      'mailto:yosef.gamble@protonmail.com'
     );
   });
 
