@@ -14,6 +14,7 @@
     "test:e2e:open": "cypress open"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^1.3.1",
     "next": "16.1.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
