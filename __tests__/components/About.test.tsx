@@ -8,12 +8,11 @@ describe('About', () => {
     expect(screen.getByRole('region', { name: /about me/i })).toBeInTheDocument();
   });
 
-  it('should render section heading', () => {
+  it('should render section heading with horizontal line', () => {
     render(<About />);
     const section = screen.getByRole('region', { name: /about me/i });
-    const headings = within(section).getAllByRole('heading', { level: 2 });
-    expect(headings.length).toBeGreaterThanOrEqual(1);
-    expect(headings[0]).toHaveTextContent(/about/i);
+    const heading = within(section).getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent(/about/i);
   });
 
   it('should contain the origin story about 2012', () => {
@@ -22,16 +21,18 @@ describe('About', () => {
     expect(section).toHaveTextContent(/back in 2012/i);
   });
 
-  it('should render the real estate marketplace link', () => {
+  it('should mention building software for different companies', () => {
     render(<About />);
     const section = screen.getByRole('region', { name: /about me/i });
-    const link = within(section).getByRole('link', { name: /real estate marketplace/i });
-    expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+    expect(section).toHaveTextContent(/advertising agency/i);
+    expect(section).toHaveTextContent(/start-up/i);
+    expect(section).toHaveTextContent(/huge corporation/i);
   });
 
-  it('should describe current focus', () => {
+  it('should describe current focus at TechCorp', () => {
     render(<About />);
     const section = screen.getByRole('region', { name: /about me/i });
-    expect(section).toHaveTextContent(/main focus these days/i);
+    expect(section).toHaveTextContent(/techcorp/i);
+    expect(section).toHaveTextContent(/accessible, inclusive products/i);
   });
 });

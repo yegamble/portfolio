@@ -2,66 +2,61 @@ export default function About() {
   return (
     <section
       id="about"
-      className="mb-16 scroll-mt-16 md:mb-24 lg:mb-36 lg:scroll-mt-24"
+      className="scroll-mt-24 border-t border-slate-800/30 py-16 md:py-24"
       aria-label="About me"
     >
-      <div className="sticky top-0 z-20 -mx-6 mb-4 w-screen bg-bg-dark/75 px-6 py-5 backdrop-blur md:-mx-12 md:px-12 lg:sr-only lg:relative lg:top-auto lg:mx-auto lg:w-full lg:px-0 lg:py-0 lg:opacity-0">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-text-primary lg:sr-only">
+      <div className="mb-8 flex items-center gap-4 md:mb-10">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-text-primary">
           About
         </h2>
+        <div className="h-px flex-1 bg-slate-800" />
       </div>
-      <div className="space-y-4">
+      <div className="space-y-6 text-lg leading-relaxed text-text-secondary">
         <p>
           Back in 2012, I decided to try my hand at creating custom Tumblr
           themes and tumbled head first into the rabbit hole of coding and web
           development. Fast-forward to today, and I&apos;ve had the privilege of
-          building software for a{' '}
+          building software for an{' '}
           <a
-            className="font-medium text-text-primary hover:text-primary focus-visible:text-primary"
-            href="https://www.realestate.co.nz"
+            className="font-medium text-text-primary underline decoration-slate-700 underline-offset-4 transition-colors hover:text-primary"
+            href="#"
             target="_blank"
             rel="noreferrer noopener"
           >
-            real estate marketplace
+            advertising agency
           </a>
           , a{' '}
           <a
-            className="font-medium text-text-primary hover:text-primary focus-visible:text-primary"
+            className="font-medium text-text-primary underline decoration-slate-700 underline-offset-4 transition-colors hover:text-primary"
             href="#"
             target="_blank"
             rel="noreferrer noopener"
           >
-            fintech startup
+            start-up
           </a>
-          , and an{' '}
+          , and a{' '}
           <a
-            className="font-medium text-text-primary hover:text-primary focus-visible:text-primary"
+            className="font-medium text-text-primary underline decoration-slate-700 underline-offset-4 transition-colors hover:text-primary"
             href="#"
             target="_blank"
             rel="noreferrer noopener"
           >
-            enterprise SaaS platform
+            huge corporation
           </a>
           .
         </p>
         <p>
-          My main focus these days is building robust, scalable backend services
-          and APIs at{' '}
-          <a
-            className="font-medium text-text-primary hover:text-primary focus-visible:text-primary"
-            href="#"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            TechCorp
-          </a>
-          . I enjoy working at the intersection of design and engineering &mdash;
-          where pixel-perfect frontends meet battle-tested distributed systems.
+          My main focus these days is engineering accessible, inclusive products
+          and digital experiences at{' '}
+          <span className="font-medium text-text-primary">TechCorp</span> for a
+          variety of clients.
         </p>
         <p>
-          When I&apos;m not at the computer, I&apos;m usually exploring NYC,
-          reading about distributed systems, or diving deep into the latest in
-          cloud-native architecture.
+          I build scalable, high-performance web applications with a relentless
+          focus on user experience and code quality. Currently engineering
+          distributed systems. With over 8 years of experience in full-stack
+          development, I specialize in bridging the gap between complex backend
+          architecture and intuitive frontend design.
         </p>
       </div>
     </section>

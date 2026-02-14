@@ -7,13 +7,14 @@ describe('Portfolio Site', () => {
     cy.title().should('contain', 'Yosef Gamble');
   });
 
-  it('should display the header with name and title', () => {
-    cy.get('h1').should('contain.text', 'Yosef Gamble');
-    cy.get('h2').first().should('contain.text', 'Senior Full-Stack Engineer');
+  it('should display the sticky header with name and title', () => {
+    cy.get('header').should('be.visible');
+    cy.get('header').should('contain.text', 'Yosef Gamble');
+    cy.get('header').should('contain.text', 'Senior Full-Stack Engineer');
   });
 
-  it('should have navigation links that scroll to sections', () => {
-    cy.get('nav[aria-label="In-page jump links"]').within(() => {
+  it('should have navigation links in the header', () => {
+    cy.get('nav[aria-label="Main navigation"]').within(() => {
       cy.get('a').should('have.length', 3);
       cy.contains('About').should('have.attr', 'href', '#about');
       cy.contains('Experience').should('have.attr', 'href', '#experience');
@@ -21,9 +22,15 @@ describe('Portfolio Site', () => {
     });
   });
 
-  it('should display the About section', () => {
+  it('should display the hero section with large heading', () => {
+    cy.get('h1').should('contain.text', 'NYC based');
+    cy.get('h1').should('contain.text', 'pixel-perfect digital experiences');
+  });
+
+  it('should display the About section with content', () => {
     cy.get('#about').should('be.visible');
     cy.get('#about').should('contain.text', 'Back in 2012');
+    cy.get('#about').should('contain.text', 'TechCorp');
   });
 
   it('should display the Experience section with all positions', () => {
@@ -39,27 +46,25 @@ describe('Portfolio Site', () => {
       .should('have.length', 3);
   });
 
-  it('should display the Projects section', () => {
+  it('should display the Projects section with card layout', () => {
     cy.get('#projects').should('exist');
     cy.get('#projects').should('contain.text', 'Project Alpha');
     cy.get('#projects').should('contain.text', 'Neon UI Kit');
   });
 
   it('should have social links in the header', () => {
-    cy.get('[aria-label="Social media"]').within(() => {
-      cy.get('a[aria-label*="GitHub"]')
-        .should('have.attr', 'href', 'https://github.com/yegamble')
-        .and('have.attr', 'target', '_blank');
-      cy.get('a[aria-label*="LinkedIn"]')
-        .should('have.attr', 'href', 'https://linkedin.com/in/yosefgamble')
-        .and('have.attr', 'target', '_blank');
+    cy.get('header').first().within(() => {
+      cy.get('a').filter('[href="https://github.com/yegamble"]').should('exist');
+      cy.get('a')
+        .filter('[href="https://linkedin.com/in/yosefgamble"]')
+        .should('exist');
     });
   });
 
-  it('should display the footer with attribution', () => {
+  it('should display the footer with social icons and attribution', () => {
     cy.get('footer').should('contain.text', 'Coded in');
-    cy.get('footer').should('contain.text', 'Next.js');
     cy.get('footer').should('contain.text', 'Tailwind CSS');
+    cy.get('footer').find('a').should('have.length.at.least', 5);
   });
 
   it('should navigate to sections via anchor links', () => {

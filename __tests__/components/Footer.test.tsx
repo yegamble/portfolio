@@ -8,16 +8,20 @@ describe('Footer', () => {
     expect(screen.getByText(/coded in/i)).toBeInTheDocument();
   });
 
-  it('should link to Visual Studio Code', () => {
+  it('should render social links (GitHub, LinkedIn, Email)', () => {
     render(<Footer />);
-    const link = screen.getByRole('link', { name: /visual studio code/i });
-    expect(link).toHaveAttribute('href', 'https://code.visualstudio.com/');
-  });
-
-  it('should link to Next.js', () => {
-    render(<Footer />);
-    const link = screen.getByRole('link', { name: 'Next.js' });
-    expect(link).toHaveAttribute('href', 'https://nextjs.org/');
+    expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute(
+      'href',
+      'https://github.com/yegamble'
+    );
+    expect(screen.getByRole('link', { name: /linkedin/i })).toHaveAttribute(
+      'href',
+      'https://linkedin.com/in/yosefgamble'
+    );
+    expect(screen.getByRole('link', { name: /email/i })).toHaveAttribute(
+      'href',
+      'mailto:hello@yosefgamble.com'
+    );
   });
 
   it('should link to Tailwind CSS', () => {
@@ -26,9 +30,9 @@ describe('Footer', () => {
     expect(link).toHaveAttribute('href', 'https://tailwindcss.com/');
   });
 
-  it('should link to Inter typeface', () => {
+  it('should link to Inter font', () => {
     render(<Footer />);
     const link = screen.getByRole('link', { name: 'Inter' });
-    expect(link).toHaveAttribute('href', 'https://rsms.me/inter/');
+    expect(link).toHaveAttribute('href', 'https://fonts.google.com/specimen/Inter');
   });
 });

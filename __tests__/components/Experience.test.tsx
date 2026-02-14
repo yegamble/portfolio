@@ -28,13 +28,11 @@ describe('Experience', () => {
     render(<Experience />);
     const techLists = screen.getAllByRole('list', { name: /technologies used/i });
     expect(techLists).toHaveLength(3);
-
-    const firstTechList = techLists[0];
-    expect(within(firstTechList).getByText('Go')).toBeInTheDocument();
-    expect(within(firstTechList).getByText('Kubernetes')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('Kubernetes')).toBeInTheDocument();
   });
 
-  it('should render the resume link', () => {
+  it('should render the resume link with right arrow', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: /work experience/i });
     const link = within(section).getByRole('link', { name: /view full/i });
