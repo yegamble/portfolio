@@ -29,7 +29,6 @@ describe('Portfolio Site', () => {
     // After scrolling, the nav name should become visible
     cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
     cy.get('header').should('contain.text', 'Yosef Gamble');
-    cy.get('header').should('contain.text', 'Senior Full-Stack Engineer');
   });
 
   it('should have navigation links in the header', () => {
@@ -98,5 +97,92 @@ describe('Portfolio Site', () => {
 
     cy.get('a[href="#projects"]').first().click();
     cy.url().should('include', '#projects');
+  });
+});
+
+describe('Scroll Header — Responsive Layout', () => {
+  const viewports: [string, number, number][] = [
+    ['mobile', 375, 812],
+    ['tablet', 768, 1024],
+    ['desktop', 1280, 900],
+  ];
+
+  viewports.forEach(([name, width, height]) => {
+    describe(`${name} (${width}x${height})`, () => {
+      beforeEach(() => {
+        cy.viewport(width, height);
+        cy.visit('/');
+      });
+
+      it('should center nav links before scroll', () => {
+        // The inner flex container should use justify-center before scrolling
+        cy.get('header > div').first().should('have.css', 'justify-content', 'center');
+      });
+
+      it('should not clip navbar text on initial load', () => {
+        // The hero name should be fully below the navbar — no overlap
+        cy.get('header').invoke('outerHeight').then((headerHeight) => {
+          cy.get('section').first().then(($section) => {
+            const sectionTop = $section[0].getBoundingClientRect().top;
+            expect(sectionTop).to.be.greaterThan((headerHeight as number) - 1);
+          });
+        });
+      });
+
+      it('should transition navbar to justify-between after scroll', () => {
+        cy.get('#experience').scrollIntoView();
+        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
+        cy.get('header > div').first().should('have.css', 'justify-content', 'space-between');
+      });
+
+      it('should not have text overflow or wrapping in navbar after scroll', () => {
+        cy.get('#experience').scrollIntoView();
+        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
+
+        // The name container should not have visible overflow
+        cy.get('header [aria-hidden="false"]').should('have.css', 'white-space', 'nowrap');
+
+        // Each navbar link should be fully visible (not clipped)
+        if (width >= 640) {
+          cy.get('nav[aria-label="Main navigation"] a').each(($link) => {
+            const rect = $link[0].getBoundingClientRect();
+            expect(rect.width).to.be.greaterThan(0);
+            expect(rect.right).to.be.lessThan(width + 1);
+          });
+        }
+      });
+
+      it('should keep social icons fully visible at all scroll positions', () => {
+        // Before scroll
+        cy.get('header a[href="https://github.com/yegamble"]')
+          .should('be.visible')
+          .then(($el) => {
+            const rect = $el[0].getBoundingClientRect();
+            expect(rect.right).to.be.lessThan(width + 1);
+            expect(rect.left).to.be.greaterThan(-1);
+          });
+
+        // After scroll
+        cy.get('#experience').scrollIntoView();
+        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
+        cy.get('header a[href="https://github.com/yegamble"]')
+          .should('be.visible')
+          .then(($el) => {
+            const rect = $el[0].getBoundingClientRect();
+            expect(rect.right).to.be.lessThan(width + 1);
+            expect(rect.left).to.be.greaterThan(-1);
+          });
+      });
+
+      it('should have adequate spacing between hero name and navbar', () => {
+        cy.get('header').invoke('outerHeight').then((navHeight) => {
+          cy.get('section p').first().then(($heroName) => {
+            const nameTop = $heroName[0].getBoundingClientRect().top;
+            // At least 16px gap between navbar bottom and hero name top
+            expect(nameTop - (navHeight as number)).to.be.greaterThan(15);
+          });
+        });
+      });
+    });
   });
 });

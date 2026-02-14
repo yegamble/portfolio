@@ -137,7 +137,7 @@ describe('ScrollHeader', () => {
       render(<ScrollHeader />);
       expect(window.IntersectionObserver).toHaveBeenCalledWith(
         expect.any(Function),
-        { threshold: 0 }
+        { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
       );
       expect(mockObserve).toHaveBeenCalled();
     });
