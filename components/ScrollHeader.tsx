@@ -32,8 +32,8 @@ export default function ScrollHeader() {
       <header
         className={`sticky top-0 z-50 w-full transition-colors duration-500 ease-out motion-reduce:duration-0 ${
           isScrolled
-            ? 'border-b border-slate-800/50 bg-slate-900/90 backdrop-blur-md'
-            : 'border-b border-transparent bg-transparent'
+            ? 'border-b border-slate-800/50 bg-slate-900/95 backdrop-blur-md'
+            : 'border-b border-transparent bg-slate-900'
         }`}
       >
         <div

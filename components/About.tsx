@@ -13,50 +13,38 @@ export default function About() {
       </div>
       <div className="space-y-6 text-lg leading-relaxed text-text-secondary">
         <p>
-          Back in 2012, I decided to try my hand at creating custom Tumblr
-          themes and tumbled head first into the rabbit hole of coding and web
-          development. Fast-forward to today, and I&apos;ve had the privilege of
-          building software for an{' '}
-          <a
-            className="font-medium text-text-primary underline decoration-slate-700 underline-offset-4 transition-colors hover:text-primary"
-            href="#"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            advertising agency
-          </a>
-          , a{' '}
-          <a
-            className="font-medium text-text-primary underline decoration-slate-700 underline-offset-4 transition-colors hover:text-primary"
-            href="#"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            start-up
-          </a>
-          , and a{' '}
-          <a
-            className="font-medium text-text-primary underline decoration-slate-700 underline-offset-4 transition-colors hover:text-primary"
-            href="#"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            huge corporation
-          </a>
-          .
+          I started writing code at Central Washington University in 2013,
+          where I served as Student Government President and earned the Boeing
+          Scholarship. My path took me across the Pacific to New Zealand
+          &mdash; first for a degree at the University of Auckland, then into
+          the tech industry building software that would reach millions of
+          users.
         </p>
         <p>
-          My main focus these days is engineering accessible, inclusive products
-          and digital experiences at{' '}
-          <span className="font-medium text-text-primary">TechCorp</span> for a
-          variety of clients.
+          At{' '}
+          <a
+            className="font-medium text-text-primary underline decoration-slate-700 underline-offset-4 transition-colors hover:text-primary"
+            href="https://www.realestate.co.nz"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            realestate.co.nz
+          </a>
+          , I became a key engineer on New Zealand&apos;s most established
+          real estate portal. I shipped industry-first features &mdash;
+          instant price change alerts and transparent price history &mdash;
+          that competitors copied months later. I designed a serverless
+          notification system on AWS Lambda integrated with Braze that
+          delivered listing alerts to every user on the platform, and led
+          company-wide workshops on serverless architecture and observability.
         </p>
         <p>
-          I build scalable, high-performance web applications with a relentless
-          focus on user experience and code quality. Currently engineering
-          distributed systems. With over 8 years of experience in full-stack
-          development, I specialize in bridging the gap between complex backend
-          architecture and intuitive frontend design.
+          Now back in New York, I&apos;m building an open-source video
+          streaming backend in Go &mdash; implementing ActivityPub federation
+          and ATProto for decentralized content sharing, and cutting bandwidth
+          costs to nearly $0 through Cloudflare CDN and Backblaze B2
+          integration. I care about scalable systems, infrastructure
+          automation, and the open web.
         </p>
       </div>
     </section>

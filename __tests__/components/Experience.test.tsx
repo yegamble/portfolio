@@ -11,17 +11,17 @@ describe('Experience', () => {
   it('should render all three experience entries', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: /work experience/i });
-    expect(section).toHaveTextContent(/techcorp/i);
+    expect(section).toHaveTextContent(/Independent/i);
     expect(section).toHaveTextContent(/realestate\.co\.nz/i);
-    expect(section).toHaveTextContent(/proactiv/i);
+    expect(section).toHaveTextContent(/ProStock/i);
   });
 
   it('should render date ranges for each position', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: /work experience/i });
-    expect(section).toHaveTextContent('2020 — Present');
-    expect(section).toHaveTextContent('2018 — 2020');
-    expect(section).toHaveTextContent('2016 — 2018');
+    expect(section).toHaveTextContent('2024 — Present');
+    expect(section).toHaveTextContent('2021 — 2024');
+    expect(section).toHaveTextContent('2019 — 2024');
   });
 
   it('should render technology tags', () => {
@@ -29,7 +29,7 @@ describe('Experience', () => {
     const techLists = screen.getAllByRole('list', { name: /technologies used/i });
     expect(techLists).toHaveLength(3);
     expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
-    expect(within(techLists[0]).getByText('Kubernetes')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('Docker')).toBeInTheDocument();
   });
 
   it('should render the resume link with right arrow', () => {

@@ -9,31 +9,31 @@ interface ExperienceItem {
 
 const experiences: ExperienceItem[] = [
   {
-    dates: '2020 — Present',
-    title: 'Senior Engineer',
-    company: 'TechCorp',
-    companyUrl: '#',
+    dates: '2024 — Present',
+    title: 'Full Stack Engineer',
+    company: 'Independent',
+    companyUrl: 'https://github.com/yegamble',
     description:
-      'Leading the core platform team in redesigning the microservices architecture to support 5M+ daily active users. Improved system latency by 40% through aggressive caching strategies and database optimization.',
-    technologies: ['Go', 'gRPC', 'Kubernetes', 'AWS'],
+      'Building an open-source, PeerTube-compatible video streaming backend in Go with decentralized social networking protocols — ActivityPub federation and ATProto integration for cross-platform content sharing. Cut bandwidth costs from hundreds of dollars monthly to nearly $0 by integrating Backblaze B2 and Cloudflare CDN via the Bandwidth Alliance. Containerized with Docker, CI/CD via GitHub Actions, PostgreSQL for storage, Redis for caching and rate-limiting.',
+    technologies: ['Go', 'ActivityPub', 'Docker', 'PostgreSQL', 'Redis', 'Cloudflare'],
   },
   {
-    dates: '2018 — 2020',
-    title: 'Software Engineer',
+    dates: '2021 — 2024',
+    title: 'Full Stack Engineer',
     company: 'realestate.co.nz',
     companyUrl: 'https://www.realestate.co.nz',
     description:
-      'Architected and built the MVP for a fintech dashboard that secured Series A funding. Collaborated closely with product designers to implement pixel-perfect, responsive interfaces.',
-    technologies: ['React', 'TypeScript', 'Node.js'],
+      'Shipped industry-first features for New Zealand\u2019s most established real estate portal — instant price change alerts and transparent price history that competitors copied months later. Designed and built a serverless notification system on AWS Lambda integrated with Braze, delivering daily and weekly listing alerts platform-wide. Led company-wide workshops on Serverless architecture and New Relic observability. Contributed to the EmberJS frontend rebuild that received positive feedback from agents and users nationally.',
+    technologies: ['AWS Lambda', 'CDK', 'EmberJS', 'PHP', 'Braze', 'New Relic'],
   },
   {
-    dates: '2016 — 2018',
-    title: 'Frontend Developer',
-    company: 'Proactiv',
+    dates: '2019 — 2024',
+    title: 'Software Developer',
+    company: 'ProStock',
     companyUrl: '#',
     description:
-      'Developed interactive marketing sites for Fortune 500 clients. Focused on WebGL animations and high-fidelity transitions to drive engagement.',
-    technologies: ['JavaScript', 'WebGL', 'GSAP'],
+      'Built the core platform for a warehouse management system saving operators over $250K annually. Developed APIs supporting international order fulfillment for Zoono across NZ, Australia, and Asia. Deployed an Android scanner application for warehouse staff to receive, transfer, and ship products globally. Created an AngularJS portal for clients to track product status and orders in real-time. Migrated infrastructure to Digital Ocean, improving uptime across production environments.',
+    technologies: ['PHP', 'AngularJS', 'Android', 'Digital Ocean', 'REST APIs'],
   },
 ];
 

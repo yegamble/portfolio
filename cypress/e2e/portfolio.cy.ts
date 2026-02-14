@@ -47,15 +47,15 @@ describe('Portfolio Site', () => {
 
   it('should display the About section with content', () => {
     cy.get('#about').should('be.visible');
-    cy.get('#about').should('contain.text', 'Back in 2012');
-    cy.get('#about').should('contain.text', 'TechCorp');
+    cy.get('#about').should('contain.text', 'Central Washington University');
+    cy.get('#about').should('contain.text', 'realestate.co.nz');
   });
 
   it('should display the Experience section with all positions', () => {
     cy.get('#experience').should('exist');
-    cy.get('#experience').should('contain.text', 'TechCorp');
+    cy.get('#experience').should('contain.text', 'Independent');
     cy.get('#experience').should('contain.text', 'realestate.co.nz');
-    cy.get('#experience').should('contain.text', 'Proactiv');
+    cy.get('#experience').should('contain.text', 'ProStock');
   });
 
   it('should display technology tags in experience entries', () => {
@@ -172,6 +172,17 @@ describe('Scroll Header — Responsive Layout', () => {
             expect(rect.right).to.be.lessThan(width + 1);
             expect(rect.left).to.be.greaterThan(-1);
           });
+      });
+
+      it('should have opaque header background to prevent text bleed-through', () => {
+        // Header must not be transparent — hero text must not show through during scroll
+        cy.get('header').should('not.have.css', 'background-color', 'rgba(0, 0, 0, 0)');
+
+        // Scroll partway so hero text would be behind the header
+        cy.scrollTo(0, 100);
+        // eslint-disable-next-line cypress/no-unnecessary-waiting
+        cy.wait(100);
+        cy.get('header').should('not.have.css', 'background-color', 'rgba(0, 0, 0, 0)');
       });
 
       it('should have adequate spacing between hero name and navbar', () => {

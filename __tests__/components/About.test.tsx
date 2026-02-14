@@ -15,24 +15,26 @@ describe('About', () => {
     expect(heading).toHaveTextContent(/about/i);
   });
 
-  it('should contain the origin story about 2012', () => {
+  it('should contain the origin story about Central Washington University', () => {
     render(<About />);
     const section = screen.getByRole('region', { name: /about me/i });
-    expect(section).toHaveTextContent(/back in 2012/i);
+    expect(section).toHaveTextContent(/Central Washington University/i);
+    expect(section).toHaveTextContent(/2013/);
   });
 
-  it('should mention building software for different companies', () => {
+  it('should mention key career milestones', () => {
     render(<About />);
     const section = screen.getByRole('region', { name: /about me/i });
-    expect(section).toHaveTextContent(/advertising agency/i);
-    expect(section).toHaveTextContent(/start-up/i);
-    expect(section).toHaveTextContent(/huge corporation/i);
+    expect(section).toHaveTextContent(/realestate\.co\.nz/i);
+    expect(section).toHaveTextContent(/industry-first/i);
+    expect(section).toHaveTextContent(/Boeing Scholarship/i);
   });
 
-  it('should describe current focus at TechCorp', () => {
+  it('should describe current focus on open-source Go development', () => {
     render(<About />);
     const section = screen.getByRole('region', { name: /about me/i });
-    expect(section).toHaveTextContent(/techcorp/i);
-    expect(section).toHaveTextContent(/accessible, inclusive products/i);
+    expect(section).toHaveTextContent(/open-source/i);
+    expect(section).toHaveTextContent(/video streaming/i);
+    expect(section).toHaveTextContent(/ActivityPub/i);
   });
 });
