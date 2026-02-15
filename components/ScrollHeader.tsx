@@ -2,17 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
-
-const navItems = [
-  { label: 'About', href: '#about' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Projects', href: '#projects' },
-];
+import LanguageToggle from '@/components/LanguageToggle';
 
 export default function ScrollHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -56,31 +53,32 @@ export default function ScrollHeader() {
               href="/"
               tabIndex={isScrolled ? 0 : -1}
             >
-              Yosef Gamble
+              {t('hero.name')}
             </Link>
             <span className="hidden h-4 w-px shrink-0 bg-slate-700 lg:inline-block" />
             <span className="hidden text-xs font-medium uppercase tracking-widest text-text-muted lg:inline-block">
-              Senior Full-Stack Engineer
+              {t('hero.title')}
             </span>
           </div>
 
-          {/* Nav links + social icons — always visible */}
+          {/* Nav links + social icons + language toggle — always visible */}
           <div className="flex shrink-0 items-center gap-6 md:gap-8">
             <nav aria-label="Main navigation" className="hidden sm:block">
               <ul className="flex items-center gap-6">
-                {navItems.map(({ label, href }) => (
-                  <li key={href}>
+                {(['about', 'experience', 'projects'] as const).map((key) => (
+                  <li key={key}>
                     <a
                       className="text-xs font-bold uppercase tracking-widest text-text-muted transition-colors hover:text-primary"
-                      href={href}
+                      href={`#${key}`}
                     >
-                      {label}
+                      {t(`nav.${key}`)}
                     </a>
                   </li>
                 ))}
               </ul>
             </nav>
-            <SocialLinks className="pl-2 sm:border-l sm:border-slate-800 sm:pl-6" />
+            <LanguageToggle />
+            <SocialLinks className="ps-2 sm:border-s sm:border-slate-800 sm:ps-6" />
           </div>
         </div>
       </header>
@@ -89,15 +87,14 @@ export default function ScrollHeader() {
       <section className="mx-auto flex w-full max-w-3xl flex-col justify-center px-6 pb-16 pt-16 md:pb-24 md:pt-24 lg:px-8">
         <div ref={sentinelRef}>
           <p className="mb-2 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            Yosef Gamble
+            {t('hero.name')}
           </p>
           <p className="mb-8 text-sm font-medium uppercase tracking-widest text-text-muted">
-            Senior Full-Stack Engineer
+            {t('hero.title')}
           </p>
         </div>
         <h1 className="mb-8 text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
-          NYC based. Go, TypeScript, &amp; AWS focus. Building accessible,
-          pixel-perfect digital experiences.
+          {t('hero.tagline')}
         </h1>
         <div className="h-1 w-24 rounded-full bg-primary" />
       </section>

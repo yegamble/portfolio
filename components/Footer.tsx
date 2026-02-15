@@ -1,6 +1,11 @@
+'use client';
+
+import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="mt-12 border-t border-slate-800/30 pb-8 pt-12 text-center text-sm text-text-muted">
       <SocialLinks
@@ -10,25 +15,25 @@ export default function Footer() {
         className="mb-8 justify-center"
       />
       <p className="mx-auto max-w-md">
-        Coded in{' '}
+        {t('footer.codedIn')}{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://code.visualstudio.com/"
           target="_blank"
           rel="noreferrer noopener"
         >
-          Visual Studio Code
+          {t('footer.vscode')}
         </a>
-        . Built with{' '}
+        . {t('footer.builtWith')}{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://tailwindcss.com/"
           target="_blank"
           rel="noreferrer noopener"
         >
-          Tailwind CSS
+          {t('footer.tailwind')}
         </a>
-        {' '}and{' '}
+        {' '}{t('footer.and')}{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://fonts.google.com/specimen/Inter"
@@ -37,7 +42,7 @@ export default function Footer() {
         >
           Inter
         </a>
-        {' '}font.
+        {' '}{t('footer.font')}.
       </p>
     </footer>
   );

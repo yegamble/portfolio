@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslation } from 'react-i18next';
 import {
   GitHubIcon,
   LinkedInIcon,
@@ -6,7 +9,7 @@ import {
 } from '@/components/icons';
 
 interface SocialLinkItem {
-  label: string;
+  labelKey: string;
   href: string;
   icon: (props: { className?: string }) => React.ReactNode;
   external?: boolean;
@@ -14,24 +17,24 @@ interface SocialLinkItem {
 
 const socialLinks: SocialLinkItem[] = [
   {
-    label: 'GitHub',
+    labelKey: 'social.github',
     href: 'https://github.com/yegamble',
     icon: GitHubIcon,
     external: true,
   },
   {
-    label: 'LinkedIn',
+    labelKey: 'social.linkedin',
     href: 'https://linkedin.com/in/yosefgamble',
     icon: LinkedInIcon,
     external: true,
   },
   {
-    label: 'Email',
+    labelKey: 'social.email',
     href: 'mailto:yegamble@gmail.com',
     icon: EmailIcon,
   },
   {
-    label: 'Secure email',
+    labelKey: 'social.secureEmail',
     href: 'mailto:yosef.gamble@protonmail.com',
     icon: SecureEmailIcon,
   },
@@ -50,18 +53,20 @@ export default function SocialLinks({
   linkClassName = 'text-text-muted transition-colors hover:text-text-primary',
   className = '',
 }: SocialLinksProps) {
+  const { t } = useTranslation();
+
   return (
     <div className={`flex items-center ${gap} ${className}`}>
-      {socialLinks.map(({ label, href, icon: Icon, external }) => (
+      {socialLinks.map(({ labelKey, href, icon: Icon, external }) => (
         <a
-          key={label}
+          key={labelKey}
           className={linkClassName}
           href={href}
           {...(external
             ? { target: '_blank', rel: 'noreferrer noopener' }
             : {})}
         >
-          <span className="sr-only">{label}</span>
+          <span className="sr-only">{t(labelKey)}</span>
           <Icon className={iconSize} />
         </a>
       ))}

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import I18nProvider from '@/components/I18nProvider';
 import './globals.css';
 
 const inter = Inter({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   display: 'swap',
   variable: '--font-inter',
 });
@@ -42,7 +43,7 @@ export default function RootLayout({
           <div className="absolute -right-[10%] -top-[10%] h-[40rem] w-[40rem] rounded-full bg-[#1e293b] opacity-30 blur-[100px]" />
           <div className="absolute -bottom-[10%] -left-[10%] h-[30rem] w-[30rem] rounded-full bg-[#1e293b] opacity-30 blur-[80px]" />
         </div>
-        {children}
+        <I18nProvider>{children}</I18nProvider>
       </body>
     </html>
   );
