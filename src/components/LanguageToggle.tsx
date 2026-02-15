@@ -4,12 +4,17 @@ import { useTranslation } from 'react-i18next';
 import CipherText from '@/components/CipherText';
 
 export default function LanguageToggle() {
+  const isEnabled = process.env.NEXT_PUBLIC_HEBREW_ENABLED === 'true';
   const { t, i18n } = useTranslation();
 
   const toggleLanguage = () => {
     const nextLang = i18n.language === 'en' ? 'he' : 'en';
     i18n.changeLanguage(nextLang);
   };
+
+  if (!isEnabled) {
+    return null;
+  }
 
   return (
     <button

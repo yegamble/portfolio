@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import i18n from '@/lib/i18n';
 import Projects from '@/components/Projects';
 
 describe('Projects', () => {
@@ -130,7 +131,6 @@ describe('Projects', () => {
     it('should render SVG icons for each project card', () => {
       const { container } = render(<Projects />);
       const svgs = container.querySelectorAll('svg');
-      // Each card has: project icon + arrow icon = 2 per card * 2 cards = 4
       expect(svgs.length).toBeGreaterThanOrEqual(4);
     });
   });
@@ -147,6 +147,25 @@ describe('Projects', () => {
       const section = screen.getByRole('region', { name: /selected projects/i });
       const links = within(section).getAllByRole('link');
       expect(links.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('Empty projects', () => {
+    it('should not render the section when projects array is empty', () => {
+      const original = i18n.getResourceBundle('en', 'translation');
+      i18n.addResourceBundle(
+        'en',
+        'translation',
+        { ...original, projects: { ...original.projects, items: [] } },
+        false,
+        true
+      );
+
+      const { container } = render(<Projects />);
+      expect(screen.queryByRole('region')).not.toBeInTheDocument();
+      expect(container.innerHTML).toBe('');
+
+      i18n.addResourceBundle('en', 'translation', original, false, true);
     });
   });
 });

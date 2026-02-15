@@ -19,13 +19,20 @@ export default function Projects() {
     description: string;
   }[];
 
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
   return (
     <section
       id="projects"
       className="scroll-mt-24 border-t border-slate-800/30 py-16 md:py-24"
       aria-label={t('projects.ariaLabel')}
     >
-      <SectionHeader title={<CipherText>{t('projects.heading')}</CipherText>} className="mb-12" />
+      <SectionHeader
+        title={<CipherText>{t('projects.heading')}</CipherText>}
+        className="mb-12"
+      />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
         {items.map((project, index) => {
           const meta = projectEntries[index];

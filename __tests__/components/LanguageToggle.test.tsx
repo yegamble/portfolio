@@ -1,11 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import i18n from '@/lib/i18n';
 import LanguageToggle from '@/components/LanguageToggle';
 
 beforeEach(async () => {
   await i18n.changeLanguage('en');
+});
+
+afterEach(() => {
+  process.env.NEXT_PUBLIC_HEBREW_ENABLED = 'true';
 });
 
 describe('LanguageToggle', () => {
@@ -64,6 +68,28 @@ describe('LanguageToggle', () => {
         'aria-label',
         'עבור לאנגלית'
       );
+    });
+  });
+
+  describe('Environment variable control', () => {
+    it('should not render when NEXT_PUBLIC_HEBREW_ENABLED is not set', () => {
+      delete process.env.NEXT_PUBLIC_HEBREW_ENABLED;
+      const { container } = render(<LanguageToggle />);
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+      expect(container.innerHTML).toBe('');
+    });
+
+    it('should not render when NEXT_PUBLIC_HEBREW_ENABLED is "false"', () => {
+      process.env.NEXT_PUBLIC_HEBREW_ENABLED = 'false';
+      const { container } = render(<LanguageToggle />);
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+      expect(container.innerHTML).toBe('');
+    });
+
+    it('should render when NEXT_PUBLIC_HEBREW_ENABLED is "true"', () => {
+      process.env.NEXT_PUBLIC_HEBREW_ENABLED = 'true';
+      render(<LanguageToggle />);
+      expect(screen.getByRole('button')).toBeInTheDocument();
     });
   });
 });
