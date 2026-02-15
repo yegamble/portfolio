@@ -39,7 +39,7 @@ export default function CipherText({ children }: CipherTextProps) {
           return (
             <span
               key={index}
-              className={isResolved ? 'cipher-resolved' : ''}
+              className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
               style={CHAR_STYLE}
             >
               {char}

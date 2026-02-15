@@ -107,5 +107,93 @@ describe('CipherText', () => {
       expect(charSpans?.[1]).not.toHaveClass('cipher-resolved');
       expect(charSpans?.[2]).toHaveClass('cipher-resolved');
     });
+
+    it('should apply cipher-char base class to all character spans', () => {
+      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('span');
+
+      charSpans.forEach((span) => {
+        expect(span).toHaveClass('cipher-char');
+      });
+    });
+
+    it('should have both cipher-char and cipher-resolved on resolved characters', () => {
+      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('span');
+
+      expect(charSpans[0]).toHaveClass('cipher-char', 'cipher-resolved');
+      expect(charSpans[1]).toHaveClass('cipher-char');
+      expect(charSpans[1]).not.toHaveClass('cipher-resolved');
+    });
+  });
+
+  describe('layout stability during animation', () => {
+    it('should apply display inline-block to each character span', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('span');
+
+      charSpans.forEach((span) => {
+        expect(span.style.display).toBe('inline-block');
+      });
+    });
+
+    it('should apply unicode-bidi plaintext to each character span', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('span');
+
+      charSpans.forEach((span) => {
+        expect(span.style.unicodeBidi).toBe('plaintext');
+      });
+    });
+
+    it('should render one span per character matching text length', () => {
+      const text = 'Hello World';
+      mockResult.displayChars = Array.from(text).map(() => 'X');
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('span');
+      expect(charSpans).toHaveLength(Array.from(text).length);
+    });
+
+    it('should not render wrapper spans when not animating', () => {
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      expect(container.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
+      expect(container.querySelector('.sr-only')).not.toBeInTheDocument();
+    });
+
+    it('should preserve text content in sr-only span during animation', () => {
+      const text = 'Test content';
+      mockResult.displayChars = Array.from(text).map(() => 'X');
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const srOnly = container.querySelector('.sr-only');
+      expect(srOnly).toHaveTextContent(text);
+    });
   });
 });

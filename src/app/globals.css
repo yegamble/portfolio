@@ -46,8 +46,20 @@ body {
   background: #475569;
 }
 
-/* Cipher text animation */
-@keyframes cipher-resolve {
+/* Cipher text animation — lazy-loading fade effect */
+.cipher-char {
+  opacity: 0.35;
+  transition: opacity 400ms ease-out, color 400ms ease-out, text-shadow 400ms ease-out;
+}
+
+.cipher-char.cipher-resolved {
+  opacity: 1;
+  color: #5eead4;
+  text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
+  animation: cipher-glow-fade 600ms ease-out forwards;
+}
+
+@keyframes cipher-glow-fade {
   0% {
     color: #5eead4;
     text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
@@ -58,15 +70,14 @@ body {
   }
 }
 
-.cipher-resolved {
-  animation: cipher-resolve 400ms ease-out;
-}
-
-@keyframes cipher-crossfade-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-.cipher-crossfade {
-  animation: cipher-crossfade-in 600ms ease-in-out;
+@media (prefers-reduced-motion: reduce) {
+  .cipher-char {
+    transition: none;
+    opacity: 1;
+  }
+  .cipher-char.cipher-resolved {
+    animation: none;
+    color: inherit;
+    text-shadow: none;
+  }
 }

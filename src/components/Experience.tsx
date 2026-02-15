@@ -23,12 +23,15 @@ export default function Experience() {
       className="scroll-mt-24 border-t border-slate-800/30 py-16 md:py-24"
       aria-label={t('experience.ariaLabel')}
     >
-      <SectionHeader title={<CipherText>{t('experience.heading')}</CipherText>} className="mb-12" />
+      <SectionHeader
+        title={<CipherText>{t('experience.heading')}</CipherText>}
+        className="mb-12"
+      />
       <ol className="space-y-12">
         {jobs.map((job, index) => {
           const meta = experienceEntries[index];
           return (
-            <li key={`${job.company}-${job.dates}`}>
+            <li key={index}>
               <div className="group relative grid grid-cols-1 gap-2 transition-all sm:grid-cols-12 sm:gap-6">
                 <header
                   className="pt-1 text-xs font-semibold uppercase tracking-wide text-text-muted sm:col-span-3"
@@ -46,7 +49,8 @@ export default function Experience() {
                       aria-label={`${job.title} at ${job.company} ${t('experience.opensInNewTab')}`}
                     >
                       <span>
-                        <CipherText>{job.title}</CipherText> &middot; <CipherText>{job.company}</CipherText>
+                        <CipherText>{job.title}</CipherText> &middot;{' '}
+                        <CipherText>{job.company}</CipherText>
                       </span>
                       <ArrowOutwardIcon className="ms-1 inline-block h-4 w-4 shrink-0 translate-y-px transition-transform group-hover/link:-translate-y-1 group-hover/link:translate-x-1 rtl:group-hover/link:-translate-x-1" />
                     </a>
