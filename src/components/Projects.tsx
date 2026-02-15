@@ -2,6 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
+import CipherText from '@/components/CipherText';
 import { ArrowOutwardIcon, FolderIcon, LayersIcon } from '@/components/icons';
 import { projectEntries } from '@/data/projects';
 
@@ -24,7 +25,7 @@ export default function Projects() {
       className="scroll-mt-24 border-t border-slate-800/30 py-16 md:py-24"
       aria-label={t('projects.ariaLabel')}
     >
-      <SectionHeader title={t('projects.heading')} className="mb-12" />
+      <SectionHeader title={<CipherText>{t('projects.heading')}</CipherText>} className="mb-12" />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
         {items.map((project, index) => {
           const meta = projectEntries[index];
@@ -45,11 +46,11 @@ export default function Projects() {
                   rel="noreferrer noopener"
                   aria-label={`${project.title} ${t('projects.opensInNewTab')}`}
                 >
-                  {project.title}
+                  <CipherText>{project.title}</CipherText>
                 </a>
               </h3>
               <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">
-                {project.description}
+                <CipherText>{project.description}</CipherText>
               </p>
               <ul
                 className="mt-auto flex flex-wrap gap-x-4 gap-y-2"

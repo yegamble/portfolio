@@ -45,3 +45,28 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+/* Cipher text animation */
+@keyframes cipher-resolve {
+  0% {
+    color: #5eead4;
+    text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
+  }
+  100% {
+    color: inherit;
+    text-shadow: none;
+  }
+}
+
+.cipher-resolved {
+  animation: cipher-resolve 400ms ease-out;
+}
+
+@keyframes cipher-crossfade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.cipher-crossfade {
+  animation: cipher-crossfade-in 600ms ease-in-out;
+}

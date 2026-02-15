@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
+
 interface SectionHeaderProps {
-  title: string;
+  title: ReactNode;
   className?: string;
 }
 
