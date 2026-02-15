@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
 import LanguageToggle from '@/components/LanguageToggle';
 import CipherText from '@/components/CipherText';
+import ProfilePicture from '@/components/ProfilePicture';
 
 export default function ScrollHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -86,6 +87,7 @@ export default function ScrollHeader() {
 
       {/* Hero Section — large name + tagline, scrolls with content */}
       <section className="mx-auto flex w-full max-w-3xl flex-col justify-center px-6 pb-16 pt-16 md:pb-24 md:pt-24 lg:px-8">
+        <ProfilePicture className="mb-8" />
         <div ref={sentinelRef}>
           <p className="mb-2 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
             <CipherText>{t('hero.name')}</CipherText>
