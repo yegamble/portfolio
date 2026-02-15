@@ -32,16 +32,16 @@ describe('ScrollHeader', () => {
     it('should render the large name in the hero area', () => {
       render(<ScrollHeader />);
       const heroName = screen.getByText('Yosef Gamble', {
-        selector: 'section p',
+        selector: 'section p span',
       });
       expect(heroName).toBeInTheDocument();
-      expect(heroName.className).toContain('text-3xl');
+      expect(heroName.closest('p')!.className).toContain('text-3xl');
     });
 
     it('should render the job title in the hero area', () => {
       render(<ScrollHeader />);
       const title = screen.getByText('Senior Full-Stack Engineer', {
-        selector: 'section p',
+        selector: 'section p span',
       });
       expect(title).toBeInTheDocument();
     });
@@ -75,17 +75,17 @@ describe('ScrollHeader', () => {
     it('should render the hero name with bold tracking-tight styling', () => {
       render(<ScrollHeader />);
       const heroName = screen.getByText('Yosef Gamble', {
-        selector: 'section p',
+        selector: 'section p span',
       });
-      expect(heroName).toHaveClass('font-bold', 'tracking-tight');
+      expect(heroName.closest('p')).toHaveClass('font-bold', 'tracking-tight');
     });
 
     it('should render the job title with uppercase tracking-widest styling', () => {
       render(<ScrollHeader />);
       const title = screen.getByText('Senior Full-Stack Engineer', {
-        selector: 'section p',
+        selector: 'section p span',
       });
-      expect(title).toHaveClass('uppercase', 'tracking-widest');
+      expect(title.closest('p')).toHaveClass('uppercase', 'tracking-widest');
     });
   });
 

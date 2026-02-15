@@ -2,6 +2,7 @@
 
 import { Trans, useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
+import ScrambledText from '@/components/ScrambledText';
 
 export default function About() {
   const { t } = useTranslation();
@@ -14,7 +15,9 @@ export default function About() {
     >
       <SectionHeader title={t('about.heading')} className="mb-8 md:mb-10" />
       <div className="space-y-6 text-lg leading-relaxed text-text-secondary">
-        <p>{t('about.p1')}</p>
+        <p>
+          <ScrambledText>{t('about.p1')}</ScrambledText>
+        </p>
         <p>
           <Trans
             i18nKey="about.p2"
@@ -29,7 +32,9 @@ export default function About() {
             ]}
           />
         </p>
-        <p>{t('about.p3')}</p>
+        <p>
+          <ScrambledText>{t('about.p3')}</ScrambledText>
+        </p>
       </div>
     </section>
   );

@@ -2,6 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
+import ScrambledText from '@/components/ScrambledText';
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -15,25 +16,25 @@ export default function Footer() {
         className="mb-8 justify-center"
       />
       <p className="mx-auto max-w-md">
-        {t('footer.codedIn')}{' '}
+        <ScrambledText>{t('footer.codedIn')}</ScrambledText>{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://code.visualstudio.com/"
           target="_blank"
           rel="noreferrer noopener"
         >
-          {t('footer.vscode')}
+          <ScrambledText>{t('footer.vscode')}</ScrambledText>
         </a>
-        . {t('footer.builtWith')}{' '}
+        . <ScrambledText>{t('footer.builtWith')}</ScrambledText>{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://tailwindcss.com/"
           target="_blank"
           rel="noreferrer noopener"
         >
-          {t('footer.tailwind')}
+          <ScrambledText>{t('footer.tailwind')}</ScrambledText>
         </a>
-        {' '}{t('footer.and')}{' '}
+        {' '}<ScrambledText>{t('footer.and')}</ScrambledText>{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://fonts.google.com/specimen/Inter"
@@ -42,7 +43,7 @@ export default function Footer() {
         >
           Inter
         </a>
-        {' '}{t('footer.font')}.
+        {' '}<ScrambledText>{t('footer.font')}</ScrambledText>.
       </p>
     </footer>
   );

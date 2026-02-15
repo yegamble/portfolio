@@ -3,6 +3,7 @@
 import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
 import TechTag from '@/components/TechTag';
+import ScrambledText from '@/components/ScrambledText';
 import { ArrowOutwardIcon, ArrowRightIcon } from '@/components/icons';
 
 interface ExperienceItem {
@@ -56,7 +57,7 @@ export default function Experience() {
                   className="pt-1 text-xs font-semibold uppercase tracking-wide text-text-muted sm:col-span-3"
                   aria-label={job.dates}
                 >
-                  {job.dates}
+                  <ScrambledText>{job.dates}</ScrambledText>
                 </header>
                 <div className="sm:col-span-9">
                   <h3 className="text-lg font-medium leading-snug text-text-primary">
@@ -68,13 +69,13 @@ export default function Experience() {
                       aria-label={`${job.title} at ${job.company} ${t('experience.opensInNewTab')}`}
                     >
                       <span>
-                        {job.title} &middot; {job.company}
+                        <ScrambledText>{`${job.title} \u00B7 ${job.company}`}</ScrambledText>
                       </span>
                       <ArrowOutwardIcon className="ms-1 inline-block h-4 w-4 shrink-0 translate-y-px transition-transform group-hover/link:-translate-y-1 group-hover/link:translate-x-1 rtl:group-hover/link:-translate-x-1" />
                     </a>
                   </h3>
                   <p className="mt-2 text-base leading-relaxed text-text-secondary">
-                    {job.description}
+                    <ScrambledText>{job.description}</ScrambledText>
                   </p>
                   <ul
                     className="mt-4 flex flex-wrap gap-2"
@@ -97,7 +98,7 @@ export default function Experience() {
           aria-label={t('experience.viewResume')}
         >
           <span className="border-b border-transparent pb-px transition-all group-hover:border-primary">
-            {t('experience.viewResume')}
+            <ScrambledText>{t('experience.viewResume')}</ScrambledText>
           </span>
           <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
         </a>

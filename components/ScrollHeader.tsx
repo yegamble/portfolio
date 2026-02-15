@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
 import LanguageToggle from '@/components/LanguageToggle';
+import ScrambledText from '@/components/ScrambledText';
 
 export default function ScrollHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -53,11 +54,11 @@ export default function ScrollHeader() {
               href="/"
               tabIndex={isScrolled ? 0 : -1}
             >
-              {t('hero.name')}
+              <ScrambledText>{t('hero.name')}</ScrambledText>
             </Link>
             <span className="hidden h-4 w-px shrink-0 bg-slate-700 lg:inline-block" />
             <span className="hidden text-xs font-medium uppercase tracking-widest text-text-muted lg:inline-block">
-              {t('hero.title')}
+              <ScrambledText>{t('hero.title')}</ScrambledText>
             </span>
           </div>
 
@@ -71,7 +72,7 @@ export default function ScrollHeader() {
                       className="text-xs font-bold uppercase tracking-widest text-text-muted transition-colors hover:text-primary"
                       href={`#${key}`}
                     >
-                      {t(`nav.${key}`)}
+                      <ScrambledText>{t(`nav.${key}`)}</ScrambledText>
                     </a>
                   </li>
                 ))}
@@ -87,14 +88,14 @@ export default function ScrollHeader() {
       <section className="mx-auto flex w-full max-w-3xl flex-col justify-center px-6 pb-16 pt-16 md:pb-24 md:pt-24 lg:px-8">
         <div ref={sentinelRef}>
           <p className="mb-2 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            {t('hero.name')}
+            <ScrambledText>{t('hero.name')}</ScrambledText>
           </p>
           <p className="mb-8 text-sm font-medium uppercase tracking-widest text-text-muted">
-            {t('hero.title')}
+            <ScrambledText>{t('hero.title')}</ScrambledText>
           </p>
         </div>
         <h1 className="mb-8 text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
-          {t('hero.tagline')}
+          <ScrambledText>{t('hero.tagline')}</ScrambledText>
         </h1>
         <div className="h-1 w-24 rounded-full bg-primary" />
       </section>

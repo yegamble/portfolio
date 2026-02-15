@@ -39,8 +39,8 @@ describe('i18n Integration - English Mode', () => {
 
   it('should render hero content in English', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('Yosef Gamble', { selector: 'section p' })).toBeInTheDocument();
-    expect(screen.getByText('Senior Full-Stack Engineer', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText('Yosef Gamble', { selector: 'section p span' })).toBeInTheDocument();
+    expect(screen.getByText('Senior Full-Stack Engineer', { selector: 'section p span' })).toBeInTheDocument();
     const h1 = screen.getByRole('heading', { level: 1 });
     expect(h1).toHaveTextContent(/NYC based/);
   });
@@ -93,12 +93,12 @@ describe('i18n Integration - Hebrew Mode', () => {
 
   it('should render hero name in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('יוסף גמבל', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText('יוסף גמבל', { selector: 'section p span' })).toBeInTheDocument();
   });
 
   it('should render hero title in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('מהנדס פול סטק בכיר', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText('מהנדס פול סטק בכיר', { selector: 'section p span' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Hebrew', () => {

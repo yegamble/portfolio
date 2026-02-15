@@ -47,13 +47,15 @@ describe('SectionHeader', () => {
   });
 
   it('should render different titles correctly', () => {
-    const { rerender } = render(<SectionHeader title="About" />);
+    const { rerender, unmount } = render(<SectionHeader title="About" />);
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('About');
+    unmount();
 
-    rerender(<SectionHeader title="Experience" />);
+    const { rerender: rerender2, unmount: unmount2 } = render(<SectionHeader title="Experience" />);
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Experience');
+    unmount2();
 
-    rerender(<SectionHeader title="Projects" />);
+    render(<SectionHeader title="Projects" />);
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Projects');
   });
 

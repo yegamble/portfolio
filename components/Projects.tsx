@@ -2,6 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
+import ScrambledText from '@/components/ScrambledText';
 import { ArrowOutwardIcon, FolderIcon, LayersIcon } from '@/components/icons';
 
 const projectsMeta: { url: string; technologies: string[]; icon: React.ReactNode }[] = [
@@ -52,11 +53,11 @@ export default function Projects() {
                   rel="noreferrer noopener"
                   aria-label={`${project.title} ${t('projects.opensInNewTab')}`}
                 >
-                  {project.title}
+                  <ScrambledText>{project.title}</ScrambledText>
                 </a>
               </h3>
               <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">
-                {project.description}
+                <ScrambledText>{project.description}</ScrambledText>
               </p>
               <ul
                 className="mt-auto flex flex-wrap gap-x-4 gap-y-2"
