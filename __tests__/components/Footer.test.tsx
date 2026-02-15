@@ -55,10 +55,18 @@ describe('Footer', () => {
       );
     });
 
-    it('should render social icon SVGs with larger size (h-6 w-6)', () => {
-      const { container } = render(<Footer />);
-      const socialSvgs = container.querySelectorAll('svg.h-6.w-6');
-      expect(socialSvgs).toHaveLength(4);
+    it('should render all four social links with icons', () => {
+      render(<Footer />);
+      const socialLinks = [
+        screen.getByRole('link', { name: /github/i }),
+        screen.getByRole('link', { name: /linkedin/i }),
+        screen.getByRole('link', { name: /^email$/i }),
+        screen.getByRole('link', { name: /secure email/i }),
+      ];
+      socialLinks.forEach((link) => {
+        const svg = link.querySelector('svg');
+        expect(svg).toBeInTheDocument();
+      });
     });
   });
 

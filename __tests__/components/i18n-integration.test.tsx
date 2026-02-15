@@ -1,5 +1,6 @@
-import { render, screen, within, fireEvent, act } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import i18n from '@/lib/i18n';
 import ScrollHeader from '@/components/ScrollHeader';
 import About from '@/components/About';
@@ -170,10 +171,9 @@ describe('i18n Integration - Language Toggle Flow', () => {
     expect(within(nav).getByText('About')).toBeInTheDocument();
 
     // Toggle to Hebrew
+    const user = userEvent.setup();
     const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await act(async () => {
-      fireEvent.click(toggleBtn);
-    });
+    await user.click(toggleBtn);
 
     // Verify Hebrew
     expect(within(nav).getByText('אודות')).toBeInTheDocument();
@@ -182,13 +182,12 @@ describe('i18n Integration - Language Toggle Flow', () => {
   });
 
   it('should toggle back to English from Hebrew', async () => {
+    const user = userEvent.setup();
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
 
     const toggleBtn = screen.getByRole('button', { name: /עבור לאנגלית/i });
-    await act(async () => {
-      fireEvent.click(toggleBtn);
-    });
+    await user.click(toggleBtn);
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     expect(within(nav).getByText('About')).toBeInTheDocument();
@@ -203,9 +202,7 @@ describe('i18n Integration - Language Toggle Flow', () => {
 describe('i18n Regression - Structural integrity across languages', () => {
   it('should preserve anchor hrefs when switching to Hebrew', async () => {
     render(<ScrollHeader />);
-    await act(async () => {
-      await i18n.changeLanguage('he');
-    });
+    await i18n.changeLanguage('he');
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     const links = within(nav).getAllByRole('link');
     expect(links[0]).toHaveAttribute('href', '#about');
@@ -284,8 +281,7 @@ describe('i18n Regression - Structural integrity across languages', () => {
     await i18n.changeLanguage('he');
     render(<About />);
     const section = screen.getByRole('region', { name: 'אודותיי' });
-    const contentDiv = section.querySelector('.space-y-6');
-    const paragraphs = contentDiv!.querySelectorAll('p');
+    const paragraphs = section.querySelectorAll('p');
     expect(paragraphs).toHaveLength(3);
   });
 

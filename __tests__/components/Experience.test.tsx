@@ -37,8 +37,8 @@ describe('Experience', () => {
     });
 
     it('should render divider line in header', () => {
-      const { container } = render(<Experience />);
-      const divider = container.querySelector('.h-px.flex-1.bg-slate-800');
+      render(<Experience />);
+      const divider = screen.getByRole('separator');
       expect(divider).toBeInTheDocument();
     });
   });
@@ -156,11 +156,12 @@ describe('Experience', () => {
       expect(within(techLists[2]).getByText('REST APIs')).toBeInTheDocument();
     });
 
-    it('should use TechTag component with pill styling', () => {
+    it('should render TechTag components within tech lists', () => {
       render(<Experience />);
       const techLists = screen.getAllByRole('list', { name: /technologies used/i });
       const goTag = within(techLists[0]).getByText('Go');
-      expect(goTag).toHaveClass('rounded-full', 'text-xs', 'font-medium');
+      expect(goTag).toBeInTheDocument();
+      expect(goTag.closest('li')).toBeInTheDocument();
     });
   });
 

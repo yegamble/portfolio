@@ -180,7 +180,6 @@ describe('Scroll Header — Responsive Layout', () => {
 
         // Scroll partway so hero text would be behind the header
         cy.scrollTo(0, 100);
-        // eslint-disable-next-line cypress/no-unnecessary-waiting
         cy.wait(100);
         cy.get('header').should('not.have.css', 'background-color', 'rgba(0, 0, 0, 0)');
       });

@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import i18n from '@/lib/i18n';
 import LanguageToggle from '@/components/LanguageToggle';
 
@@ -35,16 +36,18 @@ describe('LanguageToggle', () => {
   });
 
   describe('Language switching', () => {
-    it('should switch to Hebrew when clicked in English mode', () => {
+    it('should switch to Hebrew when clicked in English mode', async () => {
+      const user = userEvent.setup();
       render(<LanguageToggle />);
-      fireEvent.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button'));
       expect(i18n.language).toBe('he');
     });
 
     it('should switch back to English when clicked in Hebrew mode', async () => {
+      const user = userEvent.setup();
       await i18n.changeLanguage('he');
       render(<LanguageToggle />);
-      fireEvent.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button'));
       expect(i18n.language).toBe('en');
     });
 

@@ -4,30 +4,7 @@ import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
 import TechTag from '@/components/TechTag';
 import { ArrowOutwardIcon, ArrowRightIcon } from '@/components/icons';
-
-interface ExperienceItem {
-  dates: string;
-  title: string;
-  company: string;
-  companyUrl: string;
-  description: string;
-  technologies: string[];
-}
-
-const experiencesMeta: Pick<ExperienceItem, 'companyUrl' | 'technologies'>[] = [
-  {
-    companyUrl: 'https://github.com/yegamble',
-    technologies: ['Go', 'ActivityPub', 'Docker', 'PostgreSQL', 'Redis', 'Cloudflare'],
-  },
-  {
-    companyUrl: 'https://www.realestate.co.nz',
-    technologies: ['AWS Lambda', 'CDK', 'EmberJS', 'PHP', 'Braze', 'New Relic'],
-  },
-  {
-    companyUrl: '#',
-    technologies: ['PHP', 'AngularJS', 'Android', 'Digital Ocean', 'REST APIs'],
-  },
-];
+import { experienceEntries } from '@/data/experience';
 
 export default function Experience() {
   const { t } = useTranslation();
@@ -48,7 +25,7 @@ export default function Experience() {
       <SectionHeader title={t('experience.heading')} className="mb-12" />
       <ol className="space-y-12">
         {jobs.map((job, index) => {
-          const meta = experiencesMeta[index];
+          const meta = experienceEntries[index];
           return (
             <li key={`${job.company}-${job.dates}`}>
               <div className="group relative grid grid-cols-1 gap-2 transition-all sm:grid-cols-12 sm:gap-6">

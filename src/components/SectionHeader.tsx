@@ -12,7 +12,7 @@ export default function SectionHeader({
       <h2 className="text-sm font-bold uppercase tracking-widest text-text-primary">
         {title}
       </h2>
-      <div className="h-px flex-1 bg-slate-800" />
+      <div className="h-px flex-1 bg-slate-800" role="separator" />
     </div>
   );
 }

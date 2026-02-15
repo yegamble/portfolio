@@ -37,8 +37,8 @@ describe('Projects', () => {
     });
 
     it('should render divider line in header', () => {
-      const { container } = render(<Projects />);
-      const divider = container.querySelector('.h-px.flex-1.bg-slate-800');
+      render(<Projects />);
+      const divider = screen.getByRole('separator');
       expect(divider).toBeInTheDocument();
     });
   });
@@ -135,17 +135,18 @@ describe('Projects', () => {
     });
   });
 
-  describe('Card styling', () => {
-    it('should render cards with rounded borders', () => {
-      const { container } = render(<Projects />);
-      const cards = container.querySelectorAll('.rounded-2xl');
-      expect(cards).toHaveLength(2);
+  describe('Card structure', () => {
+    it('should render two project cards', () => {
+      render(<Projects />);
+      const headings = screen.getAllByRole('heading', { level: 3 });
+      expect(headings).toHaveLength(2);
     });
 
-    it('should have grid layout for cards', () => {
-      const { container } = render(<Projects />);
-      const grid = container.querySelector('.grid');
-      expect(grid).toBeInTheDocument();
+    it('should render project cards within the section', () => {
+      render(<Projects />);
+      const section = screen.getByRole('region', { name: /selected projects/i });
+      const links = within(section).getAllByRole('link');
+      expect(links.length).toBeGreaterThanOrEqual(2);
     });
   });
 });

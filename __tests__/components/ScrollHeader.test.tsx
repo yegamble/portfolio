@@ -61,15 +61,24 @@ describe('ScrollHeader', () => {
     });
 
     it('should render the teal accent bar', () => {
-      const { container } = render(<ScrollHeader />);
-      const bar = container.querySelector('section .bg-primary');
-      expect(bar).toBeInTheDocument();
+      render(<ScrollHeader />);
+      const heroName = screen.getByText('Yosef Gamble', {
+        selector: 'section p',
+      });
+      // The accent bar is a sibling element within the hero section
+      const heroSection = heroName.closest('section');
+      expect(heroSection).toBeInTheDocument();
+      // Verify accent bar exists as a decorative div within the section
+      const accentBar = heroSection!.querySelector('[class*="bg-primary"]');
+      expect(accentBar).toBeInTheDocument();
     });
 
     it('should render hero section as a section element', () => {
-      const { container } = render(<ScrollHeader />);
-      const sections = container.querySelectorAll('section');
-      expect(sections.length).toBeGreaterThanOrEqual(1);
+      render(<ScrollHeader />);
+      const heroName = screen.getByText('Yosef Gamble', {
+        selector: 'section p',
+      });
+      expect(heroName.closest('section')).toBeInTheDocument();
     });
 
     it('should render the hero name with bold tracking-tight styling', () => {

@@ -16,8 +16,8 @@ describe('SectionHeader', () => {
   });
 
   it('should render the horizontal divider line', () => {
-    const { container } = render(<SectionHeader title="Projects" />);
-    const divider = container.querySelector('.h-px.flex-1.bg-slate-800');
+    render(<SectionHeader title="Projects" />);
+    const divider = screen.getByRole('separator');
     expect(divider).toBeInTheDocument();
   });
 
