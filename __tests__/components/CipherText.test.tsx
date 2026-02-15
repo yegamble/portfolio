@@ -1,8 +1,27 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CipherText from '@/components/CipherText';
 
+const mockResult = { displayChars: [] as string[], isAnimating: false };
+vi.mock('@/hooks/useCipherTransition', () => ({
+  useCipherTransition: (text: string) => {
+    if (mockResult.displayChars.length === 0) {
+      return { displayChars: Array.from(text), isAnimating: false };
+    }
+    return mockResult;
+  },
+}));
+
 describe('CipherText', () => {
+  beforeEach(() => {
+    mockResult.displayChars = [];
+    mockResult.isAnimating = false;
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_CIPHER_TRANSITION;
+  });
+
   describe('rendering', () => {
     it('should render text as plain string when env var is not set', () => {
       render(<CipherText>Hello World</CipherText>);
@@ -30,7 +49,7 @@ describe('CipherText', () => {
       expect(screen.getByText('Screen Reader Text')).toBeInTheDocument();
     });
 
-    it('should not have animation spans when env var is off', () => {
+    it('should not have animation spans when not animating', () => {
       const { container } = render(<CipherText>Hello</CipherText>);
 
       const spans = container.querySelectorAll('span');
@@ -53,69 +72,33 @@ describe('CipherText', () => {
   });
 
   describe('animated rendering path', () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-      delete process.env.NEXT_PUBLIC_CIPHER_TRANSITION;
-    });
-
     it('should render sr-only span with actual text when animating', () => {
-      vi.doMock('@/hooks/useCipherTransition', () => ({
-        useCipherTransition: () => ({
-          displayChars: ['X', 'Y', 'Z', 'l', 'o'],
-          isAnimating: true,
-        }),
-      }));
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
 
-      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
-
-      const { default: MockedCipherText } =
-        require('@/components/CipherText') as typeof import('@/components/CipherText');
-
-      const { container } = render(<MockedCipherText>Hello</MockedCipherText>);
+      const { container } = render(<CipherText>Hello</CipherText>);
 
       const srOnly = container.querySelector('.sr-only');
       expect(srOnly).toBeInTheDocument();
       expect(srOnly).toHaveTextContent('Hello');
-
-      vi.doUnmock('@/hooks/useCipherTransition');
     });
 
     it('should render aria-hidden span wrapping animation characters', () => {
-      vi.doMock('@/hooks/useCipherTransition', () => ({
-        useCipherTransition: () => ({
-          displayChars: ['X', 'Y', 'Z', 'l', 'o'],
-          isAnimating: true,
-        }),
-      }));
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
 
-      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
-
-      const { default: MockedCipherText } =
-        require('@/components/CipherText') as typeof import('@/components/CipherText');
-
-      const { container } = render(<MockedCipherText>Hello</MockedCipherText>);
+      const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       expect(ariaHidden).toBeInTheDocument();
       expect(ariaHidden?.querySelectorAll('span').length).toBe(5);
-
-      vi.doUnmock('@/hooks/useCipherTransition');
     });
 
     it('should apply cipher-resolved class to resolved characters', () => {
-      vi.doMock('@/hooks/useCipherTransition', () => ({
-        useCipherTransition: () => ({
-          displayChars: ['H', 'X', 'l', 'l', 'o'],
-          isAnimating: true,
-        }),
-      }));
+      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
+      mockResult.isAnimating = true;
 
-      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
-
-      const { default: MockedCipherText } =
-        require('@/components/CipherText') as typeof import('@/components/CipherText');
-
-      const { container } = render(<MockedCipherText>Hello</MockedCipherText>);
+      const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       const charSpans = ariaHidden?.querySelectorAll('span');
@@ -123,8 +106,6 @@ describe('CipherText', () => {
       expect(charSpans?.[0]).toHaveClass('cipher-resolved');
       expect(charSpans?.[1]).not.toHaveClass('cipher-resolved');
       expect(charSpans?.[2]).toHaveClass('cipher-resolved');
-
-      vi.doUnmock('@/hooks/useCipherTransition');
     });
   });
 });
