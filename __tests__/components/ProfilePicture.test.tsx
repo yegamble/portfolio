@@ -16,10 +16,10 @@ describe('ProfilePicture', () => {
       expect(img).toHaveAttribute('src', expect.stringContaining('profile.jpg'));
     });
 
-    it('should render with priority loading (no lazy loading)', () => {
+    it('should render with lazy loading', () => {
       render(<ProfilePicture />);
       const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
-      expect(img).not.toHaveAttribute('loading', 'lazy');
+      expect(img).toHaveAttribute('loading', 'lazy');
     });
   });
 
@@ -29,6 +29,13 @@ describe('ProfilePicture', () => {
       const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
       const circleContainer = img.closest('.rounded-full');
       expect(circleContainer).toBeInTheDocument();
+    });
+
+    it('should render with bg-slate-800 placeholder background', () => {
+      render(<ProfilePicture />);
+      const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
+      const container = img.closest('.bg-slate-800');
+      expect(container).toBeInTheDocument();
     });
 
     it('should render with a primary ring border', () => {
