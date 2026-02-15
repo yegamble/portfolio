@@ -7,6 +7,9 @@ const mockObserve = vi.fn();
 const mockDisconnect = vi.fn();
 
 beforeEach(() => {
+  mockObserve.mockClear();
+  mockDisconnect.mockClear();
+
   window.IntersectionObserver = vi.fn(function (
     this: IntersectionObserver,
     callback: IntersectionObserverCallback
@@ -50,10 +53,39 @@ describe('ScrollHeader', () => {
       expect(heading).toHaveTextContent(/pixel-perfect digital experiences/i);
     });
 
+    it('should mention Go, TypeScript, and AWS in tagline', () => {
+      render(<ScrollHeader />);
+      const heading = screen.getByRole('heading', { level: 1 });
+      expect(heading).toHaveTextContent(/Go, TypeScript/);
+      expect(heading).toHaveTextContent(/AWS/);
+    });
+
     it('should render the teal accent bar', () => {
       const { container } = render(<ScrollHeader />);
       const bar = container.querySelector('section .bg-primary');
       expect(bar).toBeInTheDocument();
+    });
+
+    it('should render hero section as a section element', () => {
+      const { container } = render(<ScrollHeader />);
+      const sections = container.querySelectorAll('section');
+      expect(sections.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should render the hero name with bold tracking-tight styling', () => {
+      render(<ScrollHeader />);
+      const heroName = screen.getByText('Yosef Gamble', {
+        selector: 'section p',
+      });
+      expect(heroName).toHaveClass('font-bold', 'tracking-tight');
+    });
+
+    it('should render the job title with uppercase tracking-widest styling', () => {
+      render(<ScrollHeader />);
+      const title = screen.getByText('Senior Full-Stack Engineer', {
+        selector: 'section p',
+      });
+      expect(title).toHaveClass('uppercase', 'tracking-widest');
     });
   });
 
@@ -68,6 +100,32 @@ describe('ScrollHeader', () => {
       expect(within(nav).getByText(/projects/i)).toBeInTheDocument();
     });
 
+    it('should render navigation links with correct href anchors', () => {
+      render(<ScrollHeader />);
+      const nav = screen.getByRole('navigation', { name: /main navigation/i });
+      const links = within(nav).getAllByRole('link');
+      expect(links[0]).toHaveAttribute('href', '#about');
+      expect(links[1]).toHaveAttribute('href', '#experience');
+      expect(links[2]).toHaveAttribute('href', '#projects');
+    });
+
+    it('should render nav links with uppercase tracking-widest styling', () => {
+      render(<ScrollHeader />);
+      const nav = screen.getByRole('navigation', { name: /main navigation/i });
+      const links = within(nav).getAllByRole('link');
+      links.forEach((link) => {
+        expect(link).toHaveClass('uppercase', 'tracking-widest', 'text-xs');
+      });
+    });
+
+    it('should have a navigation element with aria-label', () => {
+      render(<ScrollHeader />);
+      const nav = screen.getByRole('navigation', { name: /main navigation/i });
+      expect(nav).toBeInTheDocument();
+    });
+  });
+
+  describe('Social links via SocialLinks component', () => {
     it('should render GitHub social link', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /github/i });
@@ -92,6 +150,14 @@ describe('ScrollHeader', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /secure email/i });
       expect(link).toHaveAttribute('href', 'mailto:yosef.gamble@protonmail.com');
+    });
+
+    it('should render social links with sr-only labels', () => {
+      render(<ScrollHeader />);
+      expect(screen.getByText('GitHub')).toHaveClass('sr-only');
+      expect(screen.getByText('LinkedIn')).toHaveClass('sr-only');
+      expect(screen.getByText('Email')).toHaveClass('sr-only');
+      expect(screen.getByText('Secure email')).toHaveClass('sr-only');
     });
   });
 
@@ -118,6 +184,31 @@ describe('ScrollHeader', () => {
       expect(navNameContainer).toHaveAttribute('aria-hidden', 'false');
     });
 
+    it('should toggle back to hidden when scrolling back to top', () => {
+      render(<ScrollHeader />);
+
+      act(() => {
+        observerCallback(
+          [{ isIntersecting: false } as IntersectionObserverEntry],
+          {} as IntersectionObserver
+        );
+      });
+
+      const header = screen.getByRole('banner');
+      let navNameContainer = header.querySelector('[aria-hidden]');
+      expect(navNameContainer).toHaveAttribute('aria-hidden', 'false');
+
+      act(() => {
+        observerCallback(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          {} as IntersectionObserver
+        );
+      });
+
+      navNameContainer = header.querySelector('[aria-hidden]');
+      expect(navNameContainer).toHaveAttribute('aria-hidden', 'true');
+    });
+
     it('should make nav name link tabbable only when scrolled', () => {
       render(<ScrollHeader />);
       const navNameLink = screen.getByRole('link', { name: /yosef gamble/i, hidden: true });
@@ -133,6 +224,64 @@ describe('ScrollHeader', () => {
       expect(navNameLink).toHaveAttribute('tabIndex', '0');
     });
 
+    it('should apply pointer-events-none when not scrolled', () => {
+      render(<ScrollHeader />);
+      const header = screen.getByRole('banner');
+      const navNameContainer = header.querySelector('[aria-hidden]');
+      expect(navNameContainer?.className).toContain('pointer-events-none');
+    });
+
+    it('should remove pointer-events-none when scrolled', () => {
+      render(<ScrollHeader />);
+
+      act(() => {
+        observerCallback(
+          [{ isIntersecting: false } as IntersectionObserverEntry],
+          {} as IntersectionObserver
+        );
+      });
+
+      const header = screen.getByRole('banner');
+      const navNameContainer = header.querySelector('[aria-hidden]');
+      expect(navNameContainer?.className).not.toContain('pointer-events-none');
+    });
+
+    it('should apply backdrop-blur when scrolled', () => {
+      render(<ScrollHeader />);
+
+      act(() => {
+        observerCallback(
+          [{ isIntersecting: false } as IntersectionObserverEntry],
+          {} as IntersectionObserver
+        );
+      });
+
+      const header = screen.getByRole('banner');
+      expect(header.className).toContain('backdrop-blur-md');
+    });
+
+    it('should apply justify-between when scrolled', () => {
+      render(<ScrollHeader />);
+
+      act(() => {
+        observerCallback(
+          [{ isIntersecting: false } as IntersectionObserverEntry],
+          {} as IntersectionObserver
+        );
+      });
+
+      const header = screen.getByRole('banner');
+      const innerDiv = header.firstElementChild;
+      expect(innerDiv?.className).toContain('justify-between');
+    });
+
+    it('should apply justify-center when not scrolled', () => {
+      render(<ScrollHeader />);
+      const header = screen.getByRole('banner');
+      const innerDiv = header.firstElementChild;
+      expect(innerDiv?.className).toContain('justify-center');
+    });
+
     it('should set up IntersectionObserver on mount', () => {
       render(<ScrollHeader />);
       expect(window.IntersectionObserver).toHaveBeenCalledWith(
@@ -146,6 +295,36 @@ describe('ScrollHeader', () => {
       const { unmount } = render(<ScrollHeader />);
       unmount();
       expect(mockDisconnect).toHaveBeenCalled();
+    });
+  });
+
+  describe('Sticky header', () => {
+    it('should render a header element', () => {
+      render(<ScrollHeader />);
+      expect(screen.getByRole('banner')).toBeInTheDocument();
+    });
+
+    it('should have sticky positioning', () => {
+      render(<ScrollHeader />);
+      const header = screen.getByRole('banner');
+      expect(header).toHaveClass('sticky', 'top-0', 'z-50');
+    });
+
+    it('should display the name "Yosef Gamble" in the nav area', () => {
+      render(<ScrollHeader />);
+      const navNameLink = screen.getByRole('link', {
+        name: /yosef gamble/i,
+        hidden: true,
+      });
+      expect(navNameLink).toHaveAttribute('href', '/');
+    });
+  });
+
+  describe('Motion preference', () => {
+    it('should include motion-reduce duration overrides', () => {
+      render(<ScrollHeader />);
+      const header = screen.getByRole('banner');
+      expect(header.className).toContain('motion-reduce:duration-0');
     });
   });
 });

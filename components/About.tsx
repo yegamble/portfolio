@@ -1,3 +1,5 @@
+import SectionHeader from '@/components/SectionHeader';
+
 export default function About() {
   return (
     <section
@@ -5,12 +7,7 @@ export default function About() {
       className="scroll-mt-24 border-t border-slate-800/30 py-16 md:py-24"
       aria-label="About me"
     >
-      <div className="mb-8 flex items-center gap-4 md:mb-10">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-text-primary">
-          About
-        </h2>
-        <div className="h-px flex-1 bg-slate-800" />
-      </div>
+      <SectionHeader title="About" className="mb-8 md:mb-10" />
       <div className="space-y-6 text-lg leading-relaxed text-text-secondary">
         <p>
           I started writing code at Central Washington University in 2013,
