@@ -22,6 +22,7 @@ export function useCipherTransition(text: string): CipherTransitionResult {
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTextRef = useRef(text);
   const rafIdRef = useRef<number | null>(null);
+  const timeoutIdRef = useRef<number | null>(null);
   const resolveTimesRef = useRef<number[]>([]);
 
   useEffect(() => {
@@ -40,6 +41,10 @@ export function useCipherTransition(text: string): CipherTransitionResult {
         setIsAnimating(false);
       });
       return () => {
+        if (timeoutIdRef.current !== null) {
+          clearTimeout(timeoutIdRef.current);
+          timeoutIdRef.current = null;
+        }
         if (rafIdRef.current !== null) {
           cancelAnimationFrame(rafIdRef.current);
           rafIdRef.current = null;
@@ -69,8 +74,18 @@ export function useCipherTransition(text: string): CipherTransitionResult {
 
     let startTime: number | null = null;
     const updateInterval = 60;
-    let lastUpdate = 0;
+    let lastUpdateTime = 0;
     let animStarted = false;
+
+    const scheduleNextUpdate = (currentTime: number) => {
+      const delay = Math.max(0, updateInterval - (currentTime - lastUpdateTime));
+      if (timeoutIdRef.current !== null) {
+        clearTimeout(timeoutIdRef.current);
+      }
+      timeoutIdRef.current = window.setTimeout(() => {
+        rafIdRef.current = requestAnimationFrame(animate);
+      }, delay);
+    };
 
     const animate = (currentTime: number) => {
       if (startTime === null) {
@@ -81,12 +96,6 @@ export function useCipherTransition(text: string): CipherTransitionResult {
         setIsAnimating(true);
       }
       const elapsed = currentTime - startTime;
-
-      if (elapsed - lastUpdate < updateInterval) {
-        rafIdRef.current = requestAnimationFrame(animate);
-        return;
-      }
-      lastUpdate = elapsed;
 
       const chars: string[] = [];
       let allResolved = true;
@@ -114,13 +123,18 @@ export function useCipherTransition(text: string): CipherTransitionResult {
         setIsAnimating(false);
         prevTextRef.current = text;
       } else {
-        rafIdRef.current = requestAnimationFrame(animate);
+        lastUpdateTime = currentTime;
+        scheduleNextUpdate(currentTime);
       }
     };
 
     rafIdRef.current = requestAnimationFrame(animate);
 
     return () => {
+      if (timeoutIdRef.current !== null) {
+        clearTimeout(timeoutIdRef.current);
+        timeoutIdRef.current = null;
+      }
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;

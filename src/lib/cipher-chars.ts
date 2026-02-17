@@ -20,7 +20,7 @@ const CHARACTER_POOLS: string[][] = [
   Array.from('ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ'),
 ];
 
-const LETTER_REGEX = /\p{L}/u;
+const SINGLE_LETTER_REGEX = /^\p{L}$/u;
 
 /**
  * Returns a random cipher character from a randomly selected script pool.
@@ -38,6 +38,5 @@ export function getRandomCipherChar(): string {
  * Uses Unicode property escapes to detect letters across all scripts.
  */
 export function isScramblable(char: string): boolean {
-  if (Array.from(char).length !== 1) return false;
-  return LETTER_REGEX.test(char);
+  return SINGLE_LETTER_REGEX.test(char);
 }

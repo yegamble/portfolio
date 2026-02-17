@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import Experience from '@/components/Experience';
+import i18n from '@/lib/i18n';
 
 describe('Experience', () => {
   describe('Section structure', () => {
@@ -218,6 +219,73 @@ describe('Experience', () => {
       expect(dateHeaders[0]).toHaveAttribute('aria-label', '2024 — Present');
       expect(dateHeaders[1]).toHaveAttribute('aria-label', '2021 — 2024');
       expect(dateHeaders[2]).toHaveAttribute('aria-label', '2019 — 2024');
+    });
+  });
+
+  describe('Data integrity', () => {
+    it('should skip translation jobs that do not have metadata entries', () => {
+      const original = i18n.getResourceBundle('en', 'translation');
+      const jobs = original.experience.jobs as Array<Record<string, string>>;
+      const withUnknownEntry = [
+        ...jobs,
+        {
+          id: 'unknown-role',
+          dates: '2000 — 2001',
+          title: 'Ghost Role',
+          company: 'Ghost Co',
+          description: 'Should never render without metadata.',
+        },
+      ];
+
+      i18n.addResourceBundle(
+        'en',
+        'translation',
+        {
+          ...original,
+          experience: { ...original.experience, jobs: withUnknownEntry },
+        },
+        false,
+        true
+      );
+
+      try {
+        render(<Experience />);
+        expect(screen.queryByText('Ghost Role')).not.toBeInTheDocument();
+      } finally {
+        i18n.addResourceBundle('en', 'translation', original, false, true);
+      }
+    });
+
+    it('should preserve company URLs when translation order changes', () => {
+      const original = i18n.getResourceBundle('en', 'translation');
+      const jobs = original.experience.jobs as Array<Record<string, string>>;
+      const reordered = [jobs[2], jobs[0], jobs[1]];
+
+      i18n.addResourceBundle(
+        'en',
+        'translation',
+        {
+          ...original,
+          experience: { ...original.experience, jobs: reordered },
+        },
+        false,
+        true
+      );
+
+      try {
+        render(<Experience />);
+        expect(
+          screen.getByRole('link', { name: /full stack engineer at independent/i })
+        ).toHaveAttribute('href', 'https://github.com/yegamble');
+        expect(
+          screen.getByRole('link', { name: /full stack engineer at realestate\.co\.nz/i })
+        ).toHaveAttribute('href', 'https://www.realestate.co.nz');
+        expect(
+          screen.getByRole('link', { name: /software developer at prostock/i })
+        ).toHaveAttribute('href', '#');
+      } finally {
+        i18n.addResourceBundle('en', 'translation', original, false, true);
+      }
     });
   });
 });

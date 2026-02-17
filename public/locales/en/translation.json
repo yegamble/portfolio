@@ -12,33 +12,36 @@
   "about": {
     "heading": "About",
     "ariaLabel": "About me",
-    "p1": "I started writing code at Central Washington University in 2013, where I served as Student Government President and earned the Boeing Scholarship. My path took me across the Pacific to New Zealand \u2014 first for a degree at the University of Auckland, then into the tech industry building software that would reach millions of users.",
+    "p1": "I started writing code at Central Washington University in 2013, where I served as Student Government President and earned the Boeing Scholarship. My path took me across the Pacific to New Zealand — first for a degree at the University of Auckland, then into the tech industry building software that would reach millions of users.",
     "p2_before": "At ",
     "p2_link": "realestate.co.nz",
-    "p2_after": ", I became a key engineer on New Zealand\u2019s most established real estate portal. I shipped industry-first features \u2014 instant price change alerts and transparent price history \u2014 that competitors copied months later. I designed a serverless notification system on AWS Lambda integrated with Braze that delivered listing alerts to every user on the platform, and led company-wide workshops on serverless architecture and observability.",
-    "p3": "Now back in New York, I\u2019m building an open-source video streaming backend in Go \u2014 implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web."
+    "p2_after": ", I became a key engineer on New Zealand’s most established real estate portal. I shipped industry-first features — instant price change alerts and transparent price history — that competitors copied months later. I designed a serverless notification system on AWS Lambda integrated with Braze that delivered listing alerts to every user on the platform, and led company-wide workshops on serverless architecture and observability.",
+    "p3": "Now back in New York, I’m building an open-source video streaming backend in Go — implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web."
   },
   "experience": {
     "heading": "Experience",
     "ariaLabel": "Work experience",
     "techAriaLabel": "Technologies used",
-    "viewResume": "View Full R\u00e9sum\u00e9",
+    "viewResume": "View Full Résumé",
     "opensInNewTab": "(opens in a new tab)",
     "jobs": [
       {
-        "dates": "2024 \u2014 Present",
+        "id": "independent",
+        "dates": "2024 — Present",
         "title": "Full Stack Engineer",
         "company": "Independent",
-        "description": "Building an open-source, PeerTube-compatible video streaming backend in Go with decentralized social networking protocols \u2014 ActivityPub federation and ATProto integration for cross-platform content sharing. Cut bandwidth costs from hundreds of dollars monthly to nearly $0 by integrating Backblaze B2 and Cloudflare CDN via the Bandwidth Alliance. Containerized with Docker, CI/CD via GitHub Actions, PostgreSQL for storage, Redis for caching and rate-limiting."
+        "description": "Building an open-source, PeerTube-compatible video streaming backend in Go with decentralized social networking protocols — ActivityPub federation and ATProto integration for cross-platform content sharing. Cut bandwidth costs from hundreds of dollars monthly to nearly $0 by integrating Backblaze B2 and Cloudflare CDN via the Bandwidth Alliance. Containerized with Docker, CI/CD via GitHub Actions, PostgreSQL for storage, Redis for caching and rate-limiting."
       },
       {
-        "dates": "2021 \u2014 2024",
+        "id": "realestate",
+        "dates": "2021 — 2024",
         "title": "Full Stack Engineer",
         "company": "realestate.co.nz",
-        "description": "Shipped industry-first features for New Zealand\u2019s most established real estate portal \u2014 instant price change alerts and transparent price history that competitors copied months later. Designed and built a serverless notification system on AWS Lambda integrated with Braze, delivering daily and weekly listing alerts platform-wide. Led company-wide workshops on Serverless architecture and New Relic observability. Contributed to the EmberJS frontend rebuild that received positive feedback from agents and users nationally."
+        "description": "Shipped industry-first features for New Zealand’s most established real estate portal — instant price change alerts and transparent price history that competitors copied months later. Designed and built a serverless notification system on AWS Lambda integrated with Braze, delivering daily and weekly listing alerts platform-wide. Led company-wide workshops on Serverless architecture and New Relic observability. Contributed to the EmberJS frontend rebuild that received positive feedback from agents and users nationally."
       },
       {
-        "dates": "2019 \u2014 2024",
+        "id": "prostock",
+        "dates": "2019 — 2024",
         "title": "Software Developer",
         "company": "ProStock",
         "description": "Built the core platform for a warehouse management system saving operators over $250K annually. Developed APIs supporting international order fulfillment for Zoono across NZ, Australia, and Asia. Deployed an Android scanner application for warehouse staff to receive, transfer, and ship products globally. Created an AngularJS portal for clients to track product status and orders in real-time. Migrated infrastructure to Digital Ocean, improving uptime across production environments."
@@ -52,10 +55,12 @@
     "opensInNewTab": "(opens in a new tab)",
     "items": [
       {
+        "id": "project-alpha",
         "title": "Project Alpha",
         "description": "A distributed data processing engine capable of handling petabytes of logs in real-time. Built with Rust and Kafka to ensure high availability."
       },
       {
+        "id": "neon-ui-kit",
         "title": "Neon UI Kit",
         "description": "An open-source React component library focused on accessibility and dark mode aesthetics. 2k+ stars on GitHub."
       }

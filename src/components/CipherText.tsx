@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
 
 interface CipherTextProps {
@@ -19,12 +20,11 @@ const CHAR_STYLE = {
 export default function CipherText({ children }: CipherTextProps) {
   const text = children || '';
   const { displayChars, isAnimating } = useCipherTransition(text);
+  const targetChars = useMemo(() => Array.from(text), [text]);
 
   if (!isAnimating) {
     return <>{text}</>;
   }
-
-  const targetChars = Array.from(text);
 
   return (
     <>
