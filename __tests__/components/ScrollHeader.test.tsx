@@ -60,6 +60,22 @@ describe('ScrollHeader', () => {
       expect(heading).toHaveTextContent(/AWS/);
     });
 
+    it('should render the profile picture in the hero area', () => {
+      render(<ScrollHeader />);
+      const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
+      expect(img).toBeInTheDocument();
+      // Verify it's within the hero section
+      const heroSection = img.closest('section');
+      expect(heroSection).toBeInTheDocument();
+    });
+
+    it('should render the profile picture with circular styling', () => {
+      render(<ScrollHeader />);
+      const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
+      const circleContainer = img.closest('.rounded-full');
+      expect(circleContainer).toBeInTheDocument();
+    });
+
     it('should render the teal accent bar', () => {
       render(<ScrollHeader />);
       const heroName = screen.getByText('Yosef Gamble', {

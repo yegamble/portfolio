@@ -46,6 +46,12 @@ describe('i18n Integration - English Mode', () => {
     expect(h1).toHaveTextContent(/NYC based/);
   });
 
+  it('should render profile picture with English alt text', () => {
+    render(<ScrollHeader />);
+    const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
+    expect(img).toBeInTheDocument();
+  });
+
   it('should render About section heading in English', () => {
     render(<About />);
     const section = screen.getByRole('region', { name: /about me/i });
@@ -106,6 +112,12 @@ describe('i18n Integration - Hebrew Mode', () => {
     render(<ScrollHeader />);
     const h1 = screen.getByRole('heading', { level: 1 });
     expect(h1).toHaveTextContent(/מבוסס בניו יורק/);
+  });
+
+  it('should render profile picture with Hebrew alt text', () => {
+    render(<ScrollHeader />);
+    const img = screen.getByRole('img', { name: /תמונת פרופיל של יוסף גמבל/ });
+    expect(img).toBeInTheDocument();
   });
 
   it('should render About section heading in Hebrew', () => {

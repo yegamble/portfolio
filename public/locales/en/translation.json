@@ -7,7 +7,8 @@
   "hero": {
     "name": "Yosef Gamble",
     "title": "Senior Full-Stack Engineer",
-    "tagline": "NYC based. Go, TypeScript, & AWS focus. Building accessible, pixel-perfect digital experiences."
+    "tagline": "NYC based. Go, TypeScript, & AWS focus. Building accessible, pixel-perfect digital experiences.",
+    "profileAlt": "Yosef Gamble profile photo"
   },
   "about": {
     "heading": "About",
