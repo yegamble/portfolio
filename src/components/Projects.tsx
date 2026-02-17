@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
 import CipherText from '@/components/CipherText';
@@ -11,15 +12,32 @@ const iconMap = {
   layers: <LayersIcon />,
 };
 
+interface ProjectItem {
+  id: string;
+  title: string;
+  description: string;
+}
+
 export default function Projects() {
   const { t } = useTranslation();
 
-  const items = t('projects.items', { returnObjects: true }) as {
-    title: string;
-    description: string;
-  }[];
+  const items = t('projects.items', { returnObjects: true }) as ProjectItem[];
 
-  if (!Array.isArray(items) || items.length === 0) {
+  const metadataById = useMemo(
+    () => new Map(projectEntries.map((entry) => [entry.id, entry])),
+    []
+  );
+
+  const itemsWithMetadata = useMemo(
+    () =>
+      (Array.isArray(items) ? items : []).flatMap((project) => {
+        const meta = metadataById.get(project.id);
+        return meta ? [{ project, meta }] : [];
+      }),
+    [items, metadataById]
+  );
+
+  if (itemsWithMetadata.length === 0) {
     return null;
   }
 
@@ -34,11 +52,10 @@ export default function Projects() {
         className="mb-12"
       />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-        {items.map((project, index) => {
-          const meta = projectEntries[index];
+        {itemsWithMetadata.map(({ project, meta }) => {
           return (
             <div
-              key={project.title}
+              key={project.id}
               className="group relative flex flex-col rounded-2xl border border-border-card bg-bg-card p-8 shadow-xl shadow-black/20 transition-all hover:border-border-card-hover hover:bg-bg-card-hover"
             >
               <div className="mb-6 flex items-start justify-between">

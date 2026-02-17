@@ -15,6 +15,18 @@ interface SocialLinkItem {
   external?: boolean;
 }
 
+function getMailtoHref(envKey: string): string | null {
+  const email = process.env[envKey]?.trim();
+  if (!email) {
+    return null;
+  }
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? `mailto:${email}` : null;
+}
+
+const primaryEmailHref = getMailtoHref('NEXT_PUBLIC_CONTACT_EMAIL');
+const secureEmailHref = getMailtoHref('NEXT_PUBLIC_SECURE_CONTACT_EMAIL');
+
 const socialLinks: SocialLinkItem[] = [
   {
     labelKey: 'social.github',
@@ -28,16 +40,24 @@ const socialLinks: SocialLinkItem[] = [
     icon: LinkedInIcon,
     external: true,
   },
-  {
-    labelKey: 'social.email',
-    href: 'mailto:yegamble@gmail.com',
-    icon: EmailIcon,
-  },
-  {
-    labelKey: 'social.secureEmail',
-    href: 'mailto:yosef.gamble@protonmail.com',
-    icon: SecureEmailIcon,
-  },
+  ...(primaryEmailHref
+    ? [
+        {
+          labelKey: 'social.email',
+          href: primaryEmailHref,
+          icon: EmailIcon,
+        },
+      ]
+    : []),
+  ...(secureEmailHref
+    ? [
+        {
+          labelKey: 'social.secureEmail',
+          href: secureEmailHref,
+          icon: SecureEmailIcon,
+        },
+      ]
+    : []),
 ];
 
 interface SocialLinksProps {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
 import TechTag from '@/components/TechTag';
@@ -7,15 +8,32 @@ import CipherText from '@/components/CipherText';
 import { ArrowOutwardIcon, ArrowRightIcon } from '@/components/icons';
 import { experienceEntries } from '@/data/experience';
 
+interface ExperienceJob {
+  id: string;
+  dates: string;
+  title: string;
+  company: string;
+  description: string;
+}
+
 export default function Experience() {
   const { t } = useTranslation();
 
-  const jobs = t('experience.jobs', { returnObjects: true }) as {
-    dates: string;
-    title: string;
-    company: string;
-    description: string;
-  }[];
+  const jobs = t('experience.jobs', { returnObjects: true }) as ExperienceJob[];
+
+  const metadataById = useMemo(
+    () => new Map(experienceEntries.map((entry) => [entry.id, entry])),
+    []
+  );
+
+  const jobsWithMetadata = useMemo(
+    () =>
+      (Array.isArray(jobs) ? jobs : []).flatMap((job) => {
+        const meta = metadataById.get(job.id);
+        return meta ? [{ job, meta }] : [];
+      }),
+    [jobs, metadataById]
+  );
 
   return (
     <section
@@ -28,10 +46,9 @@ export default function Experience() {
         className="mb-12"
       />
       <ol className="space-y-12">
-        {jobs.map((job, index) => {
-          const meta = experienceEntries[index];
+        {jobsWithMetadata.map(({ job, meta }) => {
           return (
-            <li key={index}>
+            <li key={job.id}>
               <div className="group relative grid grid-cols-1 gap-2 transition-all sm:grid-cols-12 sm:gap-6">
                 <header
                   className="pt-1 text-xs font-semibold uppercase tracking-wide text-text-muted sm:col-span-3"

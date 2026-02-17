@@ -168,4 +168,78 @@ describe('Projects', () => {
       i18n.addResourceBundle('en', 'translation', original, false, true);
     });
   });
+
+  describe('Data integrity', () => {
+    it('should skip translation projects that do not have metadata entries', () => {
+      const original = i18n.getResourceBundle('en', 'translation');
+      const items = original.projects.items as Array<Record<string, string>>;
+      const withUnknownEntry = [
+        ...items,
+        {
+          id: 'unknown-project',
+          title: 'Ghost Project',
+          description: 'Should not render without metadata.',
+        },
+      ];
+
+      i18n.addResourceBundle(
+        'en',
+        'translation',
+        {
+          ...original,
+          projects: { ...original.projects, items: withUnknownEntry },
+        },
+        false,
+        true
+      );
+
+      try {
+        render(<Projects />);
+        expect(screen.queryByText('Ghost Project')).not.toBeInTheDocument();
+      } finally {
+        i18n.addResourceBundle('en', 'translation', original, false, true);
+      }
+    });
+
+    it('should preserve project metadata when translation order changes', () => {
+      const original = i18n.getResourceBundle('en', 'translation');
+      const items = original.projects.items as Array<Record<string, string>>;
+      const reordered = [items[1], items[0]];
+
+      i18n.addResourceBundle(
+        'en',
+        'translation',
+        {
+          ...original,
+          projects: { ...original.projects, items: reordered },
+        },
+        false,
+        true
+      );
+
+      try {
+        render(<Projects />);
+
+        const alphaHeading = screen.getByRole('heading', {
+          level: 3,
+          name: /project alpha/i,
+        });
+        const alphaCard = alphaHeading.closest('div.group') as HTMLElement | null;
+        expect(alphaCard).toBeTruthy();
+        expect(within(alphaCard!).getByText('Rust')).toBeInTheDocument();
+        expect(within(alphaCard!).getByText('Kafka')).toBeInTheDocument();
+
+        const neonHeading = screen.getByRole('heading', {
+          level: 3,
+          name: /neon ui kit/i,
+        });
+        const neonCard = neonHeading.closest('div.group') as HTMLElement | null;
+        expect(neonCard).toBeTruthy();
+        expect(within(neonCard!).getByText('React')).toBeInTheDocument();
+        expect(within(neonCard!).getByText('A11y')).toBeInTheDocument();
+      } finally {
+        i18n.addResourceBundle('en', 'translation', original, false, true);
+      }
+    });
+  });
 });
