@@ -22,7 +22,6 @@ export function useCipherTransition(text: string): CipherTransitionResult {
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTextRef = useRef(text);
   const rafIdRef = useRef<number | null>(null);
-  const timeoutIdRef = useRef<number | null>(null);
   const resolveTimesRef = useRef<number[]>([]);
 
   useEffect(() => {
@@ -41,10 +40,6 @@ export function useCipherTransition(text: string): CipherTransitionResult {
         setIsAnimating(false);
       });
       return () => {
-        if (timeoutIdRef.current !== null) {
-          clearTimeout(timeoutIdRef.current);
-          timeoutIdRef.current = null;
-        }
         if (rafIdRef.current !== null) {
           cancelAnimationFrame(rafIdRef.current);
           rafIdRef.current = null;
@@ -77,64 +72,60 @@ export function useCipherTransition(text: string): CipherTransitionResult {
     let lastUpdateTime = 0;
     let animStarted = false;
 
-    const scheduleNextUpdate = (currentTime: number) => {
-      const delay = Math.max(0, updateInterval - (currentTime - lastUpdateTime));
-      if (timeoutIdRef.current !== null) {
-        clearTimeout(timeoutIdRef.current);
-      }
-      timeoutIdRef.current = window.setTimeout(() => {
-        rafIdRef.current = requestAnimationFrame(animate);
-      }, delay);
-    };
-
     const animate = (currentTime: number) => {
       if (startTime === null) {
         startTime = currentTime;
+        // Initialize lastUpdateTime to allow the first frame to render immediately
+        lastUpdateTime = currentTime - updateInterval;
       }
+
       if (!animStarted) {
         animStarted = true;
         setIsAnimating(true);
       }
-      const elapsed = currentTime - startTime;
 
-      const chars: string[] = [];
-      let allResolved = true;
+      const timeSinceLastUpdate = currentTime - lastUpdateTime;
 
-      for (let i = 0; i < maxLen; i++) {
-        const resolveTime = resolveTimes[i];
-        const targetChar = i < newChars.length ? newChars[i] : '';
+      // Only update the display if the interval has passed
+      if (timeSinceLastUpdate >= updateInterval) {
+        const elapsed = currentTime - startTime;
+        const chars: string[] = [];
+        let allResolved = true;
 
-        if (elapsed >= resolveTime) {
-          chars[i] = targetChar;
-        } else {
-          allResolved = false;
+        for (let i = 0; i < maxLen; i++) {
+          const resolveTime = resolveTimes[i];
+          const targetChar = i < newChars.length ? newChars[i] : '';
 
-          if (targetChar && isScramblable(targetChar)) {
-            chars[i] = getRandomCipherChar();
-          } else {
+          if (elapsed >= resolveTime) {
             chars[i] = targetChar;
+          } else {
+            allResolved = false;
+
+            if (targetChar && isScramblable(targetChar)) {
+              chars[i] = getRandomCipherChar();
+            } else {
+              chars[i] = targetChar;
+            }
           }
         }
-      }
 
-      setDisplayChars(chars);
+        setDisplayChars(chars);
 
-      if (allResolved) {
-        setIsAnimating(false);
-        prevTextRef.current = text;
-      } else {
+        if (allResolved) {
+          setIsAnimating(false);
+          prevTextRef.current = text;
+          return; // Stop the animation loop
+        }
+
         lastUpdateTime = currentTime;
-        scheduleNextUpdate(currentTime);
       }
+
+      rafIdRef.current = requestAnimationFrame(animate);
     };
 
     rafIdRef.current = requestAnimationFrame(animate);
 
     return () => {
-      if (timeoutIdRef.current !== null) {
-        clearTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = null;
-      }
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
