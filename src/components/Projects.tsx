@@ -18,23 +18,20 @@ interface ProjectItem {
   description: string;
 }
 
+const METADATA_BY_ID = new Map(projectEntries.map((entry) => [entry.id, entry]));
+
 export default function Projects() {
   const { t } = useTranslation();
 
   const items = t('projects.items', { returnObjects: true }) as ProjectItem[];
 
-  const metadataById = useMemo(
-    () => new Map(projectEntries.map((entry) => [entry.id, entry])),
-    []
-  );
-
   const itemsWithMetadata = useMemo(
     () =>
       (Array.isArray(items) ? items : []).flatMap((project) => {
-        const meta = metadataById.get(project.id);
+        const meta = METADATA_BY_ID.get(project.id);
         return meta ? [{ project, meta }] : [];
       }),
-    [items, metadataById]
+    [items]
   );
 
   if (itemsWithMetadata.length === 0) {
