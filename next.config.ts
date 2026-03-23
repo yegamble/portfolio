@@ -17,6 +17,14 @@ const contentSecurityPolicy = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  compiler: {
+    removeConsole: {
+      exclude: ['error', 'warn'],
+    },
+  },
+  experimental: {
+    optimizePackageImports: ['react-i18next', 'i18next'],
+  },
   async headers() {
     return [
       {

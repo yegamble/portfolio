@@ -18,6 +18,9 @@ cypress/videos/
 /.next/
 /out/
 
+# cloudflare workers (opennext build output)
+/.open-next/
+
 # production
 /build
 
