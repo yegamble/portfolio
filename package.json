@@ -12,8 +12,8 @@
     "test:watch": "vitest",
     "test:e2e": "cypress run",
     "test:e2e:open": "cypress open",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
+    "deploy": "next build && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "preview": "next build && opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {
     "i18next": "^25.8.7",
