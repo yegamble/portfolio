@@ -11,201 +11,106 @@ import {
   LayersIcon,
 } from '@/components/icons';
 
+const ICONS_CONFIG = [
+  { name: 'GitHubIcon', Component: GitHubIcon, viewBox: '0 0 16 16', defaultClass: 'h-5 w-5' },
+  { name: 'LinkedInIcon', Component: LinkedInIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
+  { name: 'EmailIcon', Component: EmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
+  { name: 'SecureEmailIcon', Component: SecureEmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
+  { name: 'ArrowOutwardIcon', Component: ArrowOutwardIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
+  { name: 'ArrowRightIcon', Component: ArrowRightIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
+  {
+    name: 'FolderIcon',
+    Component: FolderIcon,
+    viewBox: '0 0 24 24',
+    defaultClass: 'h-9 w-9 text-primary/90',
+  },
+  {
+    name: 'LayersIcon',
+    Component: LayersIcon,
+    viewBox: '0 0 24 24',
+    defaultClass: 'h-9 w-9 text-primary/90',
+  },
+] as const;
+
 describe('Icon components', () => {
-  describe('GitHubIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<GitHubIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
+  ICONS_CONFIG.forEach(({ name, Component, viewBox, defaultClass }) => {
+    describe(name, () => {
+      it('should render an SVG element', () => {
+        const { container } = render(<Component />);
+        expect(container.querySelector('svg')).toBeInTheDocument();
+      });
 
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<GitHubIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
+      it('should have aria-hidden attribute', () => {
+        const { container } = render(<Component />);
+        expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+      });
 
-    it('should apply default className', () => {
-      const { container } = render(<GitHubIcon />);
-      expect(container.querySelector('svg')).toHaveClass('h-5', 'w-5');
-    });
+      it('should apply default className', () => {
+        const { container } = render(<Component />);
+        const svg = container.querySelector('svg');
+        defaultClass.split(' ').forEach((cls) => {
+          expect(svg).toHaveClass(cls);
+        });
+      });
 
-    it('should accept custom className', () => {
-      const { container } = render(<GitHubIcon className="h-8 w-8" />);
-      expect(container.querySelector('svg')).toHaveClass('h-8', 'w-8');
-    });
+      it('should accept custom className', () => {
+        const customClass = 'test-class-123';
+        const { container } = render(<Component className={customClass} />);
+        expect(container.querySelector('svg')).toHaveClass(customClass);
+      });
 
-    it('should use correct viewBox for 16x16 icon', () => {
-      const { container } = render(<GitHubIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 16 16');
-    });
-  });
+      it(`should use correct viewBox: ${viewBox}`, () => {
+        const { container } = render(<Component />);
+        expect(container.querySelector('svg')).toHaveAttribute('viewBox', viewBox);
+      });
 
-  describe('LinkedInIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<LinkedInIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<LinkedInIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('should accept custom className', () => {
-      const { container } = render(<LinkedInIcon className="h-6 w-6" />);
-      expect(container.querySelector('svg')).toHaveClass('h-6', 'w-6');
-    });
-
-    it('should use correct viewBox for 24x24 icon', () => {
-      const { container } = render(<LinkedInIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 24 24');
-    });
-  });
-
-  describe('EmailIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<EmailIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<EmailIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('should contain multiple path elements for envelope', () => {
-      const { container } = render(<EmailIcon />);
-      const paths = container.querySelectorAll('path');
-      expect(paths.length).toBe(2);
-    });
-  });
-
-  describe('SecureEmailIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<SecureEmailIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<SecureEmailIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('should contain a path with clip rule for lock icon', () => {
-      const { container } = render(<SecureEmailIcon />);
-      const path = container.querySelector('path[clip-rule]');
-      expect(path).toBeInTheDocument();
-    });
-  });
-
-  describe('ArrowOutwardIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<ArrowOutwardIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<ArrowOutwardIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('should apply default h-4 w-4 className', () => {
-      const { container } = render(<ArrowOutwardIcon />);
-      expect(container.querySelector('svg')).toHaveClass('h-4', 'w-4');
-    });
-
-    it('should accept custom className', () => {
-      const { container } = render(<ArrowOutwardIcon className="h-5 w-5 text-text-muted" />);
-      expect(container.querySelector('svg')).toHaveClass('h-5', 'w-5', 'text-text-muted');
-    });
-  });
-
-  describe('ArrowRightIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<ArrowRightIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<ArrowRightIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('should apply default h-4 w-4 className', () => {
-      const { container } = render(<ArrowRightIcon />);
-      expect(container.querySelector('svg')).toHaveClass('h-4', 'w-4');
-    });
-  });
-
-  describe('FolderIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<FolderIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<FolderIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('should apply default h-9 w-9 className', () => {
-      const { container } = render(<FolderIcon />);
-      expect(container.querySelector('svg')).toHaveClass('h-9', 'w-9');
-    });
-
-    it('should accept custom className', () => {
-      const { container } = render(<FolderIcon className="h-12 w-12" />);
-      expect(container.querySelector('svg')).toHaveClass('h-12', 'w-12');
-    });
-  });
-
-  describe('LayersIcon', () => {
-    it('should render an SVG element', () => {
-      const { container } = render(<LayersIcon />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('should have aria-hidden attribute', () => {
-      const { container } = render(<LayersIcon />);
-      expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('should apply default h-9 w-9 className', () => {
-      const { container } = render(<LayersIcon />);
-      expect(container.querySelector('svg')).toHaveClass('h-9', 'w-9');
-    });
-
-    it('should contain multiple path elements for layers', () => {
-      const { container } = render(<LayersIcon />);
-      const paths = container.querySelectorAll('path');
-      expect(paths.length).toBe(3);
-    });
-  });
-
-  describe('All icons share common behavior', () => {
-    const icons = [
-      { name: 'GitHubIcon', Component: GitHubIcon },
-      { name: 'LinkedInIcon', Component: LinkedInIcon },
-      { name: 'EmailIcon', Component: EmailIcon },
-      { name: 'SecureEmailIcon', Component: SecureEmailIcon },
-      { name: 'ArrowOutwardIcon', Component: ArrowOutwardIcon },
-      { name: 'ArrowRightIcon', Component: ArrowRightIcon },
-      { name: 'FolderIcon', Component: FolderIcon },
-      { name: 'LayersIcon', Component: LayersIcon },
-    ];
-
-    icons.forEach(({ name, Component }) => {
-      it(`${name} should use fill="currentColor"`, () => {
+      it('should use fill="currentColor"', () => {
         const { container } = render(<Component />);
         expect(container.querySelector('svg')).toHaveAttribute('fill', 'currentColor');
       });
 
-      it(`${name} should have xmlns attribute`, () => {
+      it('should have xmlns attribute', () => {
         const { container } = render(<Component />);
         expect(container.querySelector('svg')).toHaveAttribute(
           'xmlns',
           'http://www.w3.org/2000/svg'
         );
       });
+    });
+  });
+
+  describe('Specific icon requirements', () => {
+    it('EmailIcon should contain exactly 2 path elements', () => {
+      const { container } = render(<EmailIcon />);
+      const paths = container.querySelectorAll('path');
+      expect(paths.length).toBe(2);
+    });
+
+    it('SecureEmailIcon should contain a path with clip-rule', () => {
+      const { container } = render(<SecureEmailIcon />);
+      const path = container.querySelector('path[clip-rule]');
+      expect(path).toBeInTheDocument();
+      expect(path).toHaveAttribute('clip-rule', 'evenodd');
+    });
+
+    it('ArrowOutwardIcon should contain a path with clip-rule', () => {
+      const { container } = render(<ArrowOutwardIcon />);
+      const path = container.querySelector('path[clip-rule]');
+      expect(path).toBeInTheDocument();
+      expect(path).toHaveAttribute('clip-rule', 'evenodd');
+    });
+
+    it('ArrowRightIcon should contain a path with clip-rule', () => {
+      const { container } = render(<ArrowRightIcon />);
+      const path = container.querySelector('path[clip-rule]');
+      expect(path).toBeInTheDocument();
+      expect(path).toHaveAttribute('clip-rule', 'evenodd');
+    });
+
+    it('LayersIcon should contain exactly 3 path elements', () => {
+      const { container } = render(<LayersIcon />);
+      const paths = container.querySelectorAll('path');
+      expect(paths.length).toBe(3);
     });
   });
 });
