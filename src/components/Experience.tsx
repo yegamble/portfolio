@@ -16,23 +16,20 @@ interface ExperienceJob {
   description: string;
 }
 
+const METADATA_BY_ID = new Map(experienceEntries.map((entry) => [entry.id, entry]));
+
 export default function Experience() {
   const { t } = useTranslation();
 
   const jobs = t('experience.jobs', { returnObjects: true }) as ExperienceJob[];
 
-  const metadataById = useMemo(
-    () => new Map(experienceEntries.map((entry) => [entry.id, entry])),
-    []
-  );
-
   const jobsWithMetadata = useMemo(
     () =>
       (Array.isArray(jobs) ? jobs : []).flatMap((job) => {
-        const meta = metadataById.get(job.id);
+        const meta = METADATA_BY_ID.get(job.id);
         return meta ? [{ job, meta }] : [];
       }),
-    [jobs, metadataById]
+    [jobs]
   );
 
   return (
