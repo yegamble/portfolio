@@ -6,16 +6,66 @@ interface CipherTransitionResult {
   isAnimating: boolean;
 }
 
+const BASE_DELAY = 400;
+const SPREAD_DURATION = 1200;
+const JITTER = 100;
+const UPDATE_INTERVAL = 60;
+
 /**
- * Hook for animating text transitions with a cipher/decryption effect.
- * Each character cycles through random characters from various scripts before resolving to the final character.
- * Staggered timing creates a wave effect.
- *
- * @param text - The current text to display
- * @returns Object with displayChars array and isAnimating flag
+ * Calculates the stagger and jitter resolve times for each character index.
+ * @param maxLen The maximum length of characters to animate.
+ * @returns An array of resolve times in milliseconds.
  */
-export function useCipherTransition(text: string): CipherTransitionResult {
-  const isEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
+function calculateResolveTimes(maxLen: number): number[] {
+  const resolveTimes: number[] = [];
+  for (let i = 0; i < maxLen; i++) {
+    const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
+    const randomJitter = (Math.random() - 0.5) * 2 * JITTER;
+    resolveTimes[i] = BASE_DELAY + progress * SPREAD_DURATION + randomJitter;
+  }
+  return resolveTimes;
+}
+
+/**
+ * Generates the frame characters given the elapsed time.
+ * @param maxLen Maximum string length.
+ * @param newChars Array of the target characters.
+ * @param resolveTimes Array of resolve times for each index.
+ * @param elapsed Elapsed time in milliseconds.
+ * @returns Object with chars array and allResolved flag.
+ */
+function generateFrameChars(
+  maxLen: number,
+  newChars: string[],
+  resolveTimes: number[],
+  elapsed: number
+): { chars: string[]; allResolved: boolean } {
+  const chars: string[] = [];
+  let allResolved = true;
+
+  for (let i = 0; i < maxLen; i++) {
+    const resolveTime = resolveTimes[i];
+    const targetChar = i < newChars.length ? newChars[i] : '';
+
+    if (elapsed >= resolveTime) {
+      chars[i] = targetChar;
+    } else {
+      allResolved = false;
+      if (targetChar && isScramblable(targetChar)) {
+        chars[i] = getRandomCipherChar();
+      } else {
+        chars[i] = targetChar;
+      }
+    }
+  }
+
+  return { chars, allResolved };
+}
+
+/**
+ * Custom hook to handle the animation loop lifecycle and React state logic for the cipher effect.
+ */
+function useCipherAnimationLoop(text: string, isEnabled: boolean) {
   const [displayChars, setDisplayChars] = useState<string[]>(() =>
     Array.from(text)
   );
@@ -33,6 +83,7 @@ export function useCipherTransition(text: string): CipherTransitionResult {
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     if (prefersReducedMotion) {
       prevTextRef.current = text;
       rafIdRef.current = requestAnimationFrame(() => {
@@ -55,28 +106,17 @@ export function useCipherTransition(text: string): CipherTransitionResult {
     const newChars = Array.from(text);
     const maxLen = Math.max(oldChars.length, newChars.length);
 
-    const baseDelay = 400;
-    const spreadDuration = 1200;
-    const jitter = 100;
-
-    const resolveTimes: number[] = [];
-    for (let i = 0; i < maxLen; i++) {
-      const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
-      const randomJitter = (Math.random() - 0.5) * 2 * jitter;
-      resolveTimes[i] = baseDelay + progress * spreadDuration + randomJitter;
-    }
+    const resolveTimes = calculateResolveTimes(maxLen);
     resolveTimesRef.current = resolveTimes;
 
     let startTime: number | null = null;
-    const updateInterval = 60;
     let lastUpdateTime = 0;
     let animStarted = false;
 
     const animate = (currentTime: number) => {
       if (startTime === null) {
         startTime = currentTime;
-        // Initialize lastUpdateTime to allow the first frame to render immediately
-        lastUpdateTime = currentTime - updateInterval;
+        lastUpdateTime = currentTime - UPDATE_INTERVAL;
       }
 
       if (!animStarted) {
@@ -86,35 +126,21 @@ export function useCipherTransition(text: string): CipherTransitionResult {
 
       const timeSinceLastUpdate = currentTime - lastUpdateTime;
 
-      // Only update the display if the interval has passed
-      if (timeSinceLastUpdate >= updateInterval) {
+      if (timeSinceLastUpdate >= UPDATE_INTERVAL) {
         const elapsed = currentTime - startTime;
-        const chars: string[] = [];
-        let allResolved = true;
-
-        for (let i = 0; i < maxLen; i++) {
-          const resolveTime = resolveTimes[i];
-          const targetChar = i < newChars.length ? newChars[i] : '';
-
-          if (elapsed >= resolveTime) {
-            chars[i] = targetChar;
-          } else {
-            allResolved = false;
-
-            if (targetChar && isScramblable(targetChar)) {
-              chars[i] = getRandomCipherChar();
-            } else {
-              chars[i] = targetChar;
-            }
-          }
-        }
+        const { chars, allResolved } = generateFrameChars(
+          maxLen,
+          newChars,
+          resolveTimes,
+          elapsed
+        );
 
         setDisplayChars(chars);
 
         if (allResolved) {
           setIsAnimating(false);
           prevTextRef.current = text;
-          return; // Stop the animation loop
+          return;
         }
 
         lastUpdateTime = currentTime;
@@ -133,11 +159,22 @@ export function useCipherTransition(text: string): CipherTransitionResult {
     };
   }, [text, isEnabled]);
 
+  return { displayChars, isAnimating };
+}
+
+/**
+ * Hook for animating text transitions with a cipher/decryption effect.
+ * Each character cycles through random characters from various scripts before resolving to the final character.
+ * Staggered timing creates a wave effect.
+ *
+ * @param text - The current text to display
+ * @returns Object with displayChars array and isAnimating flag
+ */
+export function useCipherTransition(text: string): CipherTransitionResult {
+  const isEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
+  const { displayChars, isAnimating } = useCipherAnimationLoop(text, isEnabled);
 
   if (!isEnabled) {
-    // Return a new object every render when disabled.
-    // While this avoids useMemo overhead when active, it sacrifices reference stability
-    // for the returned object and array when disabled.
     return { displayChars: Array.from(text), isAnimating: false as const };
   }
 
