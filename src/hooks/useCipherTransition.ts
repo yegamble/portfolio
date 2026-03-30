@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 interface CipherTransitionResult {
@@ -133,13 +133,12 @@ export function useCipherTransition(text: string): CipherTransitionResult {
     };
   }, [text, isEnabled]);
 
-  const disabledResult = useMemo(
-    () => ({ displayChars: Array.from(text), isAnimating: false as const }),
-    [text]
-  );
 
   if (!isEnabled) {
-    return disabledResult;
+    // Return a new object every render when disabled.
+    // While this avoids useMemo overhead when active, it sacrifices reference stability
+    // for the returned object and array when disabled.
+    return { displayChars: Array.from(text), isAnimating: false as const };
   }
 
   return { displayChars, isAnimating };
