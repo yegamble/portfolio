@@ -1,0 +1,187 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link:
+        - /url: /
+        - text: יוסף גמבל
+      - generic: מהנדס פול סטק בכיר
+      - generic [ref=e4]:
+        - navigation "Main navigation" [ref=e5]:
+          - list [ref=e6]:
+            - listitem [ref=e7]:
+              - link "אודות" [ref=e184] [cursor=pointer]:
+                - /url: "#about"
+            - listitem [ref=e9]:
+              - link "ניסיון" [ref=e185] [cursor=pointer]:
+                - /url: "#experience"
+            - listitem [ref=e11]:
+              - link "פרויקטים" [ref=e186] [cursor=pointer]:
+                - /url: "#projects"
+        - button "עבור לאנגלית" [active] [ref=e187]: EN
+        - generic [ref=e14]:
+          - link "GitHub" [ref=e15] [cursor=pointer]:
+            - /url: https://github.com/yegamble
+            - generic [ref=e16]: GitHub
+            - img [ref=e17]
+          - link "LinkedIn" [ref=e19] [cursor=pointer]:
+            - /url: https://linkedin.com/in/yosefgamble
+            - generic [ref=e20]: LinkedIn
+            - img [ref=e21]
+  - generic [ref=e23]:
+    - img "תמונת פרופיל של יוסף גמבל" [ref=e188]
+    - generic [ref=e27]:
+      - paragraph [ref=e28]: יוסף גמבל
+      - paragraph [ref=e29]: מהנדס פול סטק בכיר
+    - heading "מבוסס בניו יורק. מתמקד ב-Go, TypeScript ו-AWS. בונה חוויות דיגיטליות נגישות ומדויקות לפיקסל." [level=1] [ref=e189]:
+      - generic [ref=e31]: מבוסס בניו יורק. מתמקד ב-Go, TypeScript ו-AWS. בונה חוויות דיגיטליות נגישות ומדויקות לפיקסל.
+  - main [ref=e33]:
+    - region "אודותיי" [ref=e190]:
+      - generic [ref=e35]:
+        - heading "אודות" [level=2] [ref=e191]
+        - separator [ref=e37]
+      - generic [ref=e38]:
+        - paragraph [ref=e39]:
+          - generic [ref=e40]: התחלתי לכתוב קוד באוניברסיטת Central Washington ב-2013, שם שימשתי כנשיא אגודת הסטודנטים וזכיתי במלגת בואינג. הדרך שלי לקחה אותי מעבר לאוקיינוס השקט לניו זילנד — קודם לתואר באוניברסיטת אוקלנד, ואחר כך לתעשיית הטכנולוגיה שם בניית תוכנות שהגיעו למיליוני משתמשים.
+        - paragraph [ref=e41]:
+          - text: ב-
+          - link "realestate.co.nz" [ref=e42] [cursor=pointer]:
+            - /url: https://www.realestate.co.nz
+          - text: ", הפכתי למהנדס מפתח בפורטל הנדל\"ן הוותיק ביותר של ניו זילנד. השקתי תכונות ראשונות בתעשייה — התראות מיידיות על שינויי מחירים והיסטוריית מחירים שקופה — שמתחרים העתיקו חודשים אחר כך. תכננתי מערכת התראות serverless על AWS Lambda בשילוב עם Braze שסיפקה התראות נכסים לכל משתמש בפלטפורמה, והובלתי סדנאות בכל החברה על ארכיטקטורת serverless ו-observability."
+        - paragraph [ref=e43]:
+          - generic [ref=e44]: כעת חזרתי לניו יורק, אני בונה מערכת סטרימינג וידאו בקוד פתוח ב-Go — מיישמת פדרציית ActivityPub ו-ATProto לשיתוף תוכן מבוזר, ומקטינה עלויות רוחב פס לכמעט $0 דרך שילוב Cloudflare CDN ו-Backblaze B2. אכפת לי מערכות סקיילביליות, אוטומציית תשתיות, והאינטרנט הפתוח.
+    - region "ניסיון תעסוקתי" [ref=e192]:
+      - generic [ref=e46]:
+        - heading "ניסיון" [level=2] [ref=e193]
+        - separator [ref=e48]
+      - list [ref=e49]:
+        - listitem [ref=e50]:
+          - generic [ref=e51]:
+            - generic "2024 — הווה" [ref=e194]
+            - generic [ref=e53]:
+              - heading "מהנדס פול סטק at עצמאי (נפתח בלשונית חדשה)" [level=3] [ref=e195]:
+                - link "מהנדס פול סטק at עצמאי (נפתח בלשונית חדשה)" [ref=e196] [cursor=pointer]:
+                  - /url: https://github.com/yegamble
+                  - generic [ref=e56]: מהנדס פול סטק · עצמאי
+                  - img [ref=e57]
+              - paragraph [ref=e59]:
+                - generic [ref=e60]: בונה מערכת סטרימינג וידאו בקוד פתוח תואמת PeerTube ב-Go עם פרוטוקולי רשתות חברתיות מבוזרות — פדרציית ActivityPub ושילוב ATProto לשיתוף תוכן חוצה-פלטפורמה. הקטנתי עלויות רוחב פס ממאות דולרים לחודש לכמעט $0 באמצעות שילוב Backblaze B2 ו-Cloudflare CDN דרך Bandwidth Alliance. מכולל ב-Docker, CI/CD דרך GitHub Actions, PostgreSQL לאחסון ו-Redis למטמון והגבלת קצב.
+              - list "טכנולוגיות בשימוש" [ref=e197]:
+                - listitem [ref=e62]:
+                  - generic [ref=e63]: Go
+                - listitem [ref=e64]:
+                  - generic [ref=e65]: ActivityPub
+                - listitem [ref=e66]:
+                  - generic [ref=e67]: Docker
+                - listitem [ref=e68]:
+                  - generic [ref=e69]: PostgreSQL
+                - listitem [ref=e70]:
+                  - generic [ref=e71]: Redis
+                - listitem [ref=e72]:
+                  - generic [ref=e73]: Cloudflare
+        - listitem [ref=e74]:
+          - generic [ref=e75]:
+            - generic "2021 — 2024" [ref=e76]
+            - generic [ref=e77]:
+              - heading "מהנדס פול סטק at realestate.co.nz (נפתח בלשונית חדשה)" [level=3] [ref=e198]:
+                - link "מהנדס פול סטק at realestate.co.nz (נפתח בלשונית חדשה)" [ref=e199] [cursor=pointer]:
+                  - /url: https://www.realestate.co.nz
+                  - generic [ref=e80]: מהנדס פול סטק · realestate.co.nz
+                  - img [ref=e81]
+              - paragraph [ref=e83]:
+                - generic [ref=e84]: השקתי תכונות ראשונות בתעשייה עבור פורטל הנדל"ן הוותיק ביותר של ניו זילנד — התראות מיידיות על שינויי מחירים והיסטוריית מחירים שקופה שמתחרים העתיקו חודשים אחר כך. תכננתי ובניתי מערכת התראות serverless על AWS Lambda בשילוב עם Braze שסיפקה התראות נכסים יומיות ושבועיות לכל הפלטפורמה. הובלתי סדנאות בכל החברה על ארכיטקטורת Serverless ו-New Relic observability. תרמתי לבניית מחדש של הפרונטאנד ב-EmberJS שקיבל משוב חיובי מסוכנים ומשתמשים ברחבי הארץ.
+              - list "טכנולוגיות בשימוש" [ref=e200]:
+                - listitem [ref=e86]:
+                  - generic [ref=e87]: AWS Lambda
+                - listitem [ref=e88]:
+                  - generic [ref=e89]: CDK
+                - listitem [ref=e90]:
+                  - generic [ref=e91]: EmberJS
+                - listitem [ref=e92]:
+                  - generic [ref=e93]: PHP
+                - listitem [ref=e94]:
+                  - generic [ref=e95]: Braze
+                - listitem [ref=e96]:
+                  - generic [ref=e97]: New Relic
+        - listitem [ref=e98]:
+          - generic [ref=e99]:
+            - generic "2019 — 2024" [ref=e100]
+            - generic [ref=e101]:
+              - heading "מפתח תוכנה at ProStock (נפתח בלשונית חדשה)" [level=3] [ref=e201]:
+                - link "מפתח תוכנה at ProStock (נפתח בלשונית חדשה)" [ref=e202] [cursor=pointer]:
+                  - /url: "#"
+                  - generic [ref=e104]: מפתח תוכנה · ProStock
+                  - img [ref=e105]
+              - paragraph [ref=e107]:
+                - generic [ref=e108]: בניתי את הפלטפורמה המרכזית של מערכת ניהול מחסנים שחסכה למפעילים מעל $250K בשנה. פיתחתי APIs שתמכו במילוי הזמנות בינלאומי עבור Zoono בניו זילנד, אוסטרליה ואסיה. פרסתי אפליקציית סורק אנדרואיד לעובדי המחסן לקבלה, העברה ומשלוח מוצרים ברחבי העולם. יצרתי פורטל AngularJS ללקוחות למעקב אחר סטטוס מוצרים והזמנות בזמן אמת. העברתי תשתית ל-Digital Ocean ושיפרתי את זמינות השרתים בסביבות הפרודקשן.
+              - list "טכנולוגיות בשימוש" [ref=e203]:
+                - listitem [ref=e110]:
+                  - generic [ref=e111]: PHP
+                - listitem [ref=e112]:
+                  - generic [ref=e113]: AngularJS
+                - listitem [ref=e114]:
+                  - generic [ref=e115]: Android
+                - listitem [ref=e116]:
+                  - generic [ref=e117]: Digital Ocean
+                - listitem [ref=e118]:
+                  - generic [ref=e119]: REST APIs
+      - link "צפה בקורות חיים מלאים" [ref=e204] [cursor=pointer]:
+        - /url: /resume.pdf
+        - generic [ref=e122]: צפה בקורות חיים מלאים
+        - img [ref=e123]
+    - region "פרויקטים נבחרים" [ref=e205]:
+      - generic [ref=e126]:
+        - heading "פרויקטים" [level=2] [ref=e206]
+        - separator [ref=e128]
+      - generic [ref=e129]:
+        - generic [ref=e130]:
+          - generic [ref=e131]:
+            - img [ref=e132]
+            - img [ref=e134]
+          - heading "Project Alpha (נפתח בלשונית חדשה)" [level=3] [ref=e207]:
+            - link "Project Alpha (נפתח בלשונית חדשה)" [ref=e208] [cursor=pointer]:
+              - /url: "#"
+              - text: Project Alpha
+          - paragraph [ref=e138]:
+            - generic [ref=e139]: מנוע עיבוד נתונים מבוזר המסוגל לטפל בפטא-בייטים של לוגים בזמן אמת. נבנה עם Rust ו-Kafka להבטחת זמינות גבוהה.
+          - list "טכנולוגיות בשימוש" [ref=e209]:
+            - listitem [ref=e141]: Rust
+            - listitem [ref=e142]: Kafka
+            - listitem [ref=e143]: AWS
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - img [ref=e146]
+            - img [ref=e150]
+          - heading "Neon UI Kit (נפתח בלשונית חדשה)" [level=3] [ref=e210]:
+            - link "Neon UI Kit (נפתח בלשונית חדשה)" [ref=e211] [cursor=pointer]:
+              - /url: "#"
+              - text: Neon UI Kit
+          - paragraph [ref=e154]:
+            - generic [ref=e155]: ספריית רכיבי React בקוד פתוח עם דגש על נגישות ואסתטיקת מצב כהה. מעל 2,000 כוכבים ב-GitHub.
+          - list "טכנולוגיות בשימוש" [ref=e212]:
+            - listitem [ref=e157]: React
+            - listitem [ref=e158]: Tailwind
+            - listitem [ref=e159]: A11y
+    - generic [ref=e160]:
+      - generic [ref=e161]:
+        - link "GitHub" [ref=e162] [cursor=pointer]:
+          - /url: https://github.com/yegamble
+          - generic [ref=e163]: GitHub
+          - img [ref=e164]
+        - link "LinkedIn" [ref=e166] [cursor=pointer]:
+          - /url: https://linkedin.com/in/yosefgamble
+          - generic [ref=e167]: LinkedIn
+          - img [ref=e168]
+      - paragraph [ref=e170]:
+        - text: נכתב ב
+        - link "Visual Studio Code" [ref=e171] [cursor=pointer]:
+          - /url: https://code.visualstudio.com/
+        - text: . נבנה עם
+        - link "Tailwind CSS" [ref=e172] [cursor=pointer]:
+          - /url: https://tailwindcss.com/
+        - text: ו
+        - link "Inter" [ref=e173] [cursor=pointer]:
+          - /url: https://fonts.google.com/specimen/Inter
+        - text: פונט.
+  - button "Open Next.js Dev Tools" [ref=e180] [cursor=pointer]:
+    - img [ref=e181]
+  - alert [ref=e174]

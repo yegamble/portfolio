@@ -1,0 +1,185 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link:
+        - /url: /
+        - text: Yosef Gamble
+      - generic: Senior Full-Stack Engineer
+      - generic [ref=e4]:
+        - navigation "Main navigation" [ref=e5]:
+          - list [ref=e6]:
+            - listitem [ref=e7]:
+              - link "About" [ref=e8] [cursor=pointer]:
+                - /url: "#about"
+            - listitem [ref=e9]:
+              - link "Experience" [ref=e10] [cursor=pointer]:
+                - /url: "#experience"
+            - listitem [ref=e11]:
+              - link "Projects" [ref=e12] [cursor=pointer]:
+                - /url: "#projects"
+        - button "Switch to Hebrew" [ref=e13]: עב
+        - generic [ref=e14]:
+          - link "GitHub" [ref=e15] [cursor=pointer]:
+            - /url: https://github.com/yegamble
+            - generic [ref=e16]: GitHub
+            - img [ref=e17]
+          - link "LinkedIn" [ref=e19] [cursor=pointer]:
+            - /url: https://linkedin.com/in/yosefgamble
+            - generic [ref=e20]: LinkedIn
+            - img [ref=e21]
+  - generic [ref=e23]:
+    - img [ref=e26]
+    - generic [ref=e30]:
+      - paragraph [ref=e31]: Yosef Gamble
+      - paragraph [ref=e32]: Senior Full-Stack Engineer
+    - heading "NYC based. Go, TypeScript, & AWS focus. Building accessible, pixel-perfect digital experiences." [level=1] [ref=e33]:
+      - generic [ref=e34]: NYC based. Go, TypeScript, & AWS focus. Building accessible, pixel-perfect digital experiences.
+  - main [ref=e36]:
+    - region "About me" [ref=e37]:
+      - generic [ref=e38]:
+        - heading "About" [level=2] [ref=e39]
+        - separator [ref=e40]
+      - generic [ref=e41]:
+        - paragraph [ref=e42]:
+          - generic [ref=e43]: I started writing code at Central Washington University in 2013, where I served as Student Government President and earned the Boeing Scholarship. My path took me across the Pacific to New Zealand — first for a degree at the University of Auckland, then into the tech industry building software that would reach millions of users.
+        - paragraph [ref=e44]:
+          - text: At
+          - link "realestate.co.nz" [ref=e45] [cursor=pointer]:
+            - /url: https://www.realestate.co.nz
+          - text: ", I became a key engineer on New Zealand’s most established real estate portal. I shipped industry-first features — instant price change alerts and transparent price history — that competitors copied months later. I designed a serverless notification system on AWS Lambda integrated with Braze that delivered listing alerts to every user on the platform, and led company-wide workshops on serverless architecture and observability."
+        - paragraph [ref=e46]:
+          - generic [ref=e47]: Now back in New York, I’m building an open-source video streaming backend in Go — implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web.
+    - region "Work experience" [ref=e48]:
+      - generic [ref=e49]:
+        - heading "Experience" [level=2] [ref=e50]
+        - separator [ref=e51]
+      - list [ref=e52]:
+        - listitem [ref=e53]:
+          - generic [ref=e54]:
+            - generic "2024 — Present" [ref=e55]
+            - generic [ref=e56]:
+              - heading "Full Stack Engineer at Independent (opens in a new tab)" [level=3] [ref=e57]:
+                - link "Full Stack Engineer at Independent (opens in a new tab)" [ref=e58] [cursor=pointer]:
+                  - /url: https://github.com/yegamble
+                  - generic [ref=e59]: Full Stack Engineer · Independent
+                  - img [ref=e60]
+              - paragraph [ref=e62]:
+                - generic [ref=e63]: Building an open-source, PeerTube-compatible video streaming backend in Go with decentralized social networking protocols — ActivityPub federation and ATProto integration for cross-platform content sharing. Cut bandwidth costs from hundreds of dollars monthly to nearly $0 by integrating Backblaze B2 and Cloudflare CDN via the Bandwidth Alliance. Containerized with Docker, CI/CD via GitHub Actions, PostgreSQL for storage, Redis for caching and rate-limiting.
+              - list "Technologies used" [ref=e64]:
+                - listitem [ref=e65]:
+                  - generic [ref=e66]: Go
+                - listitem [ref=e67]:
+                  - generic [ref=e68]: ActivityPub
+                - listitem [ref=e69]:
+                  - generic [ref=e70]: Docker
+                - listitem [ref=e71]:
+                  - generic [ref=e72]: PostgreSQL
+                - listitem [ref=e73]:
+                  - generic [ref=e74]: Redis
+                - listitem [ref=e75]:
+                  - generic [ref=e76]: Cloudflare
+        - listitem [ref=e77]:
+          - generic [ref=e78]:
+            - generic "2021 — 2024" [ref=e79]
+            - generic [ref=e80]:
+              - heading "Full Stack Engineer at realestate.co.nz (opens in a new tab)" [level=3] [ref=e81]:
+                - link "Full Stack Engineer at realestate.co.nz (opens in a new tab)" [ref=e82] [cursor=pointer]:
+                  - /url: https://www.realestate.co.nz
+                  - generic [ref=e83]: Full Stack Engineer · realestate.co.nz
+                  - img [ref=e84]
+              - paragraph [ref=e86]:
+                - generic [ref=e87]: Shipped industry-first features for New Zealand’s most established real estate portal — instant price change alerts and transparent price history that competitors copied months later. Designed and built a serverless notification system on AWS Lambda integrated with Braze, delivering daily and weekly listing alerts platform-wide. Led company-wide workshops on Serverless architecture and New Relic observability. Contributed to the EmberJS frontend rebuild that received positive feedback from agents and users nationally.
+              - list "Technologies used" [ref=e88]:
+                - listitem [ref=e89]:
+                  - generic [ref=e90]: AWS Lambda
+                - listitem [ref=e91]:
+                  - generic [ref=e92]: CDK
+                - listitem [ref=e93]:
+                  - generic [ref=e94]: EmberJS
+                - listitem [ref=e95]:
+                  - generic [ref=e96]: PHP
+                - listitem [ref=e97]:
+                  - generic [ref=e98]: Braze
+                - listitem [ref=e99]:
+                  - generic [ref=e100]: New Relic
+        - listitem [ref=e101]:
+          - generic [ref=e102]:
+            - generic "2019 — 2024" [ref=e103]
+            - generic [ref=e104]:
+              - heading "Software Developer at ProStock (opens in a new tab)" [level=3] [ref=e105]:
+                - link "Software Developer at ProStock (opens in a new tab)" [ref=e106] [cursor=pointer]:
+                  - /url: "#"
+                  - generic [ref=e107]: Software Developer · ProStock
+                  - img [ref=e108]
+              - paragraph [ref=e110]:
+                - generic [ref=e111]: Built the core platform for a warehouse management system saving operators over $250K annually. Developed APIs supporting international order fulfillment for Zoono across NZ, Australia, and Asia. Deployed an Android scanner application for warehouse staff to receive, transfer, and ship products globally. Created an AngularJS portal for clients to track product status and orders in real-time. Migrated infrastructure to Digital Ocean, improving uptime across production environments.
+              - list "Technologies used" [ref=e112]:
+                - listitem [ref=e113]:
+                  - generic [ref=e114]: PHP
+                - listitem [ref=e115]:
+                  - generic [ref=e116]: AngularJS
+                - listitem [ref=e117]:
+                  - generic [ref=e118]: Android
+                - listitem [ref=e119]:
+                  - generic [ref=e120]: Digital Ocean
+                - listitem [ref=e121]:
+                  - generic [ref=e122]: REST APIs
+      - link "View Full Résumé" [ref=e124] [cursor=pointer]:
+        - /url: /resume.pdf
+        - generic [ref=e125]: View Full Résumé
+        - img [ref=e126]
+    - region "Selected projects" [ref=e128]:
+      - generic [ref=e129]:
+        - heading "Projects" [level=2] [ref=e130]
+        - separator [ref=e131]
+      - generic [ref=e132]:
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - img [ref=e135]
+            - img [ref=e137]
+          - heading "Project Alpha (opens in a new tab)" [level=3] [ref=e139]:
+            - link "Project Alpha (opens in a new tab)" [ref=e140] [cursor=pointer]:
+              - /url: "#"
+              - text: Project Alpha
+          - paragraph [ref=e141]:
+            - generic [ref=e142]: A distributed data processing engine capable of handling petabytes of logs in real-time. Built with Rust and Kafka to ensure high availability.
+          - list "Technologies used" [ref=e143]:
+            - listitem [ref=e144]: Rust
+            - listitem [ref=e145]: Kafka
+            - listitem [ref=e146]: AWS
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - img [ref=e149]
+            - img [ref=e153]
+          - heading "Neon UI Kit (opens in a new tab)" [level=3] [ref=e155]:
+            - link "Neon UI Kit (opens in a new tab)" [ref=e156] [cursor=pointer]:
+              - /url: "#"
+              - text: Neon UI Kit
+          - paragraph [ref=e157]:
+            - generic [ref=e158]: An open-source React component library focused on accessibility and dark mode aesthetics. 2k+ stars on GitHub.
+          - list "Technologies used" [ref=e159]:
+            - listitem [ref=e160]: React
+            - listitem [ref=e161]: Tailwind
+            - listitem [ref=e162]: A11y
+    - generic [ref=e163]:
+      - generic [ref=e164]:
+        - link "GitHub" [ref=e165] [cursor=pointer]:
+          - /url: https://github.com/yegamble
+          - generic [ref=e166]: GitHub
+          - img [ref=e167]
+        - link "LinkedIn" [ref=e169] [cursor=pointer]:
+          - /url: https://linkedin.com/in/yosefgamble
+          - generic [ref=e170]: LinkedIn
+          - img [ref=e171]
+      - paragraph [ref=e173]:
+        - text: Coded in
+        - link "Visual Studio Code" [ref=e174] [cursor=pointer]:
+          - /url: https://code.visualstudio.com/
+        - text: . Built with
+        - link "Tailwind CSS" [ref=e175] [cursor=pointer]:
+          - /url: https://tailwindcss.com/
+        - text: and
+        - link "Inter" [ref=e176] [cursor=pointer]:
+          - /url: https://fonts.google.com/specimen/Inter
+        - text: font.
+  - alert [ref=e177]
