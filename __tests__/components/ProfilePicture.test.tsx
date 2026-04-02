@@ -101,4 +101,40 @@ describe('ProfilePicture', () => {
       expect(img).toHaveAttribute('height', '160');
     });
   });
+
+  describe('SVG avatar placeholder', () => {
+    it('should render an SVG avatar placeholder', () => {
+      const { container } = render(<ProfilePicture />);
+      const svg = container.querySelector('svg');
+      expect(svg).toBeInTheDocument();
+    });
+
+    it('should render SVG with aria-hidden for accessibility', () => {
+      const { container } = render(<ProfilePicture />);
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('should render SVG with currentColor fill', () => {
+      const { container } = render(<ProfilePicture />);
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveAttribute('fill', 'currentColor');
+    });
+
+    it('should render SVG with viewBox for flexible sizing', () => {
+      const { container } = render(<ProfilePicture />);
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveAttribute('viewBox');
+      expect(svg).not.toHaveAttribute('width');
+      expect(svg).not.toHaveAttribute('height');
+    });
+
+    it('should render SVG inside the circular container with relative positioning', () => {
+      const { container } = render(<ProfilePicture />);
+      const svg = container.querySelector('svg');
+      const circularContainer = svg?.closest('.rounded-full');
+      expect(circularContainer).toBeInTheDocument();
+      expect(circularContainer).toHaveClass('relative');
+    });
+  });
 });
