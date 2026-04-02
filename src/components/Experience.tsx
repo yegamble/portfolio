@@ -70,7 +70,7 @@ export default function Experience() {
                     </a>
                   </h3>
                   <p className="mt-2 text-base leading-relaxed text-text-secondary">
-                    <CipherText>{job.description}</CipherText>
+                    <CipherText block>{job.description}</CipherText>
                   </p>
                   <ul
                     className="mt-4 flex flex-wrap gap-2"

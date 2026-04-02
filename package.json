@@ -16,6 +16,7 @@
     "preview": "next build && opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {
+    "@chenglou/pretext": "^0.0.4",
     "i18next": "^25.8.7",
     "next": "16.1.6",
     "react": "^19.1.0",

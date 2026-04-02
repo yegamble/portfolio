@@ -1,5 +1,10 @@
 import { render, screen, within, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('@/hooks/usePretextHeight', () => ({
+  usePretextHeight: () => ({ ref: { current: null }, style: {} }),
+}));
+
 import ScrollHeader from '@/components/ScrollHeader';
 
 let observerCallback: IntersectionObserverCallback;

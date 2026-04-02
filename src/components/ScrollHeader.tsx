@@ -97,7 +97,7 @@ export default function ScrollHeader() {
           </p>
         </div>
         <h1 className="mb-8 text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
-          <CipherText>{t('hero.tagline')}</CipherText>
+          <CipherText block>{t('hero.tagline')}</CipherText>
         </h1>
         <div className="h-1 w-24 rounded-full bg-primary" />
       </section>

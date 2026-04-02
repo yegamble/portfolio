@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Heebo } from 'next/font/google';
 import I18nProvider from '@/components/I18nProvider';
 import './globals.css';
 
@@ -7,6 +7,12 @@ const inter = Inter({
   subsets: ['latin', 'latin-ext'],
   display: 'swap',
   variable: '--font-inter',
+});
+
+const heebo = Heebo({
+  subsets: ['hebrew', 'latin'],
+  display: 'swap',
+  variable: '--font-heebo',
 });
 
 export const metadata: Metadata = {
@@ -35,8 +41,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-[family-name:var(--font-inter)] antialiased leading-relaxed min-h-screen">
+    <html lang="en" className={`${inter.variable} ${heebo.variable}`}>
+      <body className="font-[family-name:var(--font-inter),var(--font-heebo)] antialiased leading-relaxed min-h-screen">
         {/* Background decorative blurs */}
         <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-slate-900" />

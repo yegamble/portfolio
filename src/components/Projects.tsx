@@ -71,7 +71,7 @@ export default function Projects() {
                 </a>
               </h3>
               <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">
-                <CipherText>{project.description}</CipherText>
+                <CipherText block>{project.description}</CipherText>
               </p>
               <ul
                 className="mt-auto flex flex-wrap gap-x-4 gap-y-2"

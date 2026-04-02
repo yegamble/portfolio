@@ -6,6 +6,9 @@ vi.mock('next/font/google', () => ({
   Inter: () => ({
     variable: '--font-inter',
   }),
+  Heebo: () => ({
+    variable: '--font-heebo',
+  }),
 }));
 
 vi.mock('@/components/I18nProvider', () => ({

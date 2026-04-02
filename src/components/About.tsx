@@ -19,7 +19,7 @@ export default function About() {
       />
       <div className="space-y-6 text-lg leading-relaxed text-text-secondary">
         <p>
-          <CipherText>{t('about.p1')}</CipherText>
+          <CipherText block>{t('about.p1')}</CipherText>
         </p>
         <p>
           <CipherText>{t('about.p2_before')}</CipherText>
@@ -34,7 +34,7 @@ export default function About() {
           <CipherText>{t('about.p2_after')}</CipherText>
         </p>
         <p>
-          <CipherText>{t('about.p3')}</CipherText>
+          <CipherText block>{t('about.p3')}</CipherText>
         </p>
       </div>
     </section>

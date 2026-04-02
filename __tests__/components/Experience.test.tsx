@@ -1,5 +1,10 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('@/hooks/usePretextHeight', () => ({
+  usePretextHeight: () => ({ ref: { current: null }, style: {} }),
+}));
+
 import Experience from '@/components/Experience';
 import i18n from '@/lib/i18n';
 

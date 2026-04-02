@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CipherText from '@/components/CipherText';
+import type { CSSProperties, RefObject } from 'react';
 
 const mockResult = { displayChars: [] as string[], isAnimating: false };
 vi.mock('@/hooks/useCipherTransition', () => ({
@@ -12,10 +13,19 @@ vi.mock('@/hooks/useCipherTransition', () => ({
   },
 }));
 
+const mockPretextStyle: { style: CSSProperties } = { style: {} };
+vi.mock('@/hooks/usePretextHeight', () => ({
+  usePretextHeight: () => ({
+    ref: { current: null } as RefObject<HTMLSpanElement | null>,
+    style: mockPretextStyle.style,
+  }),
+}));
+
 describe('CipherText', () => {
   beforeEach(() => {
     mockResult.displayChars = [];
     mockResult.isAnimating = false;
+    mockPretextStyle.style = { display: 'inline-block', width: '100%', transition: 'min-height 500ms ease-out' };
   });
 
   afterEach(() => {
@@ -194,6 +204,79 @@ describe('CipherText', () => {
 
       const srOnly = container.querySelector('.sr-only');
       expect(srOnly).toHaveTextContent(text);
+    });
+  });
+
+  describe('block prop', () => {
+    it('should render wrapper span when block is true and not animating', () => {
+      const { container } = render(<CipherText block>Block text</CipherText>);
+
+      const wrapper = container.querySelector('span');
+      expect(wrapper).toBeInTheDocument();
+      expect(wrapper).toHaveTextContent('Block text');
+      expect(wrapper?.style.display).toBe('inline-block');
+    });
+
+    it('should not render wrapper span when block is false (default)', () => {
+      const { container } = render(<CipherText>Inline text</CipherText>);
+
+      // Without block, non-animating renders plain text node (no wrapper span)
+      expect(container.querySelector('span')).not.toBeInTheDocument();
+      expect(screen.getByText('Inline text')).toBeInTheDocument();
+    });
+
+    it('should render wrapper span with animation content when block is true and animating', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText block>Hey</CipherText>);
+
+      // Should have wrapper span containing sr-only and aria-hidden
+      const wrapper = container.firstElementChild as HTMLElement;
+      expect(wrapper?.tagName).toBe('SPAN');
+      expect(wrapper?.style.display).toBe('inline-block');
+      expect(wrapper?.querySelector('.sr-only')).toBeInTheDocument();
+      expect(wrapper?.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
+    });
+
+    it('should apply pretext height style to wrapper when block is true', () => {
+      mockPretextStyle.style = {
+        display: 'inline-block',
+        width: '100%',
+        minHeight: '120px',
+        transition: 'min-height 500ms ease-out',
+      };
+
+      const { container } = render(<CipherText block>Tall text</CipherText>);
+
+      const wrapper = container.querySelector('span');
+      expect(wrapper?.style.minHeight).toBe('120px');
+    });
+
+    it('should keep ref attached when switching between animating and non-animating states', () => {
+      const { container, rerender } = render(<CipherText block>Text A</CipherText>);
+
+      // Non-animating: wrapper span exists
+      const wrapperBefore = container.querySelector('span');
+      expect(wrapperBefore).toBeInTheDocument();
+
+      // Switch to animating
+      mockResult.displayChars = ['X', 'Y', 'Z', 'A', 'B'];
+      mockResult.isAnimating = true;
+      rerender(<CipherText block>Text B</CipherText>);
+
+      // Wrapper span still exists
+      const wrapperDuring = container.firstElementChild as HTMLElement;
+      expect(wrapperDuring?.tagName).toBe('SPAN');
+
+      // Switch back to non-animating
+      mockResult.displayChars = [];
+      mockResult.isAnimating = false;
+      rerender(<CipherText block>Text B</CipherText>);
+
+      // Wrapper span still exists (ref stays attached)
+      const wrapperAfter = container.querySelector('span');
+      expect(wrapperAfter).toBeInTheDocument();
     });
   });
 });
