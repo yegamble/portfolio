@@ -129,8 +129,12 @@ describe('I18nProvider - localStorage persistence', () => {
     expect(localStorage.getItem('language')).toBe('ru');
   });
 
-  it('should restore language from localStorage on mount', async () => {
-    localStorage.setItem('language', 'ru');
+  it('should apply html attributes for pre-initialized language on mount', async () => {
+    // Language restoration from localStorage now happens at i18n init time
+    // (in lib/i18n.ts), not in the provider. This test verifies that the
+    // provider correctly sets lang/dir attributes when i18n starts with a
+    // non-English language.
+    await i18n.changeLanguage('ru');
 
     render(
       <I18nProvider>
@@ -138,10 +142,10 @@ describe('I18nProvider - localStorage persistence', () => {
       </I18nProvider>
     );
 
-    // Give the effect time to run
     await act(async () => {});
 
-    expect(i18n.language).toBe('ru');
+    expect(document.documentElement.lang).toBe('ru');
+    expect(document.documentElement.dir).toBe('ltr');
   });
 
   it('should ignore invalid localStorage values', async () => {

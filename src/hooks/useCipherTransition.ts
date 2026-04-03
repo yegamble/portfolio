@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 interface CipherTransitionResult {
@@ -11,11 +11,48 @@ const SPREAD_DURATION = 1200;
 const JITTER = 100;
 const UPDATE_INTERVAL = 60;
 
-/**
- * Calculates the stagger and jitter resolve times for each character index.
- * @param maxLen The maximum length of characters to animate.
- * @returns An array of resolve times in milliseconds.
- */
+// ---------------------------------------------------------------------------
+// Shared RAF scheduler — one loop drives all CipherText instances so React
+// can batch every setState into a single commit per frame.
+// ---------------------------------------------------------------------------
+type TickFn = (time: number) => boolean; // return true to keep running
+
+const activeTicks = new Set<TickFn>();
+let rafId: number | null = null;
+
+function schedulerLoop(time: number) {
+  const done: TickFn[] = [];
+  for (const fn of activeTicks) {
+    if (!fn(time)) done.push(fn);
+  }
+  for (const fn of done) activeTicks.delete(fn);
+
+  if (activeTicks.size > 0) {
+    rafId = requestAnimationFrame(schedulerLoop);
+  } else {
+    rafId = null;
+  }
+}
+
+function registerTick(fn: TickFn) {
+  activeTicks.add(fn);
+  if (rafId === null) {
+    rafId = requestAnimationFrame(schedulerLoop);
+  }
+}
+
+function unregisterTick(fn: TickFn) {
+  activeTicks.delete(fn);
+  if (activeTicks.size === 0 && rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pure helpers (unchanged logic, no side-effects)
+// ---------------------------------------------------------------------------
+
 function calculateResolveTimes(maxLen: number): number[] {
   const resolveTimes: number[] = [];
   for (let i = 0; i < maxLen; i++) {
@@ -26,14 +63,6 @@ function calculateResolveTimes(maxLen: number): number[] {
   return resolveTimes;
 }
 
-/**
- * Generates the frame characters given the elapsed time.
- * @param maxLen Maximum string length.
- * @param newChars Array of the target characters.
- * @param resolveTimes Array of resolve times for each index.
- * @param elapsed Elapsed time in milliseconds.
- * @returns Object with chars array and allResolved flag.
- */
 function generateFrameChars(
   maxLen: number,
   newChars: string[],
@@ -62,17 +91,24 @@ function generateFrameChars(
   return { chars, allResolved };
 }
 
-/**
- * Custom hook to handle the animation loop lifecycle and React state logic for the cipher effect.
- */
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
 function useCipherAnimationLoop(text: string, isEnabled: boolean) {
   const [displayChars, setDisplayChars] = useState<string[]>(() =>
     Array.from(text)
   );
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTextRef = useRef(text);
-  const rafIdRef = useRef<number | null>(null);
-  const resolveTimesRef = useRef<number[]>([]);
+  const tickRef = useRef<TickFn | null>(null);
+
+  const cleanup = useCallback(() => {
+    if (tickRef.current) {
+      unregisterTick(tickRef.current);
+      tickRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!isEnabled) {
@@ -86,46 +122,41 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
 
     if (prefersReducedMotion) {
       prevTextRef.current = text;
-      rafIdRef.current = requestAnimationFrame(() => {
+      // Use a single RAF to update in the next frame
+      const id = requestAnimationFrame(() => {
         setDisplayChars(Array.from(text));
         setIsAnimating(false);
       });
-      return () => {
-        if (rafIdRef.current !== null) {
-          cancelAnimationFrame(rafIdRef.current);
-          rafIdRef.current = null;
-        }
-      };
+      return () => cancelAnimationFrame(id);
     }
 
     if (text === prevTextRef.current) {
       return;
     }
 
-    const oldChars = Array.from(prevTextRef.current);
-    const newChars = Array.from(text);
-    const maxLen = Math.max(oldChars.length, newChars.length);
+    // Clean up any in-flight animation
+    cleanup();
 
+    const newChars = Array.from(text);
+    const maxLen = Math.max(Array.from(prevTextRef.current).length, newChars.length);
     const resolveTimes = calculateResolveTimes(maxLen);
-    resolveTimesRef.current = resolveTimes;
 
     let startTime: number | null = null;
     let lastUpdateTime = 0;
-    let animStarted = false;
+    let started = false;
 
-    const animate = (currentTime: number) => {
+    const tick: TickFn = (currentTime) => {
       if (startTime === null) {
         startTime = currentTime;
         lastUpdateTime = currentTime - UPDATE_INTERVAL;
       }
 
-      if (!animStarted) {
-        animStarted = true;
+      if (!started) {
+        started = true;
         setIsAnimating(true);
       }
 
       const timeSinceLastUpdate = currentTime - lastUpdateTime;
-
       if (timeSinceLastUpdate >= UPDATE_INTERVAL) {
         const elapsed = currentTime - startTime;
         const { chars, allResolved } = generateFrameChars(
@@ -140,35 +171,33 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
         if (allResolved) {
           setIsAnimating(false);
           prevTextRef.current = text;
-          return;
+          tickRef.current = null;
+          return false; // done — unregister from scheduler
         }
 
         lastUpdateTime = currentTime;
       }
 
-      rafIdRef.current = requestAnimationFrame(animate);
+      return true; // keep running
     };
 
-    rafIdRef.current = requestAnimationFrame(animate);
+    tickRef.current = tick;
+    registerTick(tick);
+    prevTextRef.current = text;
 
-    return () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-    };
-  }, [text, isEnabled]);
+    return cleanup;
+  }, [text, isEnabled, cleanup]);
+
+  // Cleanup on unmount
+  useEffect(() => cleanup, [cleanup]);
 
   return { displayChars, isAnimating };
 }
 
 /**
  * Hook for animating text transitions with a cipher/decryption effect.
- * Each character cycles through random characters from various scripts before resolving to the final character.
- * Staggered timing creates a wave effect.
- *
- * @param text - The current text to display
- * @returns Object with displayChars array and isAnimating flag
+ * Uses a shared RAF scheduler so all instances animate in a single frame loop,
+ * allowing React to batch state updates into one render pass.
  */
 export function useCipherTransition(text: string): CipherTransitionResult {
   const isEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
