@@ -6,18 +6,18 @@
   },
   "hero": {
     "name": "Yosef Gamble",
-    "title": "Senior Full-Stack Engineer",
-    "tagline": "NYC based. Go, TypeScript, & AWS focus. Building accessible, pixel-perfect digital experiences.",
+    "title": "Senior Software Engineer",
+    "tagline": "Senior Go & TypeScript engineer. Video streaming, real estate portals, and cloud infrastructure. NYC | Auckland.",
     "profileAlt": "Yosef Gamble profile photo"
   },
   "about": {
     "heading": "About",
     "ariaLabel": "About me",
-    "p1": "I started writing code at Central Washington University in 2013, where I served as Student Government President and earned the Boeing Scholarship. My path took me across the Pacific to New Zealand — first for a degree at the University of Auckland, then into the tech industry building software that would reach millions of users.",
+    "p1": "I started writing code at Central Washington University in 2013, where I served as Student Government President and earned the Boeing Scholarship. My path took me across the Pacific to New Zealand — first for a degree at the University of Auckland, then into the tech industry as a software engineer building systems that would reach millions of users.",
     "p2_before": "At ",
     "p2_link": "realestate.co.nz",
     "p2_after": ", I became a key engineer on New Zealand’s most established real estate portal. I shipped industry-first features — instant price change alerts and transparent price history — that competitors copied months later. I designed a serverless notification system on AWS Lambda integrated with Braze that delivered listing alerts to every user on the platform, and led company-wide workshops on serverless architecture and observability.",
-    "p3": "Now back in New York, I’m building an open-source video streaming backend in Go — implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web."
+    "p3": "Now back in New York, I’m building an open-source video streaming backend in Go (Golang) — implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web."
   },
   "experience": {
     "heading": "Experience",

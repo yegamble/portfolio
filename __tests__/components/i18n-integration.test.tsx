@@ -41,9 +41,9 @@ describe('i18n Integration - English Mode', () => {
   it('should render hero content in English', () => {
     render(<ScrollHeader />);
     expect(screen.getByText('Yosef Gamble', { selector: 'section p' })).toBeInTheDocument();
-    expect(screen.getByText('Senior Full-Stack Engineer', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText('Senior Software Engineer', { selector: 'section p' })).toBeInTheDocument();
     const h1 = screen.getByRole('heading', { level: 1 });
-    expect(h1).toHaveTextContent(/NYC based/);
+    expect(h1).toHaveTextContent(/Senior Go & TypeScript engineer/);
   });
 
   it('should render profile picture with English alt text', () => {
@@ -105,13 +105,13 @@ describe('i18n Integration - Hebrew Mode', () => {
 
   it('should render hero title in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('מהנדס פול סטק בכיר', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText('מהנדס תוכנה בכיר', { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Hebrew', () => {
     render(<ScrollHeader />);
     const h1 = screen.getByRole('heading', { level: 1 });
-    expect(h1).toHaveTextContent(/מבוסס בניו יורק/);
+    expect(h1).toHaveTextContent(/מהנדס Go ו-TypeScript בכיר/);
   });
 
   it('should render profile picture with Hebrew alt text', () => {

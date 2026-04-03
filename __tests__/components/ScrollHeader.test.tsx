@@ -45,7 +45,7 @@ describe('ScrollHeader', () => {
 
     it('should render the job title in the hero area', () => {
       render(<ScrollHeader />);
-      const title = screen.getByText('Senior Full-Stack Engineer', {
+      const title = screen.getByText('Senior Software Engineer', {
         selector: 'section p',
       });
       expect(title).toBeInTheDocument();
@@ -54,15 +54,16 @@ describe('ScrollHeader', () => {
     it('should render the h1 tagline', () => {
       render(<ScrollHeader />);
       const heading = screen.getByRole('heading', { level: 1 });
-      expect(heading).toHaveTextContent(/nyc based/i);
-      expect(heading).toHaveTextContent(/pixel-perfect digital experiences/i);
+      expect(heading).toHaveTextContent(/Senior Go & TypeScript engineer/i);
+      expect(heading).toHaveTextContent(/NYC \| Auckland/i);
     });
 
-    it('should mention Go, TypeScript, and AWS in tagline', () => {
+    it('should mention Go, TypeScript, video streaming, and real estate in tagline', () => {
       render(<ScrollHeader />);
       const heading = screen.getByRole('heading', { level: 1 });
-      expect(heading).toHaveTextContent(/Go, TypeScript/);
-      expect(heading).toHaveTextContent(/AWS/);
+      expect(heading).toHaveTextContent(/Go & TypeScript/);
+      expect(heading).toHaveTextContent(/Video streaming/);
+      expect(heading).toHaveTextContent(/real estate/i);
     });
 
     it('should render the profile picture in the hero area', () => {
@@ -112,7 +113,7 @@ describe('ScrollHeader', () => {
 
     it('should render the job title with uppercase tracking-widest styling', () => {
       render(<ScrollHeader />);
-      const title = screen.getByText('Senior Full-Stack Engineer', {
+      const title = screen.getByText('Senior Software Engineer', {
         selector: 'section p',
       });
       expect(title).toHaveClass('uppercase', 'tracking-widest');
