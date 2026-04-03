@@ -92,3 +92,15 @@ body {
     text-shadow: none;
   }
 }
+
+@media (pointer: coarse), (max-width: 768px) {
+  .cipher-char {
+    transition: opacity 200ms linear, color 200ms linear;
+  }
+
+  .cipher-char.cipher-resolved {
+    text-shadow: none;
+    animation: none;
+    color: inherit;
+  }
+}
