@@ -6,6 +6,10 @@ vi.mock('@/hooks/usePretextHeight', () => ({
 }));
 
 import ScrollHeader from '@/components/ScrollHeader';
+import testEn from '../fixtures/translations/en.json';
+
+const TEST_NAME = testEn.hero.name;
+const TEST_TITLE = testEn.hero.title;
 
 let observerCallback: IntersectionObserverCallback;
 const mockObserve = vi.fn();
@@ -36,7 +40,7 @@ describe('ScrollHeader', () => {
   describe('Hero section', () => {
     it('should render the large name in the hero area', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText('Yosef Gamble', {
+      const heroName = screen.getByText(TEST_NAME, {
         selector: 'section p',
       });
       expect(heroName).toBeInTheDocument();
@@ -45,7 +49,7 @@ describe('ScrollHeader', () => {
 
     it('should render the job title in the hero area', () => {
       render(<ScrollHeader />);
-      const title = screen.getByText('Senior Software Engineer', {
+      const title = screen.getByText(TEST_TITLE, {
         selector: 'section p',
       });
       expect(title).toBeInTheDocument();
@@ -54,50 +58,47 @@ describe('ScrollHeader', () => {
     it('should render the h1 tagline', () => {
       render(<ScrollHeader />);
       const heading = screen.getByRole('heading', { level: 1 });
-      expect(heading).toHaveTextContent(/Senior Go & TypeScript engineer/i);
-      expect(heading).toHaveTextContent(/NYC \| Auckland/i);
+      expect(heading).toHaveTextContent(/Senior C\+\+, Rust & Go engineer/i);
+      expect(heading).toHaveTextContent(/Tokyo \| Sao Paulo/i);
     });
 
-    it('should mention Go, TypeScript, video streaming, and real estate in tagline', () => {
+    it('should mention key skills in tagline', () => {
       render(<ScrollHeader />);
       const heading = screen.getByRole('heading', { level: 1 });
-      expect(heading).toHaveTextContent(/Go & TypeScript/);
-      expect(heading).toHaveTextContent(/Video streaming/);
-      expect(heading).toHaveTextContent(/real estate/i);
+      expect(heading).toHaveTextContent(/C\+\+, Rust & Go/);
+      expect(heading).toHaveTextContent(/Unicode processing/i);
+      expect(heading).toHaveTextContent(/edge cases/i);
     });
 
     it('should render the profile picture in the hero area', () => {
       render(<ScrollHeader />);
-      const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
+      const img = screen.getByRole('img', { name: new RegExp(testEn.hero.profileAlt, 'i') });
       expect(img).toBeInTheDocument();
-      // Verify it's within the hero section
       const heroSection = img.closest('section');
       expect(heroSection).toBeInTheDocument();
     });
 
     it('should render the profile picture with circular styling', () => {
       render(<ScrollHeader />);
-      const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
+      const img = screen.getByRole('img', { name: new RegExp(testEn.hero.profileAlt, 'i') });
       const circleContainer = img.closest('.rounded-full');
       expect(circleContainer).toBeInTheDocument();
     });
 
     it('should render the teal accent bar', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText('Yosef Gamble', {
+      const heroName = screen.getByText(TEST_NAME, {
         selector: 'section p',
       });
-      // The accent bar is a sibling element within the hero section
       const heroSection = heroName.closest('section');
       expect(heroSection).toBeInTheDocument();
-      // Verify accent bar exists as a decorative div within the section
       const accentBar = heroSection!.querySelector('[class*="bg-primary"]');
       expect(accentBar).toBeInTheDocument();
     });
 
     it('should render hero section as a section element', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText('Yosef Gamble', {
+      const heroName = screen.getByText(TEST_NAME, {
         selector: 'section p',
       });
       expect(heroName.closest('section')).toBeInTheDocument();
@@ -105,7 +106,7 @@ describe('ScrollHeader', () => {
 
     it('should render the hero name with bold tracking-tight styling', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText('Yosef Gamble', {
+      const heroName = screen.getByText(TEST_NAME, {
         selector: 'section p',
       });
       expect(heroName).toHaveClass('font-bold', 'tracking-tight');
@@ -113,7 +114,7 @@ describe('ScrollHeader', () => {
 
     it('should render the job title with uppercase tracking-widest styling', () => {
       render(<ScrollHeader />);
-      const title = screen.getByText('Senior Software Engineer', {
+      const title = screen.getByText(TEST_TITLE, {
         selector: 'section p',
       });
       expect(title).toHaveClass('uppercase', 'tracking-widest');
@@ -160,27 +161,27 @@ describe('ScrollHeader', () => {
     it('should render GitHub social link', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /github/i });
-      expect(link).toHaveAttribute('href', 'https://github.com/yegamble');
+      expect(link).toHaveAttribute('href', expect.stringContaining('github.com'));
       expect(link).toHaveAttribute('target', '_blank');
     });
 
     it('should render LinkedIn social link', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /linkedin/i });
-      expect(link).toHaveAttribute('href', 'https://linkedin.com/in/yosefgamble');
+      expect(link).toHaveAttribute('href', expect.stringContaining('linkedin.com'));
       expect(link).toHaveAttribute('target', '_blank');
     });
 
     it('should render email link', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /^email$/i });
-      expect(link).toHaveAttribute('href', 'mailto:yegamble@gmail.com');
+      expect(link).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
     });
 
     it('should render secure email link', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /secure email/i });
-      expect(link).toHaveAttribute('href', 'mailto:yosef.gamble@protonmail.com');
+      expect(link).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
     });
 
     it('should render social links with sr-only labels', () => {
@@ -242,7 +243,8 @@ describe('ScrollHeader', () => {
 
     it('should make nav name link tabbable only when scrolled', () => {
       render(<ScrollHeader />);
-      const navNameLink = screen.getByRole('link', { name: /yosef gamble/i, hidden: true });
+      const header = screen.getByRole('banner');
+      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
       expect(navNameLink).toHaveAttribute('tabIndex', '-1');
 
       act(() => {
@@ -341,12 +343,11 @@ describe('ScrollHeader', () => {
       expect(header).toHaveClass('sticky', 'top-0', 'z-50');
     });
 
-    it('should display the name "Yosef Gamble" in the nav area', () => {
+    it('should display the name in the nav area', () => {
       render(<ScrollHeader />);
-      const navNameLink = screen.getByRole('link', {
-        name: /yosef gamble/i,
-        hidden: true,
-      });
+      const header = screen.getByRole('banner');
+      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
+      expect(navNameLink).toBeInTheDocument();
       expect(navNameLink).toHaveAttribute('href', '/');
     });
 
@@ -355,10 +356,8 @@ describe('ScrollHeader', () => {
       window.matchMedia = vi.fn().mockReturnValue({ matches: false });
 
       render(<ScrollHeader />);
-      const navNameLink = screen.getByRole('link', {
-        name: /yosef gamble/i,
-        hidden: true,
-      });
+      const header = screen.getByRole('banner');
+      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
 
       const user = (await import('@testing-library/user-event')).default.setup();
       await user.click(navNameLink);
@@ -376,10 +375,8 @@ describe('ScrollHeader', () => {
       window.matchMedia = vi.fn().mockReturnValue({ matches: true });
 
       render(<ScrollHeader />);
-      const navNameLink = screen.getByRole('link', {
-        name: /yosef gamble/i,
-        hidden: true,
-      });
+      const header = screen.getByRole('banner');
+      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
 
       const user = (await import('@testing-library/user-event')).default.setup();
       await user.click(navNameLink);

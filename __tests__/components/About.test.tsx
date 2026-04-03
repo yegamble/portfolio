@@ -56,72 +56,74 @@ describe('About', () => {
       expect(paragraphs).toHaveLength(3);
     });
 
-    it('should contain the origin story about Central Washington University', () => {
+    it('should contain the origin story about the university', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/Central Washington University/i);
-      expect(section).toHaveTextContent(/2013/);
+      expect(section).toHaveTextContent(/University of Nowhere/i);
+      expect(section).toHaveTextContent(/2042/);
     });
 
-    it('should mention Student Government President role', () => {
+    it('should mention the scholarship', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/Student Government President/i);
+      expect(section).toHaveTextContent(/Lorem Ipsum/i);
     });
 
     it('should mention key career milestones', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/realestate\.co\.nz/i);
-      expect(section).toHaveTextContent(/industry-first/i);
-      expect(section).toHaveTextContent(/Boeing Scholarship/i);
+      expect(section).toHaveTextContent(/test-company\.example\.com/i);
+      expect(section).toHaveTextContent(/42 countries/i);
+      expect(section).toHaveTextContent(/edge case/i);
     });
 
-    it('should mention University of Auckland', () => {
+    it('should mention the user count', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/University of Auckland/i);
+      expect(section).toHaveTextContent(/10M users/i);
     });
 
-    it('should describe current focus on open-source Go development', () => {
+    it('should describe current focus on open-source development', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
       expect(section).toHaveTextContent(/open-source/i);
-      expect(section).toHaveTextContent(/video streaming/i);
-      expect(section).toHaveTextContent(/ActivityPub/i);
+      expect(section).toHaveTextContent(/Unicode/i);
+      expect(section).toHaveTextContent(/text processor/i);
     });
 
-    it('should mention ATProto and decentralized content', () => {
+    it('should mention bidirectional text handling', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/ATProto/i);
-      expect(section).toHaveTextContent(/decentralized content sharing/i);
+      expect(section).toHaveTextContent(/bidirectional text/i);
+      expect(section).toHaveTextContent(/RTL/);
     });
 
-    it('should mention Cloudflare CDN and Backblaze B2', () => {
+    it('should mention i18n and l10n', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/Cloudflare CDN/i);
-      expect(section).toHaveTextContent(/Backblaze B2/i);
+      expect(section).toHaveTextContent(/i18n/);
+      expect(section).toHaveTextContent(/l10n/);
     });
 
-    it('should mention New Zealand', () => {
+    it('should handle special characters in content', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/New Zealand/i);
+      // Apostrophes, ampersands, dollar signs
+      expect(section).toHaveTextContent(/apostrophe/i);
+      expect(section).toHaveTextContent(/\$1,000,000/);
     });
   });
 
   describe('Links', () => {
-    it('should contain a link to realestate.co.nz', () => {
+    it('should contain a link to the company', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
-      expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      expect(link).toHaveAttribute('href');
     });
 
-    it('should open realestate.co.nz link in new tab', () => {
+    it('should open company link in new tab', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
+      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });

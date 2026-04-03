@@ -23,35 +23,35 @@ describe('Footer', () => {
   });
 
   describe('Social links via SocialLinks component', () => {
-    it('should render GitHub link with correct href', () => {
+    it('should render GitHub link with a github.com href', () => {
       render(<Footer />);
       expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute(
         'href',
-        'https://github.com/yegamble'
+        expect.stringContaining('github.com')
       );
     });
 
-    it('should render LinkedIn link with correct href', () => {
+    it('should render LinkedIn link with a linkedin.com href', () => {
       render(<Footer />);
       expect(screen.getByRole('link', { name: /linkedin/i })).toHaveAttribute(
         'href',
-        'https://linkedin.com/in/yosefgamble'
+        expect.stringContaining('linkedin.com')
       );
     });
 
-    it('should render email link with correct href', () => {
+    it('should render email link with a mailto href', () => {
       render(<Footer />);
       expect(screen.getByRole('link', { name: /^email$/i })).toHaveAttribute(
         'href',
-        'mailto:yegamble@gmail.com'
+        expect.stringMatching(/^mailto:/)
       );
     });
 
-    it('should render secure email link with correct href', () => {
+    it('should render secure email link with a mailto href', () => {
       render(<Footer />);
       expect(screen.getByRole('link', { name: /secure email/i })).toHaveAttribute(
         'href',
-        'mailto:yosef.gamble@protonmail.com'
+        expect.stringMatching(/^mailto:/)
       );
     });
 

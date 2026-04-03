@@ -5,6 +5,26 @@ vi.mock('@/hooks/usePretextHeight', () => ({
   usePretextHeight: () => ({ ref: { current: null }, style: {} }),
 }));
 
+vi.mock('@/data/experience', () => ({
+  experienceEntries: [
+    {
+      id: 'edge-corp',
+      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
+      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
+    },
+    {
+      id: 'cafe-societe',
+      companyUrl: 'https://cafe-societe.example.com/',
+      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
+    },
+    {
+      id: 'open-src',
+      companyUrl: '#',
+      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
+    },
+  ],
+}));
+
 import Experience from '@/components/Experience';
 import i18n from '@/lib/i18n';
 
@@ -53,9 +73,9 @@ describe('Experience', () => {
     it('should render all three experience entries', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveTextContent(/Independent/i);
-      expect(section).toHaveTextContent(/realestate\.co\.nz/i);
-      expect(section).toHaveTextContent(/ProStock/i);
+      expect(section).toHaveTextContent(/Edge Corp/i);
+      expect(section).toHaveTextContent(/Cafe Societe/i);
+      expect(section).toHaveTextContent(/Open-Source Foundation/i);
     });
 
     it('should render experience items as an ordered list', () => {
@@ -76,37 +96,37 @@ describe('Experience', () => {
     it('should render date ranges for each position', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveTextContent('2024 — Present');
-      expect(section).toHaveTextContent('2021 — 2024');
-      expect(section).toHaveTextContent('2019 — 2024');
+      expect(section).toHaveTextContent('2042 - Present');
+      expect(section).toHaveTextContent('2038 - 2042');
+      expect(section).toHaveTextContent('2035 - 2038');
     });
 
     it('should render job titles for each position', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveTextContent(/Full Stack Engineer/);
-      expect(section).toHaveTextContent(/Software Developer/);
+      expect(section).toHaveTextContent(/Principal Engineer/);
+      expect(section).toHaveTextContent(/Intern to Mid-Level/);
     });
   });
 
   describe('Company links', () => {
     it('should render links for each company', () => {
       render(<Experience />);
-      const independentLink = screen.getByRole('link', {
-        name: /full stack engineer at independent/i,
+      const edgeLink = screen.getByRole('link', {
+        name: /principal engineer.*at edge corp/i,
       });
-      expect(independentLink).toHaveAttribute('href', 'https://github.com/yegamble');
+      expect(edgeLink).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
 
-      const realestateLink = screen.getByRole('link', {
-        name: /full stack engineer at realestate\.co\.nz/i,
+      const cafeLink = screen.getByRole('link', {
+        name: /full-stack developer at cafe societe/i,
       });
-      expect(realestateLink).toHaveAttribute('href', 'https://www.realestate.co.nz');
+      expect(cafeLink).toHaveAttribute('href', 'https://cafe-societe.example.com/');
     });
 
     it('should open company links in new tabs', () => {
       render(<Experience />);
       const link = screen.getByRole('link', {
-        name: /full stack engineer at independent/i,
+        name: /principal engineer.*at edge corp/i,
       });
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
@@ -116,12 +136,12 @@ describe('Experience', () => {
       render(<Experience />);
       expect(
         screen.getByRole('link', {
-          name: /full stack engineer at independent \(opens in a new tab\)/i,
+          name: /principal engineer.*at edge corp \(opens in a new tab\)/i,
         })
       ).toBeInTheDocument();
       expect(
         screen.getByRole('link', {
-          name: /software developer at prostock \(opens in a new tab\)/i,
+          name: /intern to mid-level engineer at open-source foundation \(opens in a new tab\)/i,
         })
       ).toBeInTheDocument();
     });
@@ -134,32 +154,32 @@ describe('Experience', () => {
       expect(techLists).toHaveLength(3);
     });
 
-    it('should render specific technologies for the Independent position', () => {
+    it('should render specific technologies for the Edge Corp position', () => {
       render(<Experience />);
       const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
+      expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
-      expect(within(techLists[0]).getByText('Docker')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('PostgreSQL')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Redis')).toBeInTheDocument();
-      expect(within(techLists[0]).getByText('Cloudflare')).toBeInTheDocument();
-      expect(within(techLists[0]).getByText('ActivityPub')).toBeInTheDocument();
+      expect(within(techLists[0]).getByText('gRPC')).toBeInTheDocument();
     });
 
-    it('should render specific technologies for the realestate.co.nz position', () => {
+    it('should render specific technologies for the Cafe Societe position', () => {
       render(<Experience />);
       const techLists = screen.getAllByRole('list', { name: /technologies used/i });
-      expect(within(techLists[1]).getByText('AWS Lambda')).toBeInTheDocument();
-      expect(within(techLists[1]).getByText('CDK')).toBeInTheDocument();
-      expect(within(techLists[1]).getByText('EmberJS')).toBeInTheDocument();
-      expect(within(techLists[1]).getByText('PHP')).toBeInTheDocument();
+      expect(within(techLists[1]).getByText('TypeScript')).toBeInTheDocument();
+      expect(within(techLists[1]).getByText('React')).toBeInTheDocument();
+      expect(within(techLists[1]).getByText('Node.js')).toBeInTheDocument();
+      expect(within(techLists[1]).getByText('GraphQL')).toBeInTheDocument();
     });
 
-    it('should render specific technologies for the ProStock position', () => {
+    it('should render specific technologies for the Open-Source Foundation position', () => {
       render(<Experience />);
       const techLists = screen.getAllByRole('list', { name: /technologies used/i });
-      expect(within(techLists[2]).getByText('AngularJS')).toBeInTheDocument();
-      expect(within(techLists[2]).getByText('Android')).toBeInTheDocument();
-      expect(within(techLists[2]).getByText('REST APIs')).toBeInTheDocument();
+      expect(within(techLists[2]).getByText('Python')).toBeInTheDocument();
+      expect(within(techLists[2]).getByText('Kotlin')).toBeInTheDocument();
+      expect(within(techLists[2]).getByText('Swift')).toBeInTheDocument();
     });
 
     it('should render TechTag components within tech lists', () => {
@@ -172,23 +192,23 @@ describe('Experience', () => {
   });
 
   describe('Descriptions', () => {
-    it('should include description for Independent position', () => {
+    it('should include description for Edge Corp position', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveTextContent(/PeerTube-compatible video streaming/i);
+      expect(section).toHaveTextContent(/distributed system/i);
     });
 
-    it('should include description for realestate.co.nz position', () => {
+    it('should include description for Cafe Societe position', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveTextContent(/instant price change alerts/i);
-      expect(section).toHaveTextContent(/serverless notification system/i);
+      expect(section).toHaveTextContent(/N-tier architecture/i);
+      expect(section).toHaveTextContent(/POS system/i);
     });
 
-    it('should include description for ProStock position', () => {
+    it('should include description for Open-Source Foundation position', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveTextContent(/warehouse management system/i);
+      expect(section).toHaveTextContent(/Unicode Sanitizer/i);
     });
   });
 
@@ -202,13 +222,13 @@ describe('Experience', () => {
 
     it('should have descriptive aria-label on resume link', () => {
       render(<Experience />);
-      const link = screen.getByRole('link', { name: /view full résumé/i });
+      const link = screen.getByRole('link', { name: /view full resume/i });
       expect(link).toBeInTheDocument();
     });
 
     it('should contain arrow right icon', () => {
       render(<Experience />);
-      const link = screen.getByRole('link', { name: /view full résumé/i });
+      const link = screen.getByRole('link', { name: /view full resume/i });
       const svg = link.querySelector('svg');
       expect(svg).toBeInTheDocument();
       expect(svg).toHaveAttribute('aria-hidden', 'true');
@@ -221,9 +241,9 @@ describe('Experience', () => {
       const section = screen.getByRole('region', { name: /work experience/i });
       const dateHeaders = section.querySelectorAll('header[aria-label]');
       expect(dateHeaders).toHaveLength(3);
-      expect(dateHeaders[0]).toHaveAttribute('aria-label', '2024 — Present');
-      expect(dateHeaders[1]).toHaveAttribute('aria-label', '2021 — 2024');
-      expect(dateHeaders[2]).toHaveAttribute('aria-label', '2019 — 2024');
+      expect(dateHeaders[0]).toHaveAttribute('aria-label', '2042 - Present');
+      expect(dateHeaders[1]).toHaveAttribute('aria-label', '2038 - 2042');
+      expect(dateHeaders[2]).toHaveAttribute('aria-label', '2035 - 2038');
     });
   });
 
@@ -235,7 +255,7 @@ describe('Experience', () => {
         ...jobs,
         {
           id: 'unknown-role',
-          dates: '2000 — 2001',
+          dates: '2000 - 2001',
           title: 'Ghost Role',
           company: 'Ghost Co',
           description: 'Should never render without metadata.',
@@ -280,13 +300,13 @@ describe('Experience', () => {
       try {
         render(<Experience />);
         expect(
-          screen.getByRole('link', { name: /full stack engineer at independent/i })
-        ).toHaveAttribute('href', 'https://github.com/yegamble');
+          screen.getByRole('link', { name: /principal engineer.*at edge corp/i })
+        ).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
         expect(
-          screen.getByRole('link', { name: /full stack engineer at realestate\.co\.nz/i })
-        ).toHaveAttribute('href', 'https://www.realestate.co.nz');
+          screen.getByRole('link', { name: /full-stack developer at cafe societe/i })
+        ).toHaveAttribute('href', 'https://cafe-societe.example.com/');
         expect(
-          screen.getByRole('link', { name: /software developer at prostock/i })
+          screen.getByRole('link', { name: /intern to mid-level engineer at open-source foundation/i })
         ).toHaveAttribute('href', '#');
       } finally {
         i18n.addResourceBundle('en', 'translation', original, false, true);

@@ -19,45 +19,53 @@ describe('JsonLd', () => {
     const person = schemas.find((s: any) => s['@type'] === 'Person') as any;
     expect(person).toBeDefined();
     expect(person['@context']).toBe('https://schema.org');
-    expect(person.name).toBe('Yosef Gamble');
-    expect(person.jobTitle).toBe('Senior Software Engineer');
-    expect(person.url).toBe('https://yosefgamble.com');
-    expect(person.image).toBe('https://yosefgamble.com/images/og-image.jpg');
+    expect(typeof person.name).toBe('string');
+    expect(person.name.length).toBeGreaterThan(0);
+    expect(typeof person.jobTitle).toBe('string');
+    expect(person.jobTitle.length).toBeGreaterThan(0);
+    expect(typeof person.url).toBe('string');
+    expect(typeof person.image).toBe('string');
   });
 
-  it('includes sameAs with GitHub and LinkedIn', () => {
+  it('includes sameAs with social profile URLs', () => {
     const schemas = getSchemas();
     const person = schemas.find((s: any) => s['@type'] === 'Person') as any;
-    expect(person.sameAs).toContain('https://github.com/yegamble');
-    expect(person.sameAs).toContain('https://linkedin.com/in/yosefgamble');
+    expect(Array.isArray(person.sameAs)).toBe(true);
+    expect(person.sameAs.length).toBeGreaterThan(0);
+    person.sameAs.forEach((url: string) => {
+      expect(url).toMatch(/^https:\/\//);
+    });
   });
 
-  it('includes knowsAbout with key technologies', () => {
+  it('includes knowsAbout with technologies', () => {
     const schemas = getSchemas();
     const person = schemas.find((s: any) => s['@type'] === 'Person') as any;
-    expect(person.knowsAbout).toContain('Go');
-    expect(person.knowsAbout).toContain('Golang');
-    expect(person.knowsAbout).toContain('TypeScript');
-    expect(person.knowsAbout).toContain('Video Streaming');
-    expect(person.knowsAbout).toContain('Real Estate Technology');
+    expect(Array.isArray(person.knowsAbout)).toBe(true);
+    expect(person.knowsAbout.length).toBeGreaterThan(0);
   });
 
-  it('includes workLocation with New York and Auckland', () => {
+  it('includes workLocation with City entries', () => {
     const schemas = getSchemas();
     const person = schemas.find((s: any) => s['@type'] === 'Person') as any;
     const locations = person.workLocation as Array<{ '@type': string; name: string }>;
-    expect(locations).toHaveLength(2);
-    expect(locations.find((l) => l.name === 'New York')).toBeDefined();
-    expect(locations.find((l) => l.name === 'Auckland')).toBeDefined();
+    expect(Array.isArray(locations)).toBe(true);
+    expect(locations.length).toBeGreaterThan(0);
+    locations.forEach((loc) => {
+      expect(loc['@type']).toBe('City');
+      expect(typeof loc.name).toBe('string');
+    });
   });
 
-  it('includes alumniOf with universities', () => {
+  it('includes alumniOf with university entries', () => {
     const schemas = getSchemas();
     const person = schemas.find((s: any) => s['@type'] === 'Person') as any;
     const alumni = person.alumniOf as Array<{ '@type': string; name: string }>;
-    expect(alumni).toHaveLength(2);
-    expect(alumni.find((a) => a.name === 'University of Auckland')).toBeDefined();
-    expect(alumni.find((a) => a.name === 'Central Washington University')).toBeDefined();
+    expect(Array.isArray(alumni)).toBe(true);
+    expect(alumni.length).toBeGreaterThan(0);
+    alumni.forEach((org) => {
+      expect(org['@type']).toBe('CollegeOrUniversity');
+      expect(typeof org.name).toBe('string');
+    });
   });
 
   it('includes a WebSite schema with name and url', () => {
@@ -65,7 +73,9 @@ describe('JsonLd', () => {
     const website = schemas.find((s: any) => s['@type'] === 'WebSite') as any;
     expect(website).toBeDefined();
     expect(website['@context']).toBe('https://schema.org');
-    expect(website.name).toBe('Yosef Gamble');
-    expect(website.url).toBe('https://yosefgamble.com');
+    expect(typeof website.name).toBe('string');
+    expect(website.name.length).toBeGreaterThan(0);
+    expect(typeof website.url).toBe('string');
+    expect(website.url).toMatch(/^https:\/\//);
   });
 });

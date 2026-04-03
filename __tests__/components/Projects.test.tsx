@@ -5,6 +5,23 @@ vi.mock('@/hooks/usePretextHeight', () => ({
   usePretextHeight: () => ({ ref: { current: null }, style: {} }),
 }));
 
+vi.mock('@/data/projects', () => ({
+  projectEntries: [
+    {
+      id: 'uber-proj',
+      url: 'https://example.com/unicode-engine',
+      technologies: ['C++', 'Rust', 'WASM'],
+      icon: 'folder',
+    },
+    {
+      id: 'nihon-proj',
+      url: '#',
+      technologies: ['Python', 'TensorFlow', 'FastAPI'],
+      icon: 'layers',
+    },
+  ],
+}));
+
 import i18n from '@/lib/i18n';
 import Projects from '@/components/Projects';
 
@@ -53,25 +70,25 @@ describe('Projects', () => {
     it('should render project titles', () => {
       render(<Projects />);
       const section = screen.getByRole('region', { name: /selected projects/i });
-      expect(section).toHaveTextContent(/project alpha/i);
-      expect(section).toHaveTextContent(/neon ui kit/i);
+      expect(section).toHaveTextContent(/unicode engine/i);
+      expect(section).toHaveTextContent(/naive bayes cafe/i);
     });
 
     it('should render project descriptions', () => {
       render(<Projects />);
       const section = screen.getByRole('region', { name: /selected projects/i });
-      expect(section).toHaveTextContent(/distributed data processing engine/i);
-      expect(section).toHaveTextContent(/open-source react component library/i);
+      expect(section).toHaveTextContent(/real-time text processor/i);
+      expect(section).toHaveTextContent(/ML-powered cafe recommendation/i);
     });
 
-    it('should render Project Alpha description details', () => {
+    it('should render Unicode Engine description details', () => {
       render(<Projects />);
-      expect(screen.getByText(/petabytes of logs in real-time/i)).toBeInTheDocument();
+      expect(screen.getByText(/154,998 Unicode characters/i)).toBeInTheDocument();
     });
 
-    it('should render Neon UI Kit description details', () => {
+    it('should render Naive Bayes Cafe description details', () => {
       render(<Projects />);
-      expect(screen.getByText(/accessibility and dark mode/i)).toBeInTheDocument();
+      expect(screen.getByText(/menus in 42 languages/i)).toBeInTheDocument();
     });
 
     it('should render exactly two project cards via h3 headings', () => {
@@ -85,10 +102,10 @@ describe('Projects', () => {
     it('should render project links with correct aria-labels', () => {
       render(<Projects />);
       expect(
-        screen.getByRole('link', { name: /project alpha \(opens in a new tab\)/i })
+        screen.getByRole('link', { name: /unicode engine \(opens in a new tab\)/i })
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('link', { name: /neon ui kit \(opens in a new tab\)/i })
+        screen.getByRole('link', { name: /naive bayes cafe \(opens in a new tab\)/i })
       ).toBeInTheDocument();
     });
 
@@ -115,20 +132,20 @@ describe('Projects', () => {
       expect(techLists).toHaveLength(2);
     });
 
-    it('should render Project Alpha technologies', () => {
+    it('should render Unicode Engine technologies', () => {
       render(<Projects />);
       const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
-      expect(within(techLists[0]).getByText('Kafka')).toBeInTheDocument();
-      expect(within(techLists[0]).getByText('AWS')).toBeInTheDocument();
+      expect(within(techLists[0]).getByText('WASM')).toBeInTheDocument();
     });
 
-    it('should render Neon UI Kit technologies', () => {
+    it('should render Naive Bayes Cafe technologies', () => {
       render(<Projects />);
       const techLists = screen.getAllByRole('list', { name: /technologies used/i });
-      expect(within(techLists[1]).getByText('React')).toBeInTheDocument();
-      expect(within(techLists[1]).getByText('Tailwind')).toBeInTheDocument();
-      expect(within(techLists[1]).getByText('A11y')).toBeInTheDocument();
+      expect(within(techLists[1]).getByText('Python')).toBeInTheDocument();
+      expect(within(techLists[1]).getByText('TensorFlow')).toBeInTheDocument();
+      expect(within(techLists[1]).getByText('FastAPI')).toBeInTheDocument();
     });
   });
 
@@ -225,23 +242,23 @@ describe('Projects', () => {
       try {
         render(<Projects />);
 
-        const alphaHeading = screen.getByRole('heading', {
+        const uberHeading = screen.getByRole('heading', {
           level: 3,
-          name: /project alpha/i,
+          name: /unicode engine/i,
         });
-        const alphaCard = alphaHeading.closest('div.group') as HTMLElement | null;
-        expect(alphaCard).toBeTruthy();
-        expect(within(alphaCard!).getByText('Rust')).toBeInTheDocument();
-        expect(within(alphaCard!).getByText('Kafka')).toBeInTheDocument();
+        const uberCard = uberHeading.closest('div.group') as HTMLElement | null;
+        expect(uberCard).toBeTruthy();
+        expect(within(uberCard!).getByText('C++')).toBeInTheDocument();
+        expect(within(uberCard!).getByText('Rust')).toBeInTheDocument();
 
-        const neonHeading = screen.getByRole('heading', {
+        const nihonHeading = screen.getByRole('heading', {
           level: 3,
-          name: /neon ui kit/i,
+          name: /naive bayes cafe/i,
         });
-        const neonCard = neonHeading.closest('div.group') as HTMLElement | null;
-        expect(neonCard).toBeTruthy();
-        expect(within(neonCard!).getByText('React')).toBeInTheDocument();
-        expect(within(neonCard!).getByText('A11y')).toBeInTheDocument();
+        const nihonCard = nihonHeading.closest('div.group') as HTMLElement | null;
+        expect(nihonCard).toBeTruthy();
+        expect(within(nihonCard!).getByText('Python')).toBeInTheDocument();
+        expect(within(nihonCard!).getByText('FastAPI')).toBeInTheDocument();
       } finally {
         i18n.addResourceBundle('en', 'translation', original, false, true);
       }

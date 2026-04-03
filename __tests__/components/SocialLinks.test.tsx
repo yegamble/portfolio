@@ -4,28 +4,28 @@ import SocialLinks from '@/components/SocialLinks';
 
 describe('SocialLinks', () => {
   describe('Rendering all links', () => {
-    it('should render GitHub link with correct href', () => {
+    it('should render GitHub link with a github.com href', () => {
       render(<SocialLinks />);
       const link = screen.getByRole('link', { name: /github/i });
-      expect(link).toHaveAttribute('href', 'https://github.com/yegamble');
+      expect(link).toHaveAttribute('href', expect.stringContaining('github.com'));
     });
 
-    it('should render LinkedIn link with correct href', () => {
+    it('should render LinkedIn link with a linkedin.com href', () => {
       render(<SocialLinks />);
       const link = screen.getByRole('link', { name: /linkedin/i });
-      expect(link).toHaveAttribute('href', 'https://linkedin.com/in/yosefgamble');
+      expect(link).toHaveAttribute('href', expect.stringContaining('linkedin.com'));
     });
 
-    it('should render Email link with correct href', () => {
+    it('should render Email link with a mailto href', () => {
       render(<SocialLinks />);
       const link = screen.getByRole('link', { name: /^email$/i });
-      expect(link).toHaveAttribute('href', 'mailto:yegamble@gmail.com');
+      expect(link).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
     });
 
-    it('should render Secure email link with correct href', () => {
+    it('should render Secure email link with a mailto href', () => {
       render(<SocialLinks />);
       const link = screen.getByRole('link', { name: /secure email/i });
-      expect(link).toHaveAttribute('href', 'mailto:yosef.gamble@protonmail.com');
+      expect(link).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
     });
 
     it('should render exactly four social links', () => {

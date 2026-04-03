@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import ProfilePicture from '@/components/ProfilePicture';
-import en from '../../public/locales/en/translation.json';
+import testEn from '../fixtures/translations/en.json';
 
-const profileAlt = en.hero.profileAlt;
+const profileAlt = testEn.hero.profileAlt;
 
 describe('ProfilePicture', () => {
   describe('Image rendering', () => {

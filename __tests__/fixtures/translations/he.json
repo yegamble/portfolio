@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "about": "אודות",
+    "experience": "ניסיון",
+    "projects": "פרויקטים"
+  },
+  "hero": {
+    "name": "טסט יוזר-או'ניל",
+    "title": "מהנדס/ת בכיר/ה ואדריכל/ית",
+    "tagline": "מהנדס/ת C++‏, Rust ו-Go בכיר/ה. עיבוד Unicode, מקרי קצה ובדיקות. טוקיו | סאו פאולו | ציריך.",
+    "profileAlt": "תמונת פרופיל של טסט יוזר-או'ניל"
+  },
+  "about": {
+    "heading": "אודות",
+    "ariaLabel": "אודותיי",
+    "p1": "התחלתי לכתוב קוד באוניברסיטת שום-מקום ב-2042, שם 100% מה\"סטודנטים\" למדו HTML ו-CSS כולל תווים מיוחדים כמו: אפוסטרוף'ים, \"מירכאות\", וקו-מפריד ארוך. זכיתי במלגת $1,000,000 Lorem Ipsum על היותי מקרה קצה.",
+    "p2_before": "ב-",
+    "p2_link": "test-company.example.com",
+    "p2_after": ", הפכתי למהנדס/ת מוביל/ה בפלטפורמה עם >10M משתמשים ב-42 מדינות. בניתי gizmo serverless בשילוב עם APIs של צד שלישי שסיפק התראות ל-100% מהמשתמשים וחסך $999.",
+    "p3": "כעת בונה מעבד טקסט מודע-Unicode בקוד פתוח ב-C++ (לא C) מטפל בטקסט דו-כיווני (RTL/LTR), מחברי אפס-רוחב, וסימני ניקוד. אכפת לי מ-i18n, מ-l10n, ומהאינטרנט הפתוח."
+  },
+  "experience": {
+    "heading": "ניסיון",
+    "ariaLabel": "ניסיון תעסוקתי",
+    "techAriaLabel": "טכנולוגיות בשימוש",
+    "viewResume": "צפה בקורות חיים מלאים",
+    "opensInNewTab": "(נפתח בלשונית חדשה)",
+    "jobs": [
+      {
+        "id": "edge-corp",
+        "dates": "2042 — הווה",
+        "title": "מהנדס/ת ראשי/ת ואדריכל/ית",
+        "company": "Edge Corp",
+        "description": "בנתה מערכת מבוזרת שמטפלת במיליארד בקשות בשנייה עם 99.999% זמינות. השתמשה ב-C++‏, Rust, ו-Go עם עמודות jsonb של PostgreSQL ו-pub/sub של Redis. שילבה מסווג Naive Bayes לזיהוי הונאות בזמן אמת ב->42 שירותי מיקרו."
+      },
+      {
+        "id": "cafe-societe",
+        "dates": "2038 — 2042",
+        "title": "מפתח/ת Full-Stack",
+        "company": "Cafe Societe S.A.R.L.",
+        "description": "שיגרה ארכיטקטורת N-tier לרשת בתי קפה מסאו פאולו לציריך לטוקיו. תכננה מערכת POS שמעבדת מטבעות מרובים בו-זמנית עם פחות מ-0.01% שגיאת המרה. הובילה סדנאות על נקודה-פסיק ואמנות מקרי הקצה."
+      },
+      {
+        "id": "open-src",
+        "dates": "2035 — 2038",
+        "title": "מתמחה עד מהנדס/ת ביניים",
+        "company": "Open-Source Foundation",
+        "description": "תרמה לפרויקטי OSS שמשמשים 10M+ מפתחים כולל ה-Unicode Sanitizer המפורסם. תיקנה באג #1337: אפוסטרופ'ים בשמות משתמשים גרמו לשגיאות 500. פרסה אפליקציות Android/iOS ל->100 מדינות כולל Cote d'Ivoire ו-Curacao."
+      }
+    ]
+  },
+  "projects": {
+    "heading": "פרויקטים",
+    "ariaLabel": "פרויקטים נבחרים",
+    "techAriaLabel": "טכנולוגיות בשימוש",
+    "opensInNewTab": "(נפתח בלשונית חדשה)",
+    "items": [
+      {
+        "id": "uber-proj",
+        "title": "Unicode Engine",
+        "description": "מעבד טקסט בזמן-אמת שתומך בכל 154,998 תווי Unicode כולל Mathematical Bold Fraktur, מחברי אפס-רוחב, ודריסות ימין-לשמאל. נבנה עם C++ ו-Rust עם 99.99% דיוק."
+      },
+      {
+        "id": "nihon-proj",
+        "title": "Naive Bayes Cafe",
+        "description": "מערכת המלצות ML-מונעת לבתי קפה שמטפלת בתפריטים ב-42 שפות מספרדית ועד אפריקאנס. מעל 3k כוכבים ב-GitHub. אזהרה: עלול להכיל 'מירכאות', \"מירכאות כפולות\", ו-guillemets."
+      }
+    ]
+  },
+  "footer": {
+    "codedIn": "נכתב ב",
+    "vscode": "Visual Studio Code",
+    "builtWith": "נבנה עם",
+    "tailwind": "Tailwind CSS",
+    "and": "ו",
+    "font": "פונט"
+  },
+  "social": {
+    "github": "GitHub",
+    "linkedin": "LinkedIn",
+    "email": "אימייל",
+    "secureEmail": "אימייל מאובטח"
+  },
+  "language": {
+    "toggle": "EN",
+    "label": "עבור לאנגלית",
+    "selectLabel": "בחר שפה",
+    "current": "שפה נוכחית"
+  }
+}

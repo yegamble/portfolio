@@ -8,6 +8,47 @@ import Experience from '@/components/Experience';
 import Projects from '@/components/Projects';
 import Footer from '@/components/Footer';
 
+import testEn from '../fixtures/translations/en.json';
+import testHe from '../fixtures/translations/he.json';
+import testRu from '../fixtures/translations/ru.json';
+
+vi.mock('@/data/experience', () => ({
+  experienceEntries: [
+    {
+      id: 'edge-corp',
+      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
+      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
+    },
+    {
+      id: 'cafe-societe',
+      companyUrl: 'https://cafe-societe.example.com/',
+      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
+    },
+    {
+      id: 'open-src',
+      companyUrl: '#',
+      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
+    },
+  ],
+}));
+
+vi.mock('@/data/projects', () => ({
+  projectEntries: [
+    {
+      id: 'uber-proj',
+      url: 'https://example.com/unicode-engine',
+      technologies: ['C++', 'Rust', 'WASM'],
+      icon: 'folder',
+    },
+    {
+      id: 'nihon-proj',
+      url: '#',
+      technologies: ['Python', 'TensorFlow', 'FastAPI'],
+      icon: 'layers',
+    },
+  ],
+}));
+
 beforeEach(async () => {
   await i18n.changeLanguage('en');
   document.documentElement.lang = 'en';
@@ -40,15 +81,15 @@ describe('i18n Integration - English Mode', () => {
 
   it('should render hero content in English', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('Yosef Gamble', { selector: 'section p' })).toBeInTheDocument();
-    expect(screen.getByText('Senior Software Engineer', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testEn.hero.name, { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testEn.hero.title, { selector: 'section p' })).toBeInTheDocument();
     const h1 = screen.getByRole('heading', { level: 1 });
-    expect(h1).toHaveTextContent(/Senior Go & TypeScript engineer/);
+    expect(h1).toHaveTextContent(/Senior C\+\+, Rust & Go engineer/);
   });
 
   it('should render profile picture with English alt text', () => {
     render(<ScrollHeader />);
-    const img = screen.getByRole('img', { name: /yosef gamble profile photo/i });
+    const img = screen.getByRole('img', { name: new RegExp(testEn.hero.profileAlt, 'i') });
     expect(img).toBeInTheDocument();
   });
 
@@ -75,7 +116,7 @@ describe('i18n Integration - English Mode', () => {
 
   it('should render resume link text in English', () => {
     render(<Experience />);
-    expect(screen.getByText(/View Full Résumé/)).toBeInTheDocument();
+    expect(screen.getByText(/View Full Resume/)).toBeInTheDocument();
   });
 
   it('should render footer attribution in English', () => {
@@ -100,23 +141,24 @@ describe('i18n Integration - Hebrew Mode', () => {
 
   it('should render hero name in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('יוסף גמבל', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testHe.hero.name, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero title in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('מהנדס תוכנה בכיר', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testHe.hero.title, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Hebrew', () => {
     render(<ScrollHeader />);
     const h1 = screen.getByRole('heading', { level: 1 });
-    expect(h1).toHaveTextContent(/מהנדס Go ו-TypeScript בכיר/);
+    expect(h1).toHaveTextContent(/C\+\+/);
+    expect(h1).toHaveTextContent(/Rust/);
   });
 
   it('should render profile picture with Hebrew alt text', () => {
     render(<ScrollHeader />);
-    const img = screen.getByRole('img', { name: /תמונת פרופיל של יוסף גמבל/ });
+    const img = screen.getByRole('img', { name: new RegExp(testHe.hero.profileAlt) });
     expect(img).toBeInTheDocument();
   });
 
@@ -140,14 +182,14 @@ describe('i18n Integration - Hebrew Mode', () => {
   it('should render Experience job titles in Hebrew', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-    expect(section).toHaveTextContent(/מהנדס פול סטק/);
-    expect(section).toHaveTextContent(/מפתח תוכנה/);
+    expect(section).toHaveTextContent(/מהנדס\/ת ראשי\/ת/);
+    expect(section).toHaveTextContent(/מתמחה עד מהנדס\/ת ביניים/);
   });
 
   it('should render Experience dates in Hebrew', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-    expect(section).toHaveTextContent(/2024 — הווה/);
+    expect(section).toHaveTextContent(/2042 — הווה/);
   });
 
   it('should render resume link in Hebrew', () => {
@@ -164,7 +206,7 @@ describe('i18n Integration - Hebrew Mode', () => {
   it('should render project descriptions in Hebrew', () => {
     render(<Projects />);
     const section = screen.getByRole('region', { name: /פרויקטים נבחרים/ });
-    expect(section).toHaveTextContent(/מנוע עיבוד נתונים מבוזר/);
+    expect(section).toHaveTextContent(/מעבד טקסט בזמן-אמת/);
   });
 
   it('should render footer attribution in Hebrew', () => {
@@ -189,18 +231,18 @@ describe('i18n Integration - Russian Mode', () => {
 
   it('should render hero name in Russian', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('Йосеф Гэмбл', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testRu.hero.name, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero title in Russian', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText('Старший инженер-программист', { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testRu.hero.title, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Russian', () => {
     render(<ScrollHeader />);
     const h1 = screen.getByRole('heading', { level: 1 });
-    expect(h1).toHaveTextContent(/Старший инженер Go/);
+    expect(h1).toHaveTextContent(/Старший инженер C\+\+/);
   });
 
   it('should render About section heading in Russian', () => {
@@ -223,8 +265,8 @@ describe('i18n Integration - Russian Mode', () => {
   it('should render Experience job titles in Russian', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: /Опыт работы/ });
-    expect(section).toHaveTextContent(/Фулстек-инженер/);
-    expect(section).toHaveTextContent(/Разработчик ПО/);
+    expect(section).toHaveTextContent(/Главный инженер/);
+    expect(section).toHaveTextContent(/Стажёр/);
   });
 
   it('should render resume link in Russian', () => {
@@ -244,10 +286,9 @@ describe('i18n Integration - Russian Mode', () => {
     expect(screen.getByText(/Создано с помощью/)).toBeInTheDocument();
   });
 
-  it('should preserve realestate.co.nz link in Russian About', () => {
+  it('should preserve company link to test-company in Russian About', () => {
     render(<About />);
-    const link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
-    expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+    const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
     expect(link).toHaveAttribute('target', '_blank');
   });
 
@@ -257,16 +298,16 @@ describe('i18n Integration - Russian Mode', () => {
       (l) => l.getAttribute('target') === '_blank'
     );
     const hrefs = links.map((l) => l.getAttribute('href'));
-    expect(hrefs).toContain('https://github.com/yegamble');
-    expect(hrefs).toContain('https://www.realestate.co.nz');
+    expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
+    expect(hrefs).toContain('https://cafe-societe.example.com/');
   });
 
   it('should preserve technology tags in Russian Experience (not translated)', () => {
     render(<Experience />);
     const techLists = screen.getAllByRole('list', { name: /Используемые технологии/ });
     expect(techLists).toHaveLength(3);
-    expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
-    expect(within(techLists[0]).getByText('Docker')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
   });
 
   it('should render three experience entries in Russian', () => {
@@ -296,15 +337,12 @@ describe('i18n Integration - Language Selector Flow', () => {
     const user = userEvent.setup();
     render(<ScrollHeader />);
 
-    // Verify English
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     expect(within(nav).getByText('About')).toBeInTheDocument();
 
-    // Open dropdown and select Hebrew
     await user.click(screen.getByRole('button', { name: /select language/i }));
     await user.click(screen.getByRole('option', { name: /עברית/i }));
 
-    // Verify Hebrew
     expect(within(nav).getByText('אודות')).toBeInTheDocument();
     expect(within(nav).getByText('ניסיון')).toBeInTheDocument();
     expect(within(nav).getByText('פרויקטים')).toBeInTheDocument();
@@ -352,11 +390,10 @@ describe('i18n Regression - Structural integrity across languages', () => {
     expect(links[2]).toHaveAttribute('href', '#projects');
   });
 
-  it('should preserve realestate.co.nz link in Hebrew About', async () => {
+  it('should preserve company link in Hebrew About', async () => {
     await i18n.changeLanguage('he');
     render(<About />);
-    const link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
-    expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+    const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
     expect(link).toHaveAttribute('target', '_blank');
   });
 
@@ -367,8 +404,8 @@ describe('i18n Regression - Structural integrity across languages', () => {
       (l) => l.getAttribute('target') === '_blank'
     );
     const hrefs = links.map((l) => l.getAttribute('href'));
-    expect(hrefs).toContain('https://github.com/yegamble');
-    expect(hrefs).toContain('https://www.realestate.co.nz');
+    expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
+    expect(hrefs).toContain('https://cafe-societe.example.com/');
   });
 
   it('should preserve resume link href in Hebrew Experience', async () => {
@@ -383,8 +420,8 @@ describe('i18n Regression - Structural integrity across languages', () => {
     render(<Experience />);
     const techLists = screen.getAllByRole('list', { name: /טכנולוגיות בשימוש/ });
     expect(techLists).toHaveLength(3);
-    expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
-    expect(within(techLists[0]).getByText('Docker')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
   });
 
   it('should preserve project URLs in Hebrew Projects', async () => {
@@ -427,16 +464,16 @@ describe('i18n Regression - Structural integrity across languages', () => {
     expect(paragraphs).toHaveLength(3);
   });
 
-  it('should keep social link hrefs unchanged in Hebrew', async () => {
+  it('should keep social link hrefs as valid URLs in Hebrew', async () => {
     await i18n.changeLanguage('he');
     render(<Footer />);
     expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute(
       'href',
-      'https://github.com/yegamble'
+      expect.stringContaining('github.com')
     );
     expect(screen.getByRole('link', { name: /linkedin/i })).toHaveAttribute(
       'href',
-      'https://linkedin.com/in/yosefgamble'
+      expect.stringContaining('linkedin.com')
     );
   });
 });

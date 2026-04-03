@@ -1,12 +1,51 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import userEvent from '@testing-library/user-event';
 import i18n from '@/lib/i18n';
 import ScrollHeader from '@/components/ScrollHeader';
 import About from '@/components/About';
 import Experience from '@/components/Experience';
 import Projects from '@/components/Projects';
 import Footer from '@/components/Footer';
+
+import testEn from '../fixtures/translations/en.json';
+import testHe from '../fixtures/translations/he.json';
+
+vi.mock('@/data/experience', () => ({
+  experienceEntries: [
+    {
+      id: 'edge-corp',
+      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
+      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
+    },
+    {
+      id: 'cafe-societe',
+      companyUrl: 'https://cafe-societe.example.com/',
+      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
+    },
+    {
+      id: 'open-src',
+      companyUrl: '#',
+      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
+    },
+  ],
+}));
+
+vi.mock('@/data/projects', () => ({
+  projectEntries: [
+    {
+      id: 'uber-proj',
+      url: 'https://example.com/unicode-engine',
+      technologies: ['C++', 'Rust', 'WASM'],
+      icon: 'folder',
+    },
+    {
+      id: 'nihon-proj',
+      url: '#',
+      technologies: ['Python', 'TensorFlow', 'FastAPI'],
+      icon: 'layers',
+    },
+  ],
+}));
 
 beforeEach(async () => {
   await i18n.changeLanguage('en');
@@ -46,20 +85,20 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       expect(paragraphs).toHaveLength(3);
     });
 
-    it('should render the realestate.co.nz link in paragraph 2 in English', () => {
+    it('should render the company link in paragraph 2 in English', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
-      expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      expect(link).toHaveAttribute('href');
       const section = screen.getByRole('region', { name: /about me/i });
       const paragraphs = section.querySelectorAll('p');
       expect(paragraphs[1]).toContainElement(link);
     });
 
-    it('should render the realestate.co.nz link in paragraph 2 in Hebrew', async () => {
+    it('should render the company link in paragraph 2 in Hebrew', async () => {
       await i18n.changeLanguage('he');
       render(<About />);
-      const link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
-      expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      expect(link).toHaveAttribute('href');
       const section = screen.getByRole('region', { name: 'אודותיי' });
       const paragraphs = section.querySelectorAll('p');
       expect(paragraphs[1]).toContainElement(link);
@@ -70,8 +109,8 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       const section = screen.getByRole('region', { name: /about me/i });
       const paragraphs = section.querySelectorAll('p');
       const p2 = paragraphs[1];
-      expect(p2).toHaveTextContent(/^At\s+realestate\.co\.nz/);
-      expect(p2).toHaveTextContent(/I became a key engineer/);
+      expect(p2).toHaveTextContent(/^At\s+test-company\.example\.com/);
+      expect(p2).toHaveTextContent(/became lead engineer/);
     });
 
     it('should render p2 as prefix text + link + suffix text in Hebrew', async () => {
@@ -81,7 +120,7 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       const paragraphs = section.querySelectorAll('p');
       const p2 = paragraphs[1];
       expect(p2).toHaveTextContent(/ב-/);
-      expect(p2).toHaveTextContent(/realestate\.co\.nz/);
+      expect(p2).toHaveTextContent(/test-company\.example\.com/);
       expect(p2).toHaveTextContent(/הפכתי למהנדס/);
     });
 
@@ -120,9 +159,9 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       await i18n.changeLanguage('he');
       render(<Experience />);
       const section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-      expect(section).toHaveTextContent('עצמאי');
-      expect(section).toHaveTextContent('realestate.co.nz');
-      expect(section).toHaveTextContent('ProStock');
+      expect(section).toHaveTextContent('Edge Corp');
+      expect(section).toHaveTextContent('Cafe Societe');
+      expect(section).toHaveTextContent('Open-Source Foundation');
     });
 
     it('should preserve three technology tag lists in both languages', async () => {
@@ -313,13 +352,13 @@ describe('Cipher Integration - Language switch preserves structure', () => {
   it('should preserve About p2 link after switching language', async () => {
     render(<About />);
 
-    let link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
-    expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+    let link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+    expect(link).toHaveAttribute('href');
 
     await i18n.changeLanguage('he');
 
-    link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
-    expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+    link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+    expect(link).toHaveAttribute('href');
   });
 
   it('should preserve all Experience company link hrefs after switching language', async () => {

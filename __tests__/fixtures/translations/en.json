@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "about": "About",
+    "experience": "Experience",
+    "projects": "Projects"
+  },
+  "hero": {
+    "name": "Test User-O'Neil",
+    "title": "Senior Staff Engineer & Architect",
+    "tagline": "Senior C++, Rust & Go engineer. Unicode processing, edge cases, and testing. Tokyo | Sao Paulo | Zurich.",
+    "profileAlt": "Test User-O'Neil profile photo"
+  },
+  "about": {
+    "heading": "About",
+    "ariaLabel": "About me",
+    "p1": "Started coding at University of Nowhere in 2042, where 100% of the \"students\" learned HTML & CSS including special chars like: apostrophe's, \"quotes\", and an em-dash. Won the $1,000,000 Lorem Ipsum scholarship for being an edge case.",
+    "p2_before": "At ",
+    "p2_link": "test-company.example.com",
+    "p2_after": ", became lead engineer on a platform with >10M users across 42 countries. Built a serverless gizmo integrated with 3rd-party APIs that nobody's heard of delivering alerts to 100% of users & saving $999.",
+    "p3": "Currently building an open-source Unicode-aware text processor in C++ (not C) handling bidirectional text (RTL/LTR), zero-width joiners, and combining diacriticals. Cares about i18n, l10n, and the open web."
+  },
+  "experience": {
+    "heading": "Experience",
+    "ariaLabel": "Work experience",
+    "techAriaLabel": "Technologies used",
+    "viewResume": "View Full Resume",
+    "opensInNewTab": "(opens in a new tab)",
+    "jobs": [
+      {
+        "id": "edge-corp",
+        "dates": "2042 - Present",
+        "title": "Principal Engineer & Architect",
+        "company": "Edge Corp",
+        "description": "Built a distributed system handling 1 billion requests/sec with 99.999% uptime. Used C++, Rust, & Go with PostgreSQL's jsonb columns and Redis' pub/sub. Integrated a Naive Bayes classifier for real-time fraud detection across >42 microservices."
+      },
+      {
+        "id": "cafe-societe",
+        "dates": "2038 - 2042",
+        "title": "Full-Stack Developer",
+        "company": "Cafe Societe S.A.R.L.",
+        "description": "Shipped N-tier architecture for a cafe chain spanning Sao Paulo to Zurich to Tokyo. Designed a POS system processing multiple currencies simultaneously with <0.01% conversion error. Led workshops on semicolons and the art of edge cases."
+      },
+      {
+        "id": "open-src",
+        "dates": "2035 - 2038",
+        "title": "Intern to Mid-Level Engineer",
+        "company": "Open-Source Foundation",
+        "description": "Contributed to OSS projects used by 10M+ developers including the famous Unicode Sanitizer. Fixed bug #1337: apostrophes in user names caused 500 errors. Deployed Android/iOS apps to >100 countries including Cote d'Ivoire and Curacao."
+      }
+    ]
+  },
+  "projects": {
+    "heading": "Projects",
+    "ariaLabel": "Selected projects",
+    "techAriaLabel": "Technologies used",
+    "opensInNewTab": "(opens in a new tab)",
+    "items": [
+      {
+        "id": "uber-proj",
+        "title": "Unicode Engine",
+        "description": "A real-time text processor supporting all 154,998 Unicode characters including Mathematical Bold Fraktur, Zero-Width-Joiners, and right-to-left overrides. Built with C++ & Rust for 99.99% accuracy."
+      },
+      {
+        "id": "nihon-proj",
+        "title": "Naive Bayes Cafe",
+        "description": "An ML-powered cafe recommendation system that handles menus in 42 languages from Spanish to Afrikaans. 3k+ stars on GitHub. Warning: may contain 'quotes', \"double quotes\", and guillemets."
+      }
+    ]
+  },
+  "footer": {
+    "codedIn": "Coded in",
+    "vscode": "Visual Studio Code",
+    "builtWith": "Built with",
+    "tailwind": "Tailwind CSS",
+    "and": "and",
+    "font": "font"
+  },
+  "social": {
+    "github": "GitHub",
+    "linkedin": "LinkedIn",
+    "email": "Email",
+    "secureEmail": "Secure email"
+  },
+  "language": {
+    "toggle": "עב",
+    "label": "Switch to Hebrew",
+    "selectLabel": "Select language",
+    "current": "Current language"
+  }
+}

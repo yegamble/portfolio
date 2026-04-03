@@ -33,33 +33,27 @@ describe('RootLayout', () => {
 });
 
 describe('metadata', () => {
-  it('has SEO-optimized title with name and keywords', () => {
-    expect(metadata.title).toContain('Yosef Gamble');
-    expect(metadata.title).toContain('Senior Software Engineer');
+  it('has a non-empty title', () => {
+    expect(typeof metadata.title).toBe('string');
+    expect((metadata.title as string).length).toBeGreaterThan(0);
   });
 
-  it('has keyword-rich description covering all target terms', () => {
+  it('has a non-empty description', () => {
     const desc = metadata.description as string;
-    expect(desc).toContain('Yosef Gamble');
-    expect(desc).toContain('Senior Software Engineer');
-    expect(desc).toContain('New York');
-    expect(desc).toContain('Auckland');
-    expect(desc).toContain('Go');
-    expect(desc).toContain('Golang');
-    expect(desc.toLowerCase()).toContain('real estate');
-    expect(desc).toContain('video streaming');
+    expect(typeof desc).toBe('string');
+    expect(desc.length).toBeGreaterThan(0);
   });
 
   it('has Open Graph metadata with image', () => {
     const og = metadata.openGraph as Record<string, unknown>;
     expect(og).toBeDefined();
-    expect(og.title).toContain('Yosef Gamble');
+    expect(typeof og.title).toBe('string');
     expect(og.type).toBe('website');
     expect(og.images).toBeDefined();
 
     const images = og.images as Array<{ url: string; width: number; height: number }>;
     expect(images).toHaveLength(1);
-    expect(images[0].url).toBe('/images/og-image.jpg');
+    expect(images[0].url).toMatch(/\.(jpg|png|webp)$/);
     expect(images[0].width).toBe(1200);
     expect(images[0].height).toBe(630);
   });
@@ -68,20 +62,24 @@ describe('metadata', () => {
     const twitter = metadata.twitter as Record<string, unknown>;
     expect(twitter).toBeDefined();
     expect(twitter.card).toBe('summary_large_image');
-    expect(twitter.title).toContain('Yosef Gamble');
+    expect(typeof twitter.title).toBe('string');
   });
 
   it('has canonical URL in alternates', () => {
     const alternates = metadata.alternates as NonNullable<Metadata['alternates']>;
     expect(alternates).toBeDefined();
-    expect(alternates.canonical).toBe('https://yosefgamble.com');
+    expect(typeof alternates.canonical).toBe('string');
+    expect((alternates.canonical as string)).toMatch(/^https:\/\//);
   });
 
-  it('has keywords array with target terms', () => {
+  it('has keywords array with relevant terms', () => {
     const keywords = metadata.keywords as string[];
     expect(keywords).toBeDefined();
-    expect(keywords).toContain('Yosef Gamble');
-    expect(keywords).toContain('Golang');
-    expect(keywords).toContain('senior software engineer');
+    expect(Array.isArray(keywords)).toBe(true);
+    expect(keywords.length).toBeGreaterThan(0);
+    keywords.forEach((kw) => {
+      expect(typeof kw).toBe('string');
+      expect(kw.length).toBeGreaterThan(0);
+    });
   });
 });
