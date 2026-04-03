@@ -4,30 +4,23 @@ import { useEffect } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '@/lib/i18n';
 
-const VALID_LANGUAGES = new Set(['en', 'he', 'ru']);
+function applyLangAttributes(lng: string) {
+  document.documentElement.lang = lng;
+  document.documentElement.dir = lng === 'he' ? 'rtl' : 'ltr';
+}
 
 function HtmlLangUpdater() {
   const { i18n: i18nInstance } = useTranslation();
 
-  // Restore language from localStorage on mount
+  // Set lang/dir on mount (i18n already initialized with stored language)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem('language');
-    if (stored && VALID_LANGUAGES.has(stored) && stored !== i18nInstance.language) {
-      i18nInstance.changeLanguage(stored);
-    }
+    applyLangAttributes(i18nInstance.language);
   }, [i18nInstance]);
 
-  useEffect(() => {
-    const lang = i18nInstance.language;
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
-  }, [i18nInstance.language]);
-
+  // Update lang/dir and persist on language changes
   useEffect(() => {
     const handleLanguageChanged = (lng: string) => {
-      document.documentElement.lang = lng;
-      document.documentElement.dir = lng === 'he' ? 'rtl' : 'ltr';
+      applyLangAttributes(lng);
       if (typeof window !== 'undefined') {
         localStorage.setItem('language', lng);
       }
