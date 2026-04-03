@@ -348,6 +348,48 @@ describe('ScrollHeader', () => {
       });
       expect(navNameLink).toHaveAttribute('href', '/');
     });
+
+    it('should scroll to top when nav name is clicked', async () => {
+      const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+      window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+
+      render(<ScrollHeader />);
+      const navNameLink = screen.getByRole('link', {
+        name: /yosef gamble/i,
+        hidden: true,
+      });
+
+      const user = (await import('@testing-library/user-event')).default.setup();
+      await user.click(navNameLink);
+
+      expect(scrollToSpy).toHaveBeenCalledWith({
+        top: 0,
+        behavior: 'smooth',
+      });
+
+      scrollToSpy.mockRestore();
+    });
+
+    it('should use instant scroll when prefers-reduced-motion is enabled', async () => {
+      const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+      window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+
+      render(<ScrollHeader />);
+      const navNameLink = screen.getByRole('link', {
+        name: /yosef gamble/i,
+        hidden: true,
+      });
+
+      const user = (await import('@testing-library/user-event')).default.setup();
+      await user.click(navNameLink);
+
+      expect(scrollToSpy).toHaveBeenCalledWith({
+        top: 0,
+        behavior: 'auto',
+      });
+
+      scrollToSpy.mockRestore();
+    });
   });
 
   describe('Motion preference', () => {

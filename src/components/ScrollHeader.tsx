@@ -54,6 +54,15 @@ export default function ScrollHeader() {
               className="text-base font-bold tracking-tight text-text-primary"
               href="/"
               tabIndex={isScrolled ? 0 : -1}
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({
+                  top: 0,
+                  behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                    ? 'auto'
+                    : 'smooth',
+                });
+              }}
             >
               <CipherText>{t('hero.name')}</CipherText>
             </Link>
