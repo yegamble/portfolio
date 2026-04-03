@@ -92,6 +92,79 @@ export function FolderIcon({ className = 'h-9 w-9 text-primary/90' }: IconProps)
   );
 }
 
+interface FlagIconProps {
+  className?: string;
+}
+
+function BaseFlagIcon({ className, children, viewBox = '0 0 36 24' }: FlagIconProps & { children: ReactNode; viewBox?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox={viewBox}
+      className={className}
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function USFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
+  return (
+    <BaseFlagIcon className={className}>
+      {/* Red and white stripes */}
+      <rect width="36" height="24" fill="#B22234" />
+      <rect y="1.85" width="36" height="1.85" fill="#fff" />
+      <rect y="5.54" width="36" height="1.85" fill="#fff" />
+      <rect y="9.23" width="36" height="1.85" fill="#fff" />
+      <rect y="12.92" width="36" height="1.85" fill="#fff" />
+      <rect y="16.62" width="36" height="1.85" fill="#fff" />
+      <rect y="20.31" width="36" height="1.85" fill="#fff" />
+      {/* Blue canton */}
+      <rect width="14.4" height="12.92" fill="#3C3B6E" />
+      {/* Simplified stars (dots) */}
+      <circle cx="2.4" cy="2.15" r="0.8" fill="#fff" />
+      <circle cx="7.2" cy="2.15" r="0.8" fill="#fff" />
+      <circle cx="12" cy="2.15" r="0.8" fill="#fff" />
+      <circle cx="4.8" cy="4.31" r="0.8" fill="#fff" />
+      <circle cx="9.6" cy="4.31" r="0.8" fill="#fff" />
+      <circle cx="2.4" cy="6.46" r="0.8" fill="#fff" />
+      <circle cx="7.2" cy="6.46" r="0.8" fill="#fff" />
+      <circle cx="12" cy="6.46" r="0.8" fill="#fff" />
+      <circle cx="4.8" cy="8.62" r="0.8" fill="#fff" />
+      <circle cx="9.6" cy="8.62" r="0.8" fill="#fff" />
+      <circle cx="2.4" cy="10.77" r="0.8" fill="#fff" />
+      <circle cx="7.2" cy="10.77" r="0.8" fill="#fff" />
+      <circle cx="12" cy="10.77" r="0.8" fill="#fff" />
+    </BaseFlagIcon>
+  );
+}
+
+export function IsraelFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
+  return (
+    <BaseFlagIcon className={className}>
+      <rect width="36" height="24" fill="#fff" />
+      {/* Top blue stripe */}
+      <rect y="3" width="36" height="3.5" fill="#0038b8" />
+      {/* Bottom blue stripe */}
+      <rect y="17.5" width="36" height="3.5" fill="#0038b8" />
+      {/* Star of David */}
+      <polygon points="18,7 20.5,11.5 15.5,11.5" fill="none" stroke="#0038b8" strokeWidth="0.8" />
+      <polygon points="18,17 15.5,12.5 20.5,12.5" fill="none" stroke="#0038b8" strokeWidth="0.8" />
+    </BaseFlagIcon>
+  );
+}
+
+export function RussiaFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
+  return (
+    <BaseFlagIcon className={className}>
+      <rect width="36" height="8" fill="#fff" />
+      <rect y="8" width="36" height="8" fill="#0039A6" />
+      <rect y="16" width="36" height="8" fill="#D52B1E" />
+    </BaseFlagIcon>
+  );
+}
+
 export function LayersIcon({ className = 'h-9 w-9 text-primary/90' }: IconProps) {
   return (
     <BaseIcon viewBox="0 0 24 24" className={className}>

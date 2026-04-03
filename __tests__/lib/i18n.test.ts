@@ -24,9 +24,10 @@ describe('i18n initialization', () => {
     expect(fallbackLng).toBe('en');
   });
 
-  it('registers English and Hebrew translation resources', () => {
+  it('registers English, Hebrew, and Russian translation resources', () => {
     expect(i18n.hasResourceBundle('en', 'translation')).toBe(true);
     expect(i18n.hasResourceBundle('he', 'translation')).toBe(true);
+    expect(i18n.hasResourceBundle('ru', 'translation')).toBe(true);
   });
 
   it('escapes HTML special characters in interpolated values', () => {

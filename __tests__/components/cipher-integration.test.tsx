@@ -273,91 +273,57 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
   });
 });
 
-describe('Cipher Integration - Language toggle preserves structure', () => {
-  it('should preserve About paragraph count after toggling language', async () => {
-    const user = userEvent.setup();
-    render(
-      <>
-        <ScrollHeader />
-        <About />
-      </>
-    );
+describe('Cipher Integration - Language switch preserves structure', () => {
+  it('should preserve About paragraph count after switching language', async () => {
+    render(<About />);
 
     let section = screen.getByRole('region', { name: /about me/i });
     expect(section.querySelectorAll('p')).toHaveLength(3);
 
-    const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await user.click(toggleBtn);
+    await i18n.changeLanguage('he');
 
     section = screen.getByRole('region', { name: 'אודותיי' });
     expect(section.querySelectorAll('p')).toHaveLength(3);
   });
 
-  it('should preserve Experience list item count after toggling language', async () => {
-    const user = userEvent.setup();
-    render(
-      <>
-        <ScrollHeader />
-        <Experience />
-      </>
-    );
+  it('should preserve Experience list item count after switching language', async () => {
+    render(<Experience />);
 
     let section = screen.getByRole('region', { name: /work experience/i });
     let items = section.querySelector('ol')!.querySelectorAll(':scope > li');
     expect(items).toHaveLength(3);
 
-    const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await user.click(toggleBtn);
+    await i18n.changeLanguage('he');
 
     section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
     items = section.querySelector('ol')!.querySelectorAll(':scope > li');
     expect(items).toHaveLength(3);
   });
 
-  it('should preserve Projects card count after toggling language', async () => {
-    const user = userEvent.setup();
-    render(
-      <>
-        <ScrollHeader />
-        <Projects />
-      </>
-    );
+  it('should preserve Projects card count after switching language', async () => {
+    render(<Projects />);
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
 
-    const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await user.click(toggleBtn);
+    await i18n.changeLanguage('he');
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
   });
 
-  it('should preserve About p2 link after toggling language', async () => {
-    const user = userEvent.setup();
-    render(
-      <>
-        <ScrollHeader />
-        <About />
-      </>
-    );
+  it('should preserve About p2 link after switching language', async () => {
+    render(<About />);
 
     let link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
     expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
 
-    const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await user.click(toggleBtn);
+    await i18n.changeLanguage('he');
 
     link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
     expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
   });
 
-  it('should preserve all Experience company link hrefs after toggling language', async () => {
-    const user = userEvent.setup();
-    render(
-      <>
-        <ScrollHeader />
-        <Experience />
-      </>
-    );
+  it('should preserve all Experience company link hrefs after switching language', async () => {
+    render(<Experience />);
 
     let section = screen.getByRole('region', { name: /work experience/i });
     let companyLinks = within(section).getAllByRole('link').filter(
@@ -365,8 +331,7 @@ describe('Cipher Integration - Language toggle preserves structure', () => {
     );
     const enHrefs = companyLinks.map((l) => l.getAttribute('href')).sort();
 
-    const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await user.click(toggleBtn);
+    await i18n.changeLanguage('he');
 
     section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
     companyLinks = within(section).getAllByRole('link').filter(
@@ -377,14 +342,8 @@ describe('Cipher Integration - Language toggle preserves structure', () => {
     expect(heHrefs).toEqual(enHrefs);
   });
 
-  it('should preserve Footer tool link hrefs after toggling language', async () => {
-    const user = userEvent.setup();
-    render(
-      <>
-        <ScrollHeader />
-        <Footer />
-      </>
-    );
+  it('should preserve Footer tool link hrefs after switching language', async () => {
+    render(<Footer />);
 
     const getToolHrefs = () =>
       screen.getAllByRole('link')
@@ -394,8 +353,7 @@ describe('Cipher Integration - Language toggle preserves structure', () => {
 
     const enHrefs = getToolHrefs();
 
-    const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await user.click(toggleBtn);
+    await i18n.changeLanguage('he');
 
     const heHrefs = getToolHrefs();
     expect(heHrefs).toEqual(enHrefs);

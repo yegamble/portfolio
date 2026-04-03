@@ -174,18 +174,135 @@ describe('i18n Integration - Hebrew Mode', () => {
   });
 });
 
-describe('i18n Integration - Language Toggle Flow', () => {
-  it('should switch all content when toggling language', async () => {
+describe('i18n Integration - Russian Mode', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('ru');
+  });
+
+  it('should render nav items in Russian', () => {
+    render(<ScrollHeader />);
+    const nav = screen.getByRole('navigation', { name: /main navigation/i });
+    expect(within(nav).getByText('Обо мне')).toBeInTheDocument();
+    expect(within(nav).getByText('Опыт')).toBeInTheDocument();
+    expect(within(nav).getByText('Проекты')).toBeInTheDocument();
+  });
+
+  it('should render hero name in Russian', () => {
+    render(<ScrollHeader />);
+    expect(screen.getByText('Йосеф Гэмбл', { selector: 'section p' })).toBeInTheDocument();
+  });
+
+  it('should render hero title in Russian', () => {
+    render(<ScrollHeader />);
+    expect(screen.getByText('Старший инженер-программист', { selector: 'section p' })).toBeInTheDocument();
+  });
+
+  it('should render hero tagline in Russian', () => {
+    render(<ScrollHeader />);
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1).toHaveTextContent(/Старший инженер Go/);
+  });
+
+  it('should render About section heading in Russian', () => {
+    render(<About />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent('Обо мне');
+  });
+
+  it('should render About section with Russian aria-label', () => {
+    render(<About />);
+    expect(screen.getByRole('region', { name: 'Обо мне' })).toBeInTheDocument();
+  });
+
+  it('should render Experience section heading in Russian', () => {
+    render(<Experience />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent('Опыт');
+  });
+
+  it('should render Experience job titles in Russian', () => {
+    render(<Experience />);
+    const section = screen.getByRole('region', { name: /Опыт работы/ });
+    expect(section).toHaveTextContent(/Фулстек-инженер/);
+    expect(section).toHaveTextContent(/Разработчик ПО/);
+  });
+
+  it('should render resume link in Russian', () => {
+    render(<Experience />);
+    expect(screen.getByText(/Посмотреть полное резюме/)).toBeInTheDocument();
+  });
+
+  it('should render Projects section heading in Russian', () => {
+    render(<Projects />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent('Проекты');
+  });
+
+  it('should render footer attribution in Russian', () => {
+    render(<Footer />);
+    expect(screen.getByText(/Написано в/)).toBeInTheDocument();
+    expect(screen.getByText(/Создано с помощью/)).toBeInTheDocument();
+  });
+
+  it('should preserve realestate.co.nz link in Russian About', () => {
+    render(<About />);
+    const link = screen.getByRole('link', { name: /realestate\.co\.nz/i });
+    expect(link).toHaveAttribute('href', 'https://www.realestate.co.nz');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  it('should preserve company URLs in Russian Experience', () => {
+    render(<Experience />);
+    const links = screen.getAllByRole('link').filter(
+      (l) => l.getAttribute('target') === '_blank'
+    );
+    const hrefs = links.map((l) => l.getAttribute('href'));
+    expect(hrefs).toContain('https://github.com/yegamble');
+    expect(hrefs).toContain('https://www.realestate.co.nz');
+  });
+
+  it('should preserve technology tags in Russian Experience (not translated)', () => {
+    render(<Experience />);
+    const techLists = screen.getAllByRole('list', { name: /Используемые технологии/ });
+    expect(techLists).toHaveLength(3);
+    expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('Docker')).toBeInTheDocument();
+  });
+
+  it('should render three experience entries in Russian', () => {
+    render(<Experience />);
+    const section = screen.getByRole('region', { name: /Опыт работы/ });
+    const ol = section.querySelector('ol');
+    const items = ol!.querySelectorAll(':scope > li');
+    expect(items).toHaveLength(3);
+  });
+
+  it('should render two project cards in Russian', () => {
+    render(<Projects />);
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings).toHaveLength(2);
+  });
+
+  it('should render three about paragraphs in Russian', () => {
+    render(<About />);
+    const section = screen.getByRole('region', { name: 'Обо мне' });
+    const paragraphs = section.querySelectorAll('p');
+    expect(paragraphs).toHaveLength(3);
+  });
+});
+
+describe('i18n Integration - Language Selector Flow', () => {
+  it('should switch all content when selecting Hebrew via dropdown', async () => {
+    const user = userEvent.setup();
     render(<ScrollHeader />);
 
     // Verify English
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     expect(within(nav).getByText('About')).toBeInTheDocument();
 
-    // Toggle to Hebrew
-    const user = userEvent.setup();
-    const toggleBtn = screen.getByRole('button', { name: /switch to hebrew/i });
-    await user.click(toggleBtn);
+    // Open dropdown and select Hebrew
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    await user.click(screen.getByRole('option', { name: /עברית/i }));
 
     // Verify Hebrew
     expect(within(nav).getByText('אודות')).toBeInTheDocument();
@@ -193,21 +310,34 @@ describe('i18n Integration - Language Toggle Flow', () => {
     expect(within(nav).getByText('פרויקטים')).toBeInTheDocument();
   });
 
-  it('should toggle back to English from Hebrew', async () => {
+  it('should switch to Russian via dropdown', async () => {
+    const user = userEvent.setup();
+    render(<ScrollHeader />);
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    await user.click(screen.getByRole('option', { name: /Русский/i }));
+
+    const nav = screen.getByRole('navigation', { name: /main navigation/i });
+    expect(within(nav).getByText('Обо мне')).toBeInTheDocument();
+    expect(within(nav).getByText('Опыт')).toBeInTheDocument();
+    expect(within(nav).getByText('Проекты')).toBeInTheDocument();
+  });
+
+  it('should switch back to English from Hebrew via dropdown', async () => {
     const user = userEvent.setup();
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
 
-    const toggleBtn = screen.getByRole('button', { name: /עבור לאנגלית/i });
-    await user.click(toggleBtn);
+    await user.click(screen.getByRole('button', { name: /בחר שפה/i }));
+    await user.click(screen.getByRole('option', { name: /English/i }));
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     expect(within(nav).getByText('About')).toBeInTheDocument();
   });
 
-  it('should render language toggle button in navbar', () => {
+  it('should render language selector button in navbar', () => {
     render(<ScrollHeader />);
-    expect(screen.getByRole('button', { name: /switch to hebrew/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select language/i })).toBeInTheDocument();
   });
 });
 

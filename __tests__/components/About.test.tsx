@@ -105,10 +105,10 @@ describe('About', () => {
       expect(section).toHaveTextContent(/Backblaze B2/i);
     });
 
-    it('should mention current New York location', () => {
+    it('should mention New Zealand', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveTextContent(/New York/i);
+      expect(section).toHaveTextContent(/New Zealand/i);
     });
   });
 

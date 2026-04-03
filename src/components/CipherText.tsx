@@ -36,8 +36,8 @@ const CHAR_SLOT_STYLE = {
 export default function CipherText({ children, block = false }: CipherTextProps) {
   const text = children || '';
   const { displayChars, isAnimating } = useCipherTransition(text);
-  const isHebrewEnabled = process.env.NEXT_PUBLIC_HEBREW_ENABLED === 'true';
-  const { ref, style } = usePretextHeight(text, block && isHebrewEnabled);
+  const isI18nEnabled = process.env.NEXT_PUBLIC_I18N_ENABLED === 'true';
+  const { ref, style } = usePretextHeight(text, block && isI18nEnabled);
   const targetChars = useMemo(() => Array.from(text), [text]);
 
   if (!isAnimating && !block) {

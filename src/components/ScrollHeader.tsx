@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
-import LanguageToggle from '@/components/LanguageToggle';
+import LanguageSelector from '@/components/LanguageSelector';
 import CipherText from '@/components/CipherText';
 import ProfilePicture from '@/components/ProfilePicture';
 
@@ -89,7 +89,7 @@ export default function ScrollHeader() {
                 ))}
               </ul>
             </nav>
-            <LanguageToggle />
+            <LanguageSelector />
             <SocialLinks className="ps-2 sm:border-s sm:border-slate-800 sm:ps-6" />
           </div>
         </div>

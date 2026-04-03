@@ -83,6 +83,8 @@
   },
   "language": {
     "toggle": "עב",
-    "label": "Switch to Hebrew"
+    "label": "Switch to Hebrew",
+    "selectLabel": "Select language",
+    "current": "Current language"
   }
 }

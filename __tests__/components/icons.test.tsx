@@ -9,6 +9,9 @@ import {
   ArrowRightIcon,
   FolderIcon,
   LayersIcon,
+  USFlagIcon,
+  IsraelFlagIcon,
+  RussiaFlagIcon,
 } from '@/components/icons';
 
 const ICONS_CONFIG = [
@@ -111,6 +114,45 @@ describe('Icon components', () => {
       const { container } = render(<LayersIcon />);
       const paths = container.querySelectorAll('path');
       expect(paths.length).toBe(3);
+    });
+  });
+
+  describe('Flag icons', () => {
+    const FLAG_ICONS = [
+      { name: 'USFlagIcon', Component: USFlagIcon },
+      { name: 'IsraelFlagIcon', Component: IsraelFlagIcon },
+      { name: 'RussiaFlagIcon', Component: RussiaFlagIcon },
+    ] as const;
+
+    FLAG_ICONS.forEach(({ name, Component }) => {
+      describe(name, () => {
+        it('should render an SVG element', () => {
+          const { container } = render(<Component />);
+          expect(container.querySelector('svg')).toBeInTheDocument();
+        });
+
+        it('should have aria-hidden attribute', () => {
+          const { container } = render(<Component />);
+          expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+        });
+
+        it('should have default flag dimensions class', () => {
+          const { container } = render(<Component />);
+          const svg = container.querySelector('svg');
+          expect(svg).toHaveClass('h-4', 'w-6');
+        });
+
+        it('should accept custom className', () => {
+          const { container } = render(<Component className="custom-flag" />);
+          expect(container.querySelector('svg')).toHaveClass('custom-flag');
+        });
+      });
+    });
+
+    it('RussiaFlagIcon should contain 3 rect elements for stripes', () => {
+      const { container } = render(<RussiaFlagIcon />);
+      const rects = container.querySelectorAll('rect');
+      expect(rects.length).toBe(3);
     });
   });
 });

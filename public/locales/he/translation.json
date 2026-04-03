@@ -83,6 +83,8 @@
   },
   "language": {
     "toggle": "EN",
-    "label": "עבור לאנגלית"
+    "label": "עבור לאנגלית",
+    "selectLabel": "בחר שפה",
+    "current": "שפה נוכחית"
   }
 }

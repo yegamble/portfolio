@@ -1,5 +1,5 @@
 import { render, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import i18n from '@/lib/i18n';
 import I18nProvider from '@/components/I18nProvider';
 
@@ -7,6 +7,7 @@ beforeEach(async () => {
   await i18n.changeLanguage('en');
   document.documentElement.lang = 'en';
   document.documentElement.dir = 'ltr';
+  localStorage.clear();
 });
 
 describe('I18nProvider', () => {
@@ -81,5 +82,91 @@ describe('I18nProvider', () => {
       await i18n.changeLanguage('en');
     });
     expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  it('should set dir to ltr for Russian', async () => {
+    render(
+      <I18nProvider>
+        <div />
+      </I18nProvider>
+    );
+
+    await act(async () => {
+      await i18n.changeLanguage('ru');
+    });
+
+    expect(document.documentElement.lang).toBe('ru');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+});
+
+describe('I18nProvider - localStorage persistence', () => {
+  it('should save language to localStorage on language change', async () => {
+    render(
+      <I18nProvider>
+        <div />
+      </I18nProvider>
+    );
+
+    await act(async () => {
+      await i18n.changeLanguage('he');
+    });
+
+    expect(localStorage.getItem('language')).toBe('he');
+  });
+
+  it('should save Russian language to localStorage', async () => {
+    render(
+      <I18nProvider>
+        <div />
+      </I18nProvider>
+    );
+
+    await act(async () => {
+      await i18n.changeLanguage('ru');
+    });
+
+    expect(localStorage.getItem('language')).toBe('ru');
+  });
+
+  it('should restore language from localStorage on mount', async () => {
+    localStorage.setItem('language', 'ru');
+
+    render(
+      <I18nProvider>
+        <div />
+      </I18nProvider>
+    );
+
+    // Give the effect time to run
+    await act(async () => {});
+
+    expect(i18n.language).toBe('ru');
+  });
+
+  it('should ignore invalid localStorage values', async () => {
+    localStorage.setItem('language', 'invalid');
+
+    render(
+      <I18nProvider>
+        <div />
+      </I18nProvider>
+    );
+
+    await act(async () => {});
+
+    expect(i18n.language).toBe('en');
+  });
+
+  it('should default to English when localStorage is empty', async () => {
+    render(
+      <I18nProvider>
+        <div />
+      </I18nProvider>
+    );
+
+    await act(async () => {});
+
+    expect(i18n.language).toBe('en');
   });
 });

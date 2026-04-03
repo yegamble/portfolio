@@ -5,7 +5,7 @@ import JsonLd from '@/app/json-ld';
 import './globals.css';
 
 const inter = Inter({
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
   display: 'swap',
   variable: '--font-inter',
 });
