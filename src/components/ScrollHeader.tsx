@@ -86,17 +86,19 @@ export default function ScrollHeader() {
       </header>
 
       {/* Hero Section — large name + tagline, scrolls with content */}
-      <section className="mx-auto flex w-full max-w-3xl flex-col justify-center px-6 pb-16 pt-16 md:pb-24 md:pt-24 lg:px-8">
-        <ProfilePicture className="mb-8" />
-        <div ref={sentinelRef}>
-          <p className="mb-2 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            <CipherText>{t('hero.name')}</CipherText>
-          </p>
-          <p className="mb-8 text-sm font-medium uppercase tracking-widest text-text-muted">
-            <CipherText>{t('hero.title')}</CipherText>
-          </p>
+      <section className="mx-auto flex w-full max-w-3xl flex-col justify-center px-6 pb-16 pt-16 md:pb-16 md:pt-16 lg:px-8">
+        <div className="mb-8 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+          <ProfilePicture />
+          <div ref={sentinelRef}>
+            <p className="mb-2 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              <CipherText>{t('hero.name')}</CipherText>
+            </p>
+            <p className="text-sm font-medium uppercase tracking-widest text-text-muted">
+              <CipherText>{t('hero.title')}</CipherText>
+            </p>
+          </div>
         </div>
-        <h1 className="mb-8 text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
+        <h1 className="mb-8 text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl">
           <CipherText block>{t('hero.tagline')}</CipherText>
         </h1>
         <div className="h-1 w-24 rounded-full bg-primary" />
