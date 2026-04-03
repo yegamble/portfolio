@@ -1,35 +1,43 @@
 /**
  * Cipher character sets utility for text scramble animation.
  * Provides Unicode character pools from 10+ world scripts and helper functions.
+ *
+ * Characters are stored in a single flat array for O(1) random access
+ * with a single Math.random() call per character.
  */
 
-const CHARACTER_POOLS: string[][] = [
-  Array.from('АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ'),
-  Array.from(
-    'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'
-  ),
-  Array.from(
-    '的一是不了人我在有他这中大来上个国到说们为子和你地出会也时要就可以'
-  ),
-  Array.from('ابتثجحخدذرزسشصضطظعغفقكلمنهوي'),
-  Array.from('אבגדהוזחטיכלמנסעפצקרשת'),
-  Array.from('अआइईउऊएऐओऔकखगघचछजझटठडढणतथदधनपफबभमयरलवशषसह'),
-  Array.from('ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝ'),
-  Array.from('01'),
-  Array.from('აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ'),
-  Array.from('ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ'),
+const FLAT_POOL: string[] = [
+  // Cyrillic
+  ...'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ',
+  // Japanese
+  ...'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン',
+  // Chinese
+  ...'的一是不了人我在有他这中大来上个国到说们为子和你地出会也时要就可以',
+  // Arabic
+  ...'ابتثجحخدذرزسشصضطظعغفقكلمنهوي',
+  // Hebrew
+  ...'אבגדהוזחטיכלמנסעפצקרשת',
+  // Devanagari
+  ...'अआइईउऊएऐओऔकखगघचछजझटठडढणतथदधनपफबभमयरलवशषसह',
+  // Latin extended
+  ...'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝ',
+  // Binary
+  ...'01',
+  // Georgian
+  ...'აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ',
+  // Greek
+  ...'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ',
 ];
 
+const POOL_SIZE = FLAT_POOL.length;
 const SINGLE_LETTER_REGEX = /^\p{L}$/u;
 
 /**
- * Returns a random cipher character from a randomly selected script pool.
- * Character pools are pre-computed as arrays for performance in animation hot paths.
+ * Returns a random cipher character from the flat pool.
+ * Single Math.random() call instead of two (pool + char selection).
  */
 export function getRandomCipherChar(): string {
-  const pool =
-    CHARACTER_POOLS[Math.floor(Math.random() * CHARACTER_POOLS.length)];
-  return pool[Math.floor(Math.random() * pool.length)];
+  return FLAT_POOL[(Math.random() * POOL_SIZE) | 0];
 }
 
 /**

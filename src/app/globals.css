@@ -50,6 +50,7 @@ body {
 .cipher-char-slot {
   font-kerning: none;
   font-variant-ligatures: none;
+  contain: layout style;
 }
 
 .cipher-char-layout {
@@ -60,24 +61,21 @@ body {
 .cipher-char {
   opacity: 0.35;
   white-space: pre;
-  transition: opacity 400ms ease-out, color 400ms ease-out, text-shadow 400ms ease-out;
+  transition: opacity 400ms ease-out, color 400ms ease-out;
 }
 
 .cipher-char.cipher-resolved {
   opacity: 1;
   color: #5eead4;
-  text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
   animation: cipher-glow-fade 600ms ease-out forwards;
 }
 
 @keyframes cipher-glow-fade {
   0% {
     color: #5eead4;
-    text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
   }
   100% {
     color: inherit;
-    text-shadow: none;
   }
 }
 
@@ -89,6 +87,5 @@ body {
   .cipher-char.cipher-resolved {
     animation: none;
     color: inherit;
-    text-shadow: none;
   }
 }

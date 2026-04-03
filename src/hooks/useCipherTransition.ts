@@ -50,6 +50,38 @@ function unregisterTick(fn: TickFn) {
 }
 
 // ---------------------------------------------------------------------------
+// Shared IntersectionObserver — tracks which CipherText host elements are
+// currently visible. Off-screen instances skip animation entirely and resolve
+// to final text immediately, avoiding thousands of unnecessary DOM writes.
+// ---------------------------------------------------------------------------
+
+const visibleElements = new WeakSet<Element>();
+let sharedObserver: IntersectionObserver | null = null;
+
+function getObserver(): IntersectionObserver | null {
+  if (
+    typeof window === 'undefined' ||
+    typeof IntersectionObserver === 'undefined'
+  )
+    return null;
+  if (!sharedObserver) {
+    sharedObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            visibleElements.add(entry.target);
+          } else {
+            visibleElements.delete(entry.target);
+          }
+        }
+      },
+      { rootMargin: '100px' }
+    );
+  }
+  return sharedObserver;
+}
+
+// ---------------------------------------------------------------------------
 // Pure helpers
 // ---------------------------------------------------------------------------
 
@@ -66,10 +98,12 @@ function calculateResolveTimes(maxLen: number): number[] {
 // ---------------------------------------------------------------------------
 // Hook — updates DOM directly via containerRef instead of React state,
 // eliminating per-frame re-renders across all CipherText instances.
+// Off-screen instances skip animation via IntersectionObserver.
 // ---------------------------------------------------------------------------
 
 function useCipherAnimationLoop(text: string, isEnabled: boolean) {
   const containerRef = useRef<HTMLSpanElement | null>(null);
+  const hostRef = useRef<Element | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTextRef = useRef(text);
   const tickRef = useRef<TickFn | null>(null);
@@ -80,6 +114,32 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
       tickRef.current = null;
     }
   }, []);
+
+  // Observe the nearest parent element for visibility
+  useEffect(() => {
+    if (!isEnabled) return;
+    const observer = getObserver();
+    if (!observer) return;
+
+    // Defer to find the host element after mount
+    const id = requestAnimationFrame(() => {
+      const container = containerRef.current;
+      const host =
+        container?.closest('section') ?? container?.parentElement ?? null;
+      if (host) {
+        hostRef.current = host;
+        observer.observe(host);
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(id);
+      if (hostRef.current) {
+        observer.unobserve(hostRef.current);
+        hostRef.current = null;
+      }
+    };
+  }, [isEnabled]);
 
   useEffect(() => {
     if (!isEnabled) {
@@ -102,6 +162,13 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
 
     // Clean up any in-flight animation
     cleanup();
+
+    // Skip animation for off-screen instances
+    const host = hostRef.current;
+    if (host && !visibleElements.has(host)) {
+      prevTextRef.current = text;
+      return;
+    }
 
     const newChars = Array.from(text);
     const maxLen = Math.max(
@@ -189,6 +256,7 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
  * Uses a shared RAF scheduler so all instances animate in a single frame loop.
  * Updates the DOM directly via containerRef — only two React renders per
  * animation (start and end) instead of one per tick (~26 renders eliminated).
+ * Off-screen instances skip animation entirely via a shared IntersectionObserver.
  */
 export function useCipherTransition(text: string): CipherTransitionResult {
   const isEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
