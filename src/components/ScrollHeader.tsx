@@ -42,6 +42,20 @@ export default function ScrollHeader() {
           }`}
         >
           {/* Name — visible only when scrolled past hero */}
+          <Link
+            className="text-base font-bold tracking-tight text-text-primary"
+            href="/"
+            tabIndex={isScrolled ? 0 : -1}
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({
+                top: 0,
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                  ? 'auto'
+                  : 'smooth',
+              });
+            }}
+          >
           <div
             className={`flex items-center gap-4 overflow-hidden whitespace-nowrap transition-all duration-500 ease-out motion-reduce:duration-0 ${
               isScrolled
@@ -50,27 +64,14 @@ export default function ScrollHeader() {
             }`}
             aria-hidden={!isScrolled}
           >
-            <Link
-              className="text-base font-bold tracking-tight text-text-primary"
-              href="/"
-              tabIndex={isScrolled ? 0 : -1}
-              onClick={(e) => {
-                e.preventDefault();
-                window.scrollTo({
-                  top: 0,
-                  behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                    ? 'auto'
-                    : 'smooth',
-                });
-              }}
-            >
               <CipherText>{t('hero.name')}</CipherText>
-            </Link>
+
             <span className="hidden h-4 w-px shrink-0 bg-slate-700 lg:inline-block" />
             <span className="hidden text-xs font-medium uppercase tracking-widest text-text-muted lg:inline-block">
               <CipherText>{t('hero.title')}</CipherText>
             </span>
           </div>
+        </Link>
 
           {/* Nav links + social icons + language toggle — always visible */}
           <div className="flex shrink-0 items-center gap-6 md:gap-8">
