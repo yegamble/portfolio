@@ -10,8 +10,19 @@ interface CipherTextProps {
 }
 
 const CHAR_STYLE = {
+  position: 'absolute',
+  inset: 0,
+  unicodeBidi: 'plaintext',
+  whiteSpace: 'pre',
+  pointerEvents: 'none',
+} as const;
+
+const CHAR_SLOT_STYLE = {
+  position: 'relative',
   display: 'inline-block',
   unicodeBidi: 'plaintext',
+  whiteSpace: 'pre',
+  verticalAlign: 'baseline',
 } as const;
 
 /**
@@ -49,15 +60,22 @@ export default function CipherText({ children, block = false }: CipherTextProps)
       {/* Visual animation (hidden from screen readers) */}
       <span aria-hidden="true">
         {displayChars.map((char, index) => {
-          const isResolved = char === targetChars[index];
+          const targetChar = targetChars[index] ?? '';
+          const isResolved = char === targetChar;
 
           return (
             <span
               key={index}
-              className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
-              style={CHAR_STYLE}
+              className="cipher-char-slot"
+              style={CHAR_SLOT_STYLE}
             >
-              {char}
+              <span className="cipher-char-layout">{targetChar}</span>
+              <span
+                className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
+                style={CHAR_STYLE}
+              >
+                {char || targetChar}
+              </span>
             </span>
           );
         })}

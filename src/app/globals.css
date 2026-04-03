@@ -47,8 +47,19 @@ body {
 }
 
 /* Cipher text animation — lazy-loading fade effect */
+.cipher-char-slot {
+  font-kerning: none;
+  font-variant-ligatures: none;
+}
+
+.cipher-char-layout {
+  visibility: hidden;
+  white-space: pre;
+}
+
 .cipher-char {
   opacity: 0.35;
+  white-space: pre;
   transition: opacity 400ms ease-out, color 400ms ease-out, text-shadow 400ms ease-out;
 }
 

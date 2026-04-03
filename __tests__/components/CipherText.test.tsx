@@ -101,7 +101,7 @@ describe('CipherText', () => {
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       expect(ariaHidden).toBeInTheDocument();
-      expect(ariaHidden?.querySelectorAll('span').length).toBe(5);
+      expect(ariaHidden?.querySelectorAll('.cipher-char-slot').length).toBe(5);
     });
 
     it('should apply cipher-resolved class to resolved characters', () => {
@@ -111,7 +111,7 @@ describe('CipherText', () => {
       const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden?.querySelectorAll('span');
+      const charSpans = ariaHidden?.querySelectorAll('.cipher-char');
 
       expect(charSpans?.[0]).toHaveClass('cipher-resolved');
       expect(charSpans?.[1]).not.toHaveClass('cipher-resolved');
@@ -125,7 +125,7 @@ describe('CipherText', () => {
       const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('span');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
 
       charSpans.forEach((span) => {
         expect(span).toHaveClass('cipher-char');
@@ -139,7 +139,7 @@ describe('CipherText', () => {
       const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('span');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
 
       expect(charSpans[0]).toHaveClass('cipher-char', 'cipher-resolved');
       expect(charSpans[1]).toHaveClass('cipher-char');
@@ -148,31 +148,64 @@ describe('CipherText', () => {
   });
 
   describe('layout stability during animation', () => {
-    it('should apply display inline-block to each character span', () => {
+    it('should apply display inline-block to each character slot', () => {
       mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
       mockResult.isAnimating = true;
 
       const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('span');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
 
       charSpans.forEach((span) => {
-        expect(span.style.display).toBe('inline-block');
+        const charSlot = span as HTMLElement;
+        expect(charSlot.style.display).toBe('inline-block');
       });
     });
 
-    it('should apply unicode-bidi plaintext to each character span', () => {
+    it('should apply unicode-bidi plaintext to each character slot', () => {
       mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
       mockResult.isAnimating = true;
 
       const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('span');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
 
       charSpans.forEach((span) => {
-        expect(span.style.unicodeBidi).toBe('plaintext');
+        const charSlot = span as HTMLElement;
+        expect(charSlot.style.unicodeBidi).toBe('plaintext');
+      });
+    });
+
+    it('should reserve layout with one hidden target span per character', () => {
+      const text = 'Hello World';
+      mockResult.displayChars = Array.from(text).map(() => 'X');
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const layoutSpans = ariaHidden!.querySelectorAll('.cipher-char-layout');
+
+      expect(layoutSpans).toHaveLength(Array.from(text).length);
+      expect(layoutSpans[0]).toHaveTextContent('H');
+      expect(layoutSpans[5]?.textContent).toBe(' ');
+    });
+
+    it('should absolutely position visual characters over the reserved layout', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
+
+      charSpans.forEach((span) => {
+        const charVisual = span as HTMLElement;
+        expect(charVisual.style.position).toBe('absolute');
+        expect(charVisual.style.inset).toBe('0px');
       });
     });
 
@@ -184,7 +217,7 @@ describe('CipherText', () => {
       const { container } = render(<CipherText>{text}</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('span');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
       expect(charSpans).toHaveLength(Array.from(text).length);
     });
 
