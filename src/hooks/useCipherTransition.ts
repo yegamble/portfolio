@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
-interface CipherTransitionResult {
-  displayChars: string[];
+export interface CipherTransitionResult {
+  containerRef: React.RefObject<HTMLSpanElement | null>;
   isAnimating: boolean;
 }
 
@@ -50,7 +50,7 @@ function unregisterTick(fn: TickFn) {
 }
 
 // ---------------------------------------------------------------------------
-// Pure helpers (unchanged logic, no side-effects)
+// Pure helpers
 // ---------------------------------------------------------------------------
 
 function calculateResolveTimes(maxLen: number): number[] {
@@ -63,42 +63,13 @@ function calculateResolveTimes(maxLen: number): number[] {
   return resolveTimes;
 }
 
-function generateFrameChars(
-  maxLen: number,
-  newChars: string[],
-  resolveTimes: number[],
-  elapsed: number
-): { chars: string[]; allResolved: boolean } {
-  const chars: string[] = [];
-  let allResolved = true;
-
-  for (let i = 0; i < maxLen; i++) {
-    const resolveTime = resolveTimes[i];
-    const targetChar = i < newChars.length ? newChars[i] : '';
-
-    if (elapsed >= resolveTime) {
-      chars[i] = targetChar;
-    } else {
-      allResolved = false;
-      if (targetChar && isScramblable(targetChar)) {
-        chars[i] = getRandomCipherChar();
-      } else {
-        chars[i] = targetChar;
-      }
-    }
-  }
-
-  return { chars, allResolved };
-}
-
 // ---------------------------------------------------------------------------
-// Hook
+// Hook — updates DOM directly via containerRef instead of React state,
+// eliminating per-frame re-renders across all CipherText instances.
 // ---------------------------------------------------------------------------
 
 function useCipherAnimationLoop(text: string, isEnabled: boolean) {
-  const [displayChars, setDisplayChars] = useState<string[]>(() =>
-    Array.from(text)
-  );
+  const containerRef = useRef<HTMLSpanElement | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTextRef = useRef(text);
   const tickRef = useRef<TickFn | null>(null);
@@ -122,12 +93,7 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
 
     if (prefersReducedMotion) {
       prevTextRef.current = text;
-      // Use a single RAF to update in the next frame
-      const id = requestAnimationFrame(() => {
-        setDisplayChars(Array.from(text));
-        setIsAnimating(false);
-      });
-      return () => cancelAnimationFrame(id);
+      return;
     }
 
     if (text === prevTextRef.current) {
@@ -138,7 +104,10 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
     cleanup();
 
     const newChars = Array.from(text);
-    const maxLen = Math.max(Array.from(prevTextRef.current).length, newChars.length);
+    const maxLen = Math.max(
+      Array.from(prevTextRef.current).length,
+      newChars.length
+    );
     const resolveTimes = calculateResolveTimes(maxLen);
 
     let startTime: number | null = null;
@@ -146,38 +115,59 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
     let started = false;
 
     const tick: TickFn = (currentTime) => {
+      // First tick: trigger React render to mount animation spans
+      if (!started) {
+        started = true;
+        setIsAnimating(true);
+        return true; // wait for React to commit the render
+      }
+
+      const container = containerRef.current;
+      if (!container) return true; // wait for ref to attach
+
       if (startTime === null) {
         startTime = currentTime;
         lastUpdateTime = currentTime - UPDATE_INTERVAL;
       }
 
-      if (!started) {
-        started = true;
-        setIsAnimating(true);
-      }
+      if (currentTime - lastUpdateTime < UPDATE_INTERVAL) return true;
 
-      const timeSinceLastUpdate = currentTime - lastUpdateTime;
-      if (timeSinceLastUpdate >= UPDATE_INTERVAL) {
-        const elapsed = currentTime - startTime;
-        const { chars, allResolved } = generateFrameChars(
-          maxLen,
-          newChars,
-          resolveTimes,
-          elapsed
-        );
+      const elapsed = currentTime - startTime;
+      const slots = container.children;
+      let allResolved = true;
 
-        setDisplayChars(chars);
+      for (let i = 0; i < maxLen; i++) {
+        const resolveTime = resolveTimes[i];
+        const targetChar = i < newChars.length ? newChars[i] : '';
+        const slot = slots[i] as HTMLElement | undefined;
+        if (!slot) continue;
 
-        if (allResolved) {
-          setIsAnimating(false);
-          prevTextRef.current = text;
-          tickRef.current = null;
-          return false; // done — unregister from scheduler
+        const charSpan = slot.lastElementChild as HTMLElement;
+        if (!charSpan) continue;
+
+        if (elapsed >= resolveTime) {
+          if (charSpan.textContent !== targetChar) {
+            charSpan.textContent = targetChar;
+          }
+          if (!charSpan.classList.contains('cipher-resolved')) {
+            charSpan.classList.add('cipher-resolved');
+          }
+        } else {
+          allResolved = false;
+          if (targetChar && isScramblable(targetChar)) {
+            charSpan.textContent = getRandomCipherChar();
+          }
         }
-
-        lastUpdateTime = currentTime;
       }
 
+      if (allResolved) {
+        setIsAnimating(false);
+        prevTextRef.current = text;
+        tickRef.current = null;
+        return false; // done — unregister from scheduler
+      }
+
+      lastUpdateTime = currentTime;
       return true; // keep running
     };
 
@@ -191,21 +181,18 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
   // Cleanup on unmount
   useEffect(() => cleanup, [cleanup]);
 
-  return { displayChars, isAnimating };
+  return { containerRef, isAnimating };
 }
 
 /**
  * Hook for animating text transitions with a cipher/decryption effect.
- * Uses a shared RAF scheduler so all instances animate in a single frame loop,
- * allowing React to batch state updates into one render pass.
+ * Uses a shared RAF scheduler so all instances animate in a single frame loop.
+ * Updates the DOM directly via containerRef — only two React renders per
+ * animation (start and end) instead of one per tick (~26 renders eliminated).
  */
 export function useCipherTransition(text: string): CipherTransitionResult {
   const isEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
-  const { displayChars, isAnimating } = useCipherAnimationLoop(text, isEnabled);
+  const { containerRef, isAnimating } = useCipherAnimationLoop(text, isEnabled);
 
-  if (!isEnabled) {
-    return { displayChars: Array.from(text), isAnimating: false as const };
-  }
-
-  return { displayChars, isAnimating };
+  return { containerRef, isAnimating: isEnabled ? isAnimating : false };
 }

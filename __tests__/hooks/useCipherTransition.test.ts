@@ -28,23 +28,22 @@ describe('useCipherTransition', () => {
   });
 
   describe('initial mount', () => {
-    it('should return text as-is on mount without animating', () => {
+    it('should not animate on mount', () => {
       const { result } = renderHook(() => useCipherTransition('Hello'));
 
-      expect(result.current.displayChars).toEqual(['H', 'e', 'l', 'l', 'o']);
       expect(result.current.isAnimating).toBe(false);
+      expect(result.current.containerRef).toBeDefined();
     });
 
     it('should handle empty string', () => {
       const { result } = renderHook(() => useCipherTransition(''));
 
-      expect(result.current.displayChars).toEqual([]);
       expect(result.current.isAnimating).toBe(false);
     });
   });
 
   describe('text changes (disabled mode)', () => {
-    it('should update displayChars when text changes', () => {
+    it('should not animate when disabled', () => {
       const { result, rerender } = renderHook(
         ({ text }) => useCipherTransition(text),
         { initialProps: { text: 'Hello' } }
@@ -52,18 +51,7 @@ describe('useCipherTransition', () => {
 
       rerender({ text: 'World' });
 
-      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
-    });
-
-    it('should return array matching new text length', () => {
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hi' } }
-      );
-
-      rerender({ text: 'Hello World' });
-
-      expect(result.current.displayChars).toHaveLength(11);
+      expect(result.current.isAnimating).toBe(false);
     });
   });
 
@@ -76,7 +64,6 @@ describe('useCipherTransition', () => {
 
       rerender({ text: 'World' });
 
-      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
       expect(result.current.isAnimating).toBe(false);
     });
 
@@ -91,6 +78,35 @@ describe('useCipherTransition', () => {
       rerender({ text: 'World' });
 
       expect(global.requestAnimationFrame).toHaveBeenCalled();
+    });
+
+    it('should set isAnimating to true after first RAF tick when animation is enabled', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      let rafCallback: FrameRequestCallback | null = null;
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallback = cb;
+        return 1;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const { result, rerender } = renderHook(
+        ({ text }) => useCipherTransition(text),
+        { initialProps: { text: 'Hello' } }
+      );
+
+      rerender({ text: 'World' });
+
+      // isAnimating is set inside the RAF callback, not synchronously
+      expect(result.current.isAnimating).toBe(false);
+
+      // Simulate first RAF tick — triggers setIsAnimating(true)
+      if (rafCallback) {
+        act(() => {
+          (rafCallback as FrameRequestCallback)(1000);
+        });
+      }
+
+      expect(result.current.isAnimating).toBe(true);
     });
 
     it('should not schedule rAF when animation is disabled', () => {
@@ -126,11 +142,10 @@ describe('useCipherTransition', () => {
 
       rerender({ text: 'World' });
 
-      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
       expect(result.current.isAnimating).toBe(false);
     });
 
-    it('should schedule rAF for reduced-motion path when animation is enabled', () => {
+    it('should not animate when reduced motion is preferred even with animation enabled', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
       global.matchMedia = vi.fn().mockImplementation((query) => ({
         matches: query === '(prefers-reduced-motion: reduce)',
@@ -143,14 +158,14 @@ describe('useCipherTransition', () => {
         dispatchEvent: vi.fn(),
       }));
 
-      const { rerender } = renderHook(
+      const { result, rerender } = renderHook(
         ({ text }) => useCipherTransition(text),
         { initialProps: { text: 'Hello' } }
       );
 
       rerender({ text: 'World' });
 
-      expect(global.requestAnimationFrame).toHaveBeenCalled();
+      expect(result.current.isAnimating).toBe(false);
     });
   });
 
@@ -158,13 +173,13 @@ describe('useCipherTransition', () => {
     it('should handle unmount gracefully', () => {
       const { unmount, result } = renderHook(() => useCipherTransition('Hello'));
 
-      expect(result.current.displayChars).toEqual(['H', 'e', 'l', 'l', 'o']);
+      expect(result.current.isAnimating).toBe(false);
 
       expect(() => unmount()).not.toThrow();
     });
 
     it('should handle rapid text changes', () => {
-      const { rerender, result } = renderHook(
+      const { result, rerender } = renderHook(
         ({ text }) => useCipherTransition(text),
         { initialProps: { text: 'Hello' } }
       );
@@ -172,7 +187,16 @@ describe('useCipherTransition', () => {
       rerender({ text: 'World' });
       rerender({ text: 'Test' });
 
-      expect(result.current.displayChars).toEqual(['T', 'e', 's', 't']);
+      expect(result.current.isAnimating).toBe(false);
+    });
+  });
+
+  describe('containerRef', () => {
+    it('should provide a containerRef for DOM manipulation', () => {
+      const { result } = renderHook(() => useCipherTransition('Hello'));
+
+      expect(result.current.containerRef).toBeDefined();
+      expect(result.current.containerRef.current).toBeNull();
     });
   });
 });

@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
 import { usePretextHeight } from '@/hooks/usePretextHeight';
+import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 interface CipherTextProps {
   children?: string;
@@ -32,10 +33,13 @@ const CHAR_SLOT_STYLE = {
  *
  * When block={true}, wraps content in a height-reserved span using pretext
  * to prevent layout jumps during language transitions.
+ *
+ * During animation, the hook updates character spans directly via DOM manipulation
+ * (containerRef) instead of triggering React re-renders on every frame.
  */
 export default function CipherText({ children, block = false }: CipherTextProps) {
   const text = children || '';
-  const { displayChars, isAnimating } = useCipherTransition(text);
+  const { containerRef, isAnimating } = useCipherTransition(text);
   const isI18nEnabled = process.env.NEXT_PUBLIC_I18N_ENABLED === 'true';
   const { ref, style } = usePretextHeight(text, block && isI18nEnabled);
   const targetChars = useMemo(() => Array.from(text), [text]);
@@ -57,11 +61,13 @@ export default function CipherText({ children, block = false }: CipherTextProps)
       {/* Screen reader gets the actual text */}
       <span className="sr-only">{text}</span>
 
-      {/* Visual animation (hidden from screen readers) */}
-      <span aria-hidden="true">
-        {displayChars.map((char, index) => {
-          const targetChar = targetChars[index] ?? '';
-          const isResolved = char === targetChar;
+      {/* Visual animation container — hook updates children via DOM directly */}
+      <span ref={containerRef} aria-hidden="true">
+        {targetChars.map((char, index) => {
+          // Initial render shows scrambled chars; hook takes over via DOM on next tick
+          const initialChar = isScramblable(char)
+            ? getRandomCipherChar()
+            : char;
 
           return (
             <span
@@ -69,12 +75,12 @@ export default function CipherText({ children, block = false }: CipherTextProps)
               className="cipher-char-slot"
               style={CHAR_SLOT_STYLE}
             >
-              <span className="cipher-char-layout">{targetChar}</span>
+              <span className="cipher-char-layout">{char}</span>
               <span
-                className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
+                className="cipher-char"
                 style={CHAR_STYLE}
               >
-                {char || targetChar}
+                {initialChar}
               </span>
             </span>
           );
