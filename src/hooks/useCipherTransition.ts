@@ -6,10 +6,26 @@ interface CipherTransitionResult {
   isAnimating: boolean;
 }
 
-const BASE_DELAY = 400;
-const SPREAD_DURATION = 1200;
-const JITTER = 100;
-const UPDATE_INTERVAL = 60;
+interface AnimationProfile {
+  baseDelay: number;
+  spreadDuration: number;
+  jitter: number;
+  updateInterval: number;
+}
+
+const DESKTOP_PROFILE: AnimationProfile = {
+  baseDelay: 180,
+  spreadDuration: 700,
+  jitter: 60,
+  updateInterval: 50,
+};
+
+const MOBILE_PROFILE: AnimationProfile = {
+  baseDelay: 80,
+  spreadDuration: 420,
+  jitter: 35,
+  updateInterval: 90,
+};
 
 // ---------------------------------------------------------------------------
 // Shared RAF scheduler — one loop drives all CipherText instances so React
@@ -53,14 +69,26 @@ function unregisterTick(fn: TickFn) {
 // Pure helpers (unchanged logic, no side-effects)
 // ---------------------------------------------------------------------------
 
-function calculateResolveTimes(maxLen: number): number[] {
+function calculateResolveTimes(maxLen: number, profile: AnimationProfile): number[] {
   const resolveTimes: number[] = [];
   for (let i = 0; i < maxLen; i++) {
     const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
-    const randomJitter = (Math.random() - 0.5) * 2 * JITTER;
-    resolveTimes[i] = BASE_DELAY + progress * SPREAD_DURATION + randomJitter;
+    const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
+    resolveTimes[i] =
+      profile.baseDelay + progress * profile.spreadDuration + randomJitter;
   }
   return resolveTimes;
+}
+
+function getAnimationProfile(): AnimationProfile {
+  if (typeof window === 'undefined') {
+    return DESKTOP_PROFILE;
+  }
+
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  const isNarrowViewport = window.matchMedia('(max-width: 768px)').matches;
+
+  return isCoarsePointer || isNarrowViewport ? MOBILE_PROFILE : DESKTOP_PROFILE;
 }
 
 function generateFrameChars(
@@ -139,7 +167,8 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
 
     const newChars = Array.from(text);
     const maxLen = Math.max(Array.from(prevTextRef.current).length, newChars.length);
-    const resolveTimes = calculateResolveTimes(maxLen);
+    const profile = getAnimationProfile();
+    const resolveTimes = calculateResolveTimes(maxLen, profile);
 
     let startTime: number | null = null;
     let lastUpdateTime = 0;
@@ -148,7 +177,7 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
     const tick: TickFn = (currentTime) => {
       if (startTime === null) {
         startTime = currentTime;
-        lastUpdateTime = currentTime - UPDATE_INTERVAL;
+        lastUpdateTime = currentTime - profile.updateInterval;
       }
 
       if (!started) {
@@ -157,7 +186,7 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
       }
 
       const timeSinceLastUpdate = currentTime - lastUpdateTime;
-      if (timeSinceLastUpdate >= UPDATE_INTERVAL) {
+      if (timeSinceLastUpdate >= profile.updateInterval) {
         const elapsed = currentTime - startTime;
         const { chars, allResolved } = generateFrameChars(
           maxLen,
