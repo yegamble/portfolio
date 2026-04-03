@@ -17,7 +17,7 @@
     "p2_before": "At ",
     "p2_link": "realestate.co.nz",
     "p2_after": ", I became a key engineer on New Zealand’s most established real estate portal. I shipped industry-first features — instant price change alerts and transparent price history — that competitors copied months later. I designed a serverless notification system on AWS Lambda integrated with Braze that delivered listing alerts to every user on the platform, and led company-wide workshops on serverless architecture and observability.",
-    "p3": "Now back in New York, I’m building an open-source video streaming backend in Go (Golang) — implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web."
+    "p3": "I’m building an open-source video streaming backend in Go (Golang) — implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web."
   },
   "experience": {
     "heading": "Experience",
