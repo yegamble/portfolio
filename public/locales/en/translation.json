@@ -7,7 +7,8 @@
   "hero": {
     "name": "Yosef Gamble",
     "title": "Senior Software Engineer",
-    "tagline": "Senior Go & TypeScript engineer. Video streaming, real estate portals, and cloud infrastructure. NYC | Auckland.",
+    "tagline": "Senior Go & TypeScript engineer. Video streaming, real estate portals, and cloud infrastructure.",
+    "location": "NYC | Auckland",
     "profileAlt": "Yosef Gamble profile photo"
   },
   "about": {
