@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next';
 import { EmailIcon, SecureEmailIcon, KeyIcon } from '@/components/icons';
 import PgpKeyModal from '@/components/PgpKeyModal';
 
-function getMailtoHref(envKey: string): string | null {
-  const email = process.env[envKey]?.trim();
-  if (!email) return null;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? `mailto:${email}` : null;
+function validateMailto(email: string | undefined): string | null {
+  const trimmed = email?.trim();
+  if (!trimmed) return null;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? `mailto:${trimmed}` : null;
 }
 
-const primaryEmailHref = getMailtoHref('NEXT_PUBLIC_CONTACT_EMAIL');
-const secureEmailHref = getMailtoHref('NEXT_PUBLIC_SECURE_CONTACT_EMAIL');
+const primaryEmailHref = validateMailto(process.env.NEXT_PUBLIC_CONTACT_EMAIL);
+const secureEmailHref = validateMailto(process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL);
 const pgpPublicKey = process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY?.trim() || null;
 
 interface HeroContactIconsProps {
