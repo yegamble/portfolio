@@ -171,7 +171,7 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
     cleanup();
 
     const newChars = Array.from(text);
-    const maxLen = Math.max(Array.from(prevTextRef.current).length, newChars.length);
+    const maxLen = newChars.length;
     const profile = getAnimationProfile();
     const resolveTimes = calculateResolveTimes(maxLen, profile);
 
@@ -219,7 +219,12 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
     registerTick(tick);
     prevTextRef.current = text;
 
-    return cleanup;
+    return () => {
+      cleanup();
+      // Reset to target text on interruption to prevent stale cipher chars
+      setDisplayChars(Array.from(text));
+      setIsAnimating(false);
+    };
   }, [text, isEnabled, cleanup]);
 
   // Cleanup on unmount
@@ -272,8 +277,9 @@ function useCipherRefAnimationLoop(
 
     cleanup();
 
+    const el = elementRef?.current ?? null;
     const newChars = Array.from(text);
-    const maxLen = Math.max(Array.from(prevTextRef.current).length, newChars.length);
+    const maxLen = newChars.length;
     const profile = getAnimationProfile();
     const resolveTimes = calculateResolveTimes(maxLen, profile);
 
@@ -303,8 +309,8 @@ function useCipherRefAnimationLoop(
         );
 
         // Direct DOM update — bypasses React reconciliation
-        if (elementRef?.current) {
-          elementRef.current.textContent = chars.join('');
+        if (el) {
+          el.textContent = chars.join('');
         }
 
         if (allResolved) {
@@ -324,7 +330,14 @@ function useCipherRefAnimationLoop(
     registerTick(tick);
     prevTextRef.current = text;
 
-    return cleanup;
+    return () => {
+      cleanup();
+      // Reset DOM to target text on interruption to prevent stale cipher chars
+      if (el) {
+        el.textContent = text;
+      }
+      setIsAnimating(false);
+    };
   }, [text, isEnabled, cleanup, elementRef]);
 
   useEffect(() => cleanup, [cleanup]);

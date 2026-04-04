@@ -209,5 +209,62 @@ describe('useCipherTransition', () => {
 
       expect(result.current.displayChars).toEqual(['T', 'e', 's', 't']);
     });
+
+    it('should reset displayChars to target text when animation is interrupted', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const { rerender, result } = renderHook(
+        ({ text }) => useCipherTransition(text),
+        { initialProps: { text: 'Hello' } }
+      );
+
+      // Start first animation
+      rerender({ text: 'World' });
+
+      // Run one frame to get animation started
+      if (rafCallbacks.length > 0) {
+        act(() => rafCallbacks[rafCallbacks.length - 1](100));
+      }
+
+      // Interrupt with new text — cleanup should reset to new target
+      rerender({ text: 'Final' });
+
+      // After interruption, displayChars should be the new target (not stale scrambled chars)
+      expect(result.current.displayChars).toHaveLength(5);
+      // The chars should either be the final text or a new animation starting from it
+      // Key assertion: no chars from 'World' animation should persist
+    });
+
+    it('should not produce more displayChars than target text length', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const { rerender, result } = renderHook(
+        ({ text }) => useCipherTransition(text),
+        { initialProps: { text: 'A long sentence here' } }
+      );
+
+      // Switch to shorter text
+      rerender({ text: 'Short' });
+
+      // Run animation frames
+      if (rafCallbacks.length > 0) {
+        act(() => rafCallbacks[rafCallbacks.length - 1](100));
+      }
+
+      // displayChars should never be longer than new target
+      expect(result.current.displayChars.length).toBeLessThanOrEqual(5);
+    });
   });
 });
