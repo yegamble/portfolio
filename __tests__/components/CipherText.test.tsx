@@ -2,17 +2,12 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CipherText from '@/components/CipherText';
 import type { CSSProperties, RefObject } from 'react';
-import type { CipherLine } from '@/hooks/useCipherTransition';
 
-const mockResult = { lines: [] as CipherLine[], isAnimating: false };
+const mockResult = { displayChars: [] as string[], isAnimating: false };
 vi.mock('@/hooks/useCipherTransition', () => ({
   useCipherTransition: (text: string) => {
-    if (mockResult.lines.length === 0) {
-      const chars = Array.from(text);
-      return {
-        lines: [{ text, chars, targetChars: chars, lineResolved: true }],
-        isAnimating: false,
-      };
+    if (mockResult.displayChars.length === 0) {
+      return { displayChars: Array.from(text), isAnimating: false };
     }
     return mockResult;
   },
@@ -31,7 +26,7 @@ describe('CipherText', () => {
   let disconnectMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockResult.lines = [];
+    mockResult.displayChars = [];
     mockResult.isAnimating = false;
     mockPretextStyle.style = { display: 'inline-block', width: '100%', transition: 'min-height 500ms ease-out' };
 
@@ -52,14 +47,6 @@ describe('CipherText', () => {
       };
     }) as unknown as typeof IntersectionObserver;
 
-    global.ResizeObserver = vi.fn(function () {
-      return {
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-      };
-    }) as unknown as typeof ResizeObserver;
-
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
       matches: false,
       media: query,
@@ -77,18 +64,21 @@ describe('CipherText', () => {
   });
 
   describe('rendering', () => {
-    it('should render text when not animating', () => {
+    it('should render text as plain string when env var is not set', () => {
       render(<CipherText>Hello World</CipherText>);
+
       expect(screen.getByText('Hello World')).toBeInTheDocument();
     });
 
     it('should handle empty string', () => {
       const { container } = render(<CipherText></CipherText>);
+
       expect(container).toBeInTheDocument();
     });
 
     it('should render special characters', () => {
       render(<CipherText>Hello, World! 123</CipherText>);
+
       expect(screen.getByText('Hello, World! 123')).toBeInTheDocument();
     });
   });
@@ -96,16 +86,27 @@ describe('CipherText', () => {
   describe('accessibility', () => {
     it('should provide screen reader accessible text', () => {
       render(<CipherText>Screen Reader Text</CipherText>);
+
       expect(screen.getByText('Screen Reader Text')).toBeInTheDocument();
+    });
+
+    it('should not have animation spans when not animating', () => {
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const spans = container.querySelectorAll('span');
+
+      expect(spans.length).toBeLessThanOrEqual(1);
     });
   });
 
   describe('text updates', () => {
     it('should update when children prop changes', () => {
       const { rerender } = render(<CipherText>Original</CipherText>);
+
       expect(screen.getByText('Original')).toBeInTheDocument();
 
       rerender(<CipherText>Updated</CipherText>);
+
       expect(screen.getByText('Updated')).toBeInTheDocument();
       expect(screen.queryByText('Original')).not.toBeInTheDocument();
     });
@@ -113,12 +114,7 @@ describe('CipherText', () => {
 
   describe('animated rendering path', () => {
     it('should render sr-only span with actual text when animating', () => {
-      mockResult.lines = [{
-        text: 'Hello',
-        chars: ['X', 'Y', 'Z', 'l', 'o'],
-        targetChars: ['H', 'e', 'l', 'l', 'o'],
-        lineResolved: false,
-      }];
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
       mockResult.isAnimating = true;
 
       const { container } = render(<CipherText>Hello</CipherText>);
@@ -129,95 +125,149 @@ describe('CipherText', () => {
     });
 
     it('should render aria-hidden span wrapping animation characters', () => {
-      mockResult.lines = [{
-        text: 'Hello',
-        chars: ['X', 'Y', 'Z', 'l', 'o'],
-        targetChars: ['H', 'e', 'l', 'l', 'o'],
-        lineResolved: false,
-      }];
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
       mockResult.isAnimating = true;
 
       const { container } = render(<CipherText>Hello</CipherText>);
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       expect(ariaHidden).toBeInTheDocument();
-    });
-
-    it('should render cipher-line spans for each line', () => {
-      mockResult.lines = [{
-        text: 'Hello',
-        chars: ['X', 'Y', 'Z', 'l', 'o'],
-        targetChars: ['H', 'e', 'l', 'l', 'o'],
-        lineResolved: false,
-      }];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const lineSpans = container.querySelectorAll('.cipher-line');
-      expect(lineSpans).toHaveLength(1);
-    });
-
-    it('should apply cipher-line-resolved class when line is resolved', () => {
-      mockResult.lines = [{
-        text: 'Hello',
-        chars: ['H', 'e', 'l', 'l', 'o'],
-        targetChars: ['H', 'e', 'l', 'l', 'o'],
-        lineResolved: true,
-      }];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const lineSpan = container.querySelector('.cipher-line');
-      expect(lineSpan).toHaveClass('cipher-line-resolved');
-    });
-
-    it('should not apply cipher-line-resolved class when line is not resolved', () => {
-      mockResult.lines = [{
-        text: 'Hello',
-        chars: ['X', 'Y', 'Z', 'l', 'o'],
-        targetChars: ['H', 'e', 'l', 'l', 'o'],
-        lineResolved: false,
-      }];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const lineSpan = container.querySelector('.cipher-line');
-      expect(lineSpan).not.toHaveClass('cipher-line-resolved');
+      expect(ariaHidden?.querySelectorAll('.cipher-char-slot').length).toBe(5);
     });
 
     it('should apply cipher-resolved class to resolved characters', () => {
-      mockResult.lines = [{
-        text: 'Hello',
-        chars: ['H', 'X', 'l', 'l', 'o'],
-        targetChars: ['H', 'e', 'l', 'l', 'o'],
-        lineResolved: false,
-      }];
+      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
       mockResult.isAnimating = true;
 
       const { container } = render(<CipherText>Hello</CipherText>);
 
-      const charSpans = container.querySelectorAll('.cipher-char');
-      expect(charSpans[0]).toHaveClass('cipher-resolved');
-      expect(charSpans[1]).not.toHaveClass('cipher-resolved');
-      expect(charSpans[2]).toHaveClass('cipher-resolved');
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden?.querySelectorAll('.cipher-char');
+
+      expect(charSpans?.[0]).toHaveClass('cipher-resolved');
+      expect(charSpans?.[1]).not.toHaveClass('cipher-resolved');
+      expect(charSpans?.[2]).toHaveClass('cipher-resolved');
     });
 
-    it('should render multiple lines', () => {
-      mockResult.lines = [
-        { text: 'Hello', chars: ['H', 'e', 'l', 'l', 'o'], targetChars: ['H', 'e', 'l', 'l', 'o'], lineResolved: true },
-        { text: 'World', chars: ['X', 'Y', 'Z', 'l', 'd'], targetChars: ['W', 'o', 'r', 'l', 'd'], lineResolved: false },
-      ];
+    it('should apply cipher-char base class to all character spans', () => {
+      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
       mockResult.isAnimating = true;
 
-      const { container } = render(<CipherText>Hello World</CipherText>);
+      const { container } = render(<CipherText>Hello</CipherText>);
 
-      const lineSpans = container.querySelectorAll('.cipher-line');
-      expect(lineSpans).toHaveLength(2);
-      expect(lineSpans[0]).toHaveClass('cipher-line-resolved');
-      expect(lineSpans[1]).not.toHaveClass('cipher-line-resolved');
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
+
+      charSpans.forEach((span) => {
+        expect(span).toHaveClass('cipher-char');
+      });
+    });
+
+    it('should have both cipher-char and cipher-resolved on resolved characters', () => {
+      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
+
+      expect(charSpans[0]).toHaveClass('cipher-char', 'cipher-resolved');
+      expect(charSpans[1]).toHaveClass('cipher-char');
+      expect(charSpans[1]).not.toHaveClass('cipher-resolved');
+    });
+  });
+
+  describe('layout stability during animation', () => {
+    it('should apply display inline-block to each character slot', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
+
+      charSpans.forEach((span) => {
+        const charSlot = span as HTMLElement;
+        expect(charSlot.style.display).toBe('inline-block');
+      });
+    });
+
+    it('should apply unicode-bidi plaintext to each character slot', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
+
+      charSpans.forEach((span) => {
+        const charSlot = span as HTMLElement;
+        expect(charSlot.style.unicodeBidi).toBe('plaintext');
+      });
+    });
+
+    it('should reserve layout with one hidden target span per character', () => {
+      const text = 'Hello World';
+      mockResult.displayChars = Array.from(text).map(() => 'X');
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const layoutSpans = ariaHidden!.querySelectorAll('.cipher-char-layout');
+
+      expect(layoutSpans).toHaveLength(Array.from(text).length);
+      expect(layoutSpans[0]).toHaveTextContent('H');
+      expect(layoutSpans[5]?.textContent).toBe(' ');
+    });
+
+    it('should absolutely position visual characters over the reserved layout', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
+
+      charSpans.forEach((span) => {
+        const charVisual = span as HTMLElement;
+        expect(charVisual.style.position).toBe('absolute');
+        expect(charVisual.style.inset).toBe('0px');
+      });
+    });
+
+    it('should render one span per character matching text length', () => {
+      const text = 'Hello World';
+      mockResult.displayChars = Array.from(text).map(() => 'X');
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const ariaHidden = container.querySelector('[aria-hidden="true"]');
+      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
+      expect(charSpans).toHaveLength(Array.from(text).length);
+    });
+
+    it('should not render wrapper spans when not animating', () => {
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      expect(container.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
+      expect(container.querySelector('.sr-only')).not.toBeInTheDocument();
+    });
+
+    it('should preserve text content in sr-only span during animation', () => {
+      const text = 'Test content';
+      mockResult.displayChars = Array.from(text).map(() => 'X');
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const srOnly = container.querySelector('.sr-only');
+      expect(srOnly).toHaveTextContent(text);
     });
   });
 
@@ -231,17 +281,21 @@ describe('CipherText', () => {
       expect(wrapper?.style.display).toBe('inline-block');
     });
 
+    it('should not render wrapper span when block is false (default)', () => {
+      const { container } = render(<CipherText>Inline text</CipherText>);
+
+      // Without block, non-animating renders plain text node (no wrapper span)
+      expect(container.querySelector('span')).not.toBeInTheDocument();
+      expect(screen.getByText('Inline text')).toBeInTheDocument();
+    });
+
     it('should render wrapper span with animation content when block is true and animating', () => {
-      mockResult.lines = [{
-        text: 'Hey',
-        chars: ['X', 'Y', 'Z'],
-        targetChars: ['H', 'e', 'y'],
-        lineResolved: false,
-      }];
+      mockResult.displayChars = ['X', 'Y', 'Z'];
       mockResult.isAnimating = true;
 
       const { container } = render(<CipherText block>Hey</CipherText>);
 
+      // Should have wrapper span containing sr-only and aria-hidden
       const wrapper = container.firstElementChild as HTMLElement;
       expect(wrapper?.tagName).toBe('SPAN');
       expect(wrapper?.style.display).toBe('inline-block');
@@ -261,6 +315,32 @@ describe('CipherText', () => {
 
       const wrapper = container.querySelector('span');
       expect(wrapper?.style.minHeight).toBe('120px');
+    });
+
+    it('should keep ref attached when switching between animating and non-animating states', () => {
+      const { container, rerender } = render(<CipherText block>Text A</CipherText>);
+
+      // Non-animating: wrapper span exists
+      const wrapperBefore = container.querySelector('span');
+      expect(wrapperBefore).toBeInTheDocument();
+
+      // Switch to animating
+      mockResult.displayChars = ['X', 'Y', 'Z', 'A', 'B'];
+      mockResult.isAnimating = true;
+      rerender(<CipherText block>Text B</CipherText>);
+
+      // Wrapper span still exists
+      const wrapperDuring = container.firstElementChild as HTMLElement;
+      expect(wrapperDuring?.tagName).toBe('SPAN');
+
+      // Switch back to non-animating
+      mockResult.displayChars = [];
+      mockResult.isAnimating = false;
+      rerender(<CipherText block>Text B</CipherText>);
+
+      // Wrapper span still exists (ref stays attached)
+      const wrapperAfter = container.querySelector('span');
+      expect(wrapperAfter).toBeInTheDocument();
     });
   });
 
@@ -284,26 +364,38 @@ describe('CipherText', () => {
     });
   });
 
-  describe('ResizeObserver', () => {
-    it('should set up ResizeObserver when cipher is enabled', () => {
-      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+  describe('long text optimization', () => {
+    it('should not create per-char spans for text longer than 80 characters during animation', () => {
+      const longText = 'A'.repeat(100);
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
 
-      render(<CipherText>Hello</CipherText>);
+      const { container } = render(<CipherText>{longText}</CipherText>);
 
-      expect(global.ResizeObserver).toHaveBeenCalled();
+      // Long text should NOT use per-char spans — uses ref-based text update instead
+      expect(container.querySelectorAll('.cipher-char-slot').length).toBe(0);
     });
 
-    it('should disconnect ResizeObserver on unmount', () => {
-      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
-      const disconnectSpy = vi.fn();
-      global.ResizeObserver = vi.fn(function () {
-        return { observe: vi.fn(), unobserve: vi.fn(), disconnect: disconnectSpy };
-      }) as unknown as typeof ResizeObserver;
+    it('should still render sr-only text for accessibility during long text animation', () => {
+      const longText = 'A'.repeat(100);
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
 
-      const { unmount } = render(<CipherText>Hello</CipherText>);
-      unmount();
+      const { container } = render(<CipherText>{longText}</CipherText>);
 
-      expect(disconnectSpy).toHaveBeenCalled();
+      const srOnly = container.querySelector('.sr-only');
+      expect(srOnly).toBeInTheDocument();
+      expect(srOnly).toHaveTextContent(longText);
+    });
+
+    it('should still create per-char spans for short text during animation', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      // Short text keeps per-char span animation
+      expect(container.querySelectorAll('.cipher-char-slot').length).toBe(5);
     });
   });
 });
