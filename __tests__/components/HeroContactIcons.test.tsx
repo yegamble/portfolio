@@ -110,5 +110,37 @@ describe('HeroContactIcons', () => {
       process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = origSecure;
       process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY = origPgp;
     });
+
+    it('should not render when email is an empty string', async () => {
+      vi.resetModules();
+      const origEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      const origSecure = process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      const origPgp = process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY;
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = '';
+      delete process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      delete process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY;
+      const { default: HCI } = await import('@/components/HeroContactIcons');
+      const { container } = render(<HCI />);
+      expect(container.firstChild).toBeNull();
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = origEmail;
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = origSecure;
+      process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY = origPgp;
+    });
+
+    it('should not render when email is a string of spaces', async () => {
+      vi.resetModules();
+      const origEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      const origSecure = process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      const origPgp = process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY;
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = '   ';
+      delete process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      delete process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY;
+      const { default: HCI } = await import('@/components/HeroContactIcons');
+      const { container } = render(<HCI />);
+      expect(container.firstChild).toBeNull();
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = origEmail;
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = origSecure;
+      process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY = origPgp;
+    });
   });
 });
