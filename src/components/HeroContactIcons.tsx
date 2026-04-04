@@ -32,12 +32,12 @@ export default function HeroContactIcons({ className = '' }: HeroContactIconsPro
     <div className={`flex items-center gap-3 ${className}`}>
       {primaryEmailHref && (
         <a className={linkClass} href={primaryEmailHref} aria-label={t('social.email')}>
-          <EmailIcon className="h-5 w-5" />
+          <EmailIcon className="h-7 w-7" />
         </a>
       )}
       {secureEmailHref && (
         <a className={linkClass} href={secureEmailHref} aria-label={t('social.secureEmail')}>
-          <SecureEmailIcon className="h-5 w-5" />
+          <SecureEmailIcon className="h-7 w-7" />
         </a>
       )}
       {pgpPublicKey && (
@@ -47,7 +47,7 @@ export default function HeroContactIcons({ className = '' }: HeroContactIconsPro
             onClick={() => setShowPgpModal(true)}
             aria-label={t('social.pgpKey')}
           >
-            <KeyIcon className="h-5 w-5" />
+            <KeyIcon className="h-7 w-7" />
           </button>
           <PgpKeyModal
             isOpen={showPgpModal}
