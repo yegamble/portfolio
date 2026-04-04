@@ -154,6 +154,41 @@ describe('useCipherTransition', () => {
     });
   });
 
+  describe('visibility control', () => {
+    it('should return static text and not animate when isVisible is false', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const { result, rerender } = renderHook(
+        ({ text, isVisible }) =>
+          useCipherTransition(text, { isVisible }),
+        { initialProps: { text: 'Hello', isVisible: false } }
+      );
+
+      (global.requestAnimationFrame as ReturnType<typeof vi.fn>).mockClear();
+      rerender({ text: 'World', isVisible: false });
+
+      // With isVisible=false, text should update instantly without animation
+      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
+      expect(result.current.isAnimating).toBe(false);
+      expect(global.requestAnimationFrame).not.toHaveBeenCalled();
+    });
+
+    it('should animate normally when isVisible is true', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const { rerender } = renderHook(
+        ({ text, isVisible }) =>
+          useCipherTransition(text, { isVisible }),
+        { initialProps: { text: 'Hello', isVisible: true } }
+      );
+
+      (global.requestAnimationFrame as ReturnType<typeof vi.fn>).mockClear();
+      rerender({ text: 'World', isVisible: true });
+
+      expect(global.requestAnimationFrame).toHaveBeenCalled();
+    });
+  });
+
   describe('cleanup', () => {
     it('should handle unmount gracefully', () => {
       const { unmount, result } = renderHook(() => useCipherTransition('Hello'));

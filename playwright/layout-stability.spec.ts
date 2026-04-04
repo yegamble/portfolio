@@ -140,7 +140,8 @@ test.describe('language toggle layout stability', () => {
 
     const startRects = await readRects(page);
 
-    await page.getByRole('button', { name: 'Switch to Hebrew' }).click();
+    await page.getByRole('button', { name: /select language/i }).click();
+    await page.getByRole('option', { name: 'עברית' }).click();
 
     const samples = await sampleRects(page, 2200, 100);
 
@@ -160,7 +161,8 @@ test.describe('language toggle layout stability', () => {
 
     const startRects = await readRects(page);
 
-    await page.getByRole('button', { name: 'Switch to Hebrew' }).click();
+    await page.getByRole('button', { name: /select language/i }).click();
+    await page.getByRole('option', { name: 'עברית' }).click();
 
     const samples = await sampleRects(page, 250, 25);
 

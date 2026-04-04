@@ -22,10 +22,41 @@ vi.mock('@/hooks/usePretextHeight', () => ({
 }));
 
 describe('CipherText', () => {
+  let observeMock: ReturnType<typeof vi.fn>;
+  let disconnectMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     mockResult.displayChars = [];
     mockResult.isAnimating = false;
     mockPretextStyle.style = { display: 'inline-block', width: '100%', transition: 'min-height 500ms ease-out' };
+
+    observeMock = vi.fn();
+    disconnectMock = vi.fn();
+    global.IntersectionObserver = vi.fn(function (
+      this: IntersectionObserver,
+      _callback: IntersectionObserverCallback
+    ) {
+      return {
+        observe: observeMock,
+        unobserve: vi.fn(),
+        disconnect: disconnectMock,
+        root: null,
+        rootMargin: '',
+        thresholds: [],
+        takeRecords: () => [],
+      };
+    }) as unknown as typeof IntersectionObserver;
+
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
   });
 
   afterEach(() => {
@@ -310,6 +341,61 @@ describe('CipherText', () => {
       // Wrapper span still exists (ref stays attached)
       const wrapperAfter = container.querySelector('span');
       expect(wrapperAfter).toBeInTheDocument();
+    });
+  });
+
+  describe('viewport gating', () => {
+    it('should set up IntersectionObserver for viewport detection', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      render(<CipherText>Hello</CipherText>);
+
+      expect(global.IntersectionObserver).toHaveBeenCalled();
+      expect(observeMock).toHaveBeenCalled();
+    });
+
+    it('should disconnect IntersectionObserver on unmount', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const { unmount } = render(<CipherText>Hello</CipherText>);
+      unmount();
+
+      expect(disconnectMock).toHaveBeenCalled();
+    });
+  });
+
+  describe('long text optimization', () => {
+    it('should not create per-char spans for text longer than 80 characters during animation', () => {
+      const longText = 'A'.repeat(100);
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      // Long text should NOT use per-char spans — uses ref-based text update instead
+      expect(container.querySelectorAll('.cipher-char-slot').length).toBe(0);
+    });
+
+    it('should still render sr-only text for accessibility during long text animation', () => {
+      const longText = 'A'.repeat(100);
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      const srOnly = container.querySelector('.sr-only');
+      expect(srOnly).toBeInTheDocument();
+      expect(srOnly).toHaveTextContent(longText);
+    });
+
+    it('should still create per-char spans for short text during animation', () => {
+      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>Hello</CipherText>);
+
+      // Short text keeps per-char span animation
+      expect(container.querySelectorAll('.cipher-char-slot').length).toBe(5);
     });
   });
 });

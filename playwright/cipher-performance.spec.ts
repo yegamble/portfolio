@@ -15,6 +15,12 @@ async function waitForPortfolioReady(page: Page) {
   });
 }
 
+/** Open the language dropdown and click the target language option. */
+async function switchLanguage(page: Page, langLabel: string) {
+  await page.getByRole('button', { name: /select language/i }).click();
+  await page.getByRole('option', { name: langLabel }).click();
+}
+
 test.describe('cipher animation performance', () => {
   test('no cipher animation fires on page reload with stored language', async ({
     page,
@@ -23,7 +29,7 @@ test.describe('cipher animation performance', () => {
     await waitForPortfolioReady(page);
 
     // Switch to Hebrew to store the language preference
-    await page.getByRole('button', { name: 'Switch to Hebrew' }).click();
+    await switchLanguage(page, 'עברית');
     await expect(page.locator('html')).toHaveAttribute('lang', 'he');
 
     // Wait for animation to complete
@@ -97,29 +103,20 @@ test.describe('cipher animation performance', () => {
     await waitForPortfolioReady(page);
 
     // Start collecting performance metrics via Long Task API
-    const longTaskData = await page.evaluate(() => {
-      return new Promise<{ longTaskCount: number; totalBlockingTime: number }>(
-        (resolve) => {
-          const tasks: PerformanceEntry[] = [];
-          const observer = new PerformanceObserver((list) => {
-            tasks.push(...list.getEntries());
-          });
-          observer.observe({ type: 'longtask', buffered: false });
+    await page.evaluate(() => {
+      const tasks: PerformanceEntry[] = [];
+      const observer = new PerformanceObserver((list) => {
+        tasks.push(...list.getEntries());
+      });
+      observer.observe({ type: 'longtask', buffered: false });
 
-          // Store for later retrieval
-          (
-            window as unknown as Record<string, unknown>
-          ).__longTaskObserver = observer;
-          (window as unknown as Record<string, unknown>).__longTasks = tasks;
-
-          // Resolve immediately — we'll read results after the animation
-          resolve({ longTaskCount: 0, totalBlockingTime: 0 });
-        }
-      );
+      (window as unknown as Record<string, unknown>).__longTaskObserver =
+        observer;
+      (window as unknown as Record<string, unknown>).__longTasks = tasks;
     });
 
     // Trigger language switch animation
-    await page.getByRole('button', { name: 'Switch to Hebrew' }).click();
+    await switchLanguage(page, 'עברית');
 
     // Wait for animation to fully complete (BASE_DELAY + SPREAD_DURATION + buffer)
     await page.waitForTimeout(2500);
@@ -136,7 +133,6 @@ test.describe('cipher animation performance', () => {
 
       const longTaskCount = tasks.length;
       const totalBlockingTime = tasks.reduce((sum, task) => {
-        // Long tasks are > 50ms; blocking time is the excess over 50ms
         return sum + Math.max(0, task.duration - 50);
       }, 0);
 
@@ -144,7 +140,6 @@ test.describe('cipher animation performance', () => {
     });
 
     // Assertions: animation should not cause excessive long tasks
-    // A well-optimized animation should have very few (ideally 0) long tasks
     expect(
       results.longTaskCount,
       `Animation caused ${results.longTaskCount} long tasks (>50ms). Expected fewer than 5.`
@@ -154,6 +149,60 @@ test.describe('cipher animation performance', () => {
       results.totalBlockingTime,
       `Total blocking time was ${results.totalBlockingTime}ms. Expected less than 200ms.`
     ).toBeLessThan(200);
+  });
+
+  test('mobile language switch does not freeze', async ({ page }) => {
+    test.slow();
+    await page.setViewportSize({ width: 375, height: 812 });
+    await waitForPortfolioReady(page);
+
+    // Set up long task observer
+    await page.evaluate(() => {
+      const tasks: PerformanceEntry[] = [];
+      const observer = new PerformanceObserver((list) => {
+        tasks.push(...list.getEntries());
+      });
+      observer.observe({ type: 'longtask', buffered: false });
+
+      (window as unknown as Record<string, unknown>).__longTaskObserver =
+        observer;
+      (window as unknown as Record<string, unknown>).__longTasks = tasks;
+    });
+
+    // Trigger language switch
+    await switchLanguage(page, 'עברית');
+
+    // Wait for animation to complete
+    await page.waitForTimeout(3000);
+
+    // Collect results
+    const results = await page.evaluate(() => {
+      const tasks = (
+        window as unknown as Record<string, unknown[]>
+      ).__longTasks as PerformanceEntry[];
+      const observer = (
+        window as unknown as Record<string, PerformanceObserver>
+      ).__longTaskObserver;
+      observer?.disconnect();
+
+      const longTaskCount = tasks.length;
+      const totalBlockingTime = tasks.reduce((sum, task) => {
+        return sum + Math.max(0, task.duration - 50);
+      }, 0);
+
+      return { longTaskCount, totalBlockingTime };
+    });
+
+    // Mobile should have minimal long tasks after optimization
+    expect(
+      results.longTaskCount,
+      `Mobile: ${results.longTaskCount} long tasks. Expected fewer than 3.`
+    ).toBeLessThan(3);
+
+    expect(
+      results.totalBlockingTime,
+      `Mobile: ${results.totalBlockingTime}ms blocking time. Expected less than 100ms.`
+    ).toBeLessThan(100);
   });
 
   test('frame rate stays above threshold during animation', async ({
@@ -184,7 +233,7 @@ test.describe('cipher animation performance', () => {
     });
 
     // Trigger language switch
-    await page.getByRole('button', { name: 'Switch to Hebrew' }).click();
+    await switchLanguage(page, 'עברית');
 
     // Wait for animation to complete
     await page.waitForTimeout(2500);

@@ -46,7 +46,12 @@ body {
   background: #475569;
 }
 
-/* Cipher text animation — lazy-loading fade effect */
+/* Cipher text animation — long text scramble (ref-based, no per-char spans) */
+.cipher-text-scramble {
+  opacity: 0.5;
+}
+
+/* Cipher text animation — per-char effect (short text only) */
 .cipher-char-slot {
   font-kerning: none;
   font-variant-ligatures: none;
