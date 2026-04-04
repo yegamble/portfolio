@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, type CSSProperties, type RefObject } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect, type CSSProperties, type RefObject } from 'react';
 import { prepare, layout } from '@chenglou/pretext';
 
 interface UsePretextHeightResult {
@@ -6,7 +6,6 @@ interface UsePretextHeightResult {
   style: CSSProperties;
 }
 
-const ANIMATION_DURATION = 1800;
 const FALLBACK_FONT = '400 16px Inter, Heebo, sans-serif';
 const FALLBACK_LINE_HEIGHT = 26;
 
@@ -23,21 +22,31 @@ function getLineHeight(el: HTMLElement): number {
   return FALLBACK_LINE_HEIGHT;
 }
 
+// Returns 0 if element and all ancestors have no layout width (e.g. hidden subtree) — measurement skipped.
 function getWidth(el: HTMLElement): number {
-  const parent = el.parentElement;
-  return parent ? parent.clientWidth : el.clientWidth;
+  if (el.clientWidth > 0) return el.clientWidth;
+  let current = el.parentElement;
+  while (current) {
+    if (current.clientWidth > 0) return current.clientWidth;
+    current = current.parentElement;
+  }
+  return 0;
 }
 
 export function usePretextHeight(
   text: string,
-  isEnabled: boolean
+  isEnabled: boolean,
+  isAnimating: boolean = false
 ): UsePretextHeightResult {
   const ref = useRef<HTMLSpanElement | null>(null);
+  const [maxHeightClamp, setMaxHeightClamp] = useState<number | undefined>(undefined);
   const [minHeight, setMinHeight] = useState<number | undefined>(undefined);
   const prevTextRef = useRef(text);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const targetHeightRef = useRef<number | undefined>(undefined);
+  const wasAnimatingRef = useRef(false);
 
-  useEffect(() => {
+  // Measure and set max-height clamp on text change (layout effect to apply before paint)
+  useLayoutEffect(() => {
     if (!isEnabled) return;
 
     const el = ref.current;
@@ -49,36 +58,37 @@ export function usePretextHeight(
     if (text !== prevTextRef.current) {
       const width = getWidth(el);
       if (width > 0) {
-        const currentHeight = el.offsetHeight;
         const font = getFont(el);
         const lineHeight = getLineHeight(el);
 
-        const prepared = prepare(text, font);
-        const { height: targetHeight } = layout(prepared, width, lineHeight);
+        // Measure BOTH old and new text with pretext
+        const oldPrepared = prepare(prevTextRef.current, font);
+        const { height: oldHeight } = layout(oldPrepared, width, lineHeight);
+        const newPrepared = prepare(text, font);
+        const { height: newHeight } = layout(newPrepared, width, lineHeight);
 
-        const maxHeight = Math.max(currentHeight, targetHeight);
-        setMinHeight(maxHeight);
-
-        if (timerRef.current !== null) {
-          clearTimeout(timerRef.current);
-        }
-
-        timerRef.current = setTimeout(() => {
-          setMinHeight(targetHeight);
-          timerRef.current = null;
-        }, ANIMATION_DURATION);
+        // Clamp at max of both — prevents overshoot during animation
+        setMaxHeightClamp(Math.max(oldHeight, newHeight));
+        targetHeightRef.current = newHeight;
       }
 
       prevTextRef.current = text;
     }
+  }, [text, isEnabled, isAnimating]);
 
-    return () => {
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
+  // Release clamp and set target minHeight when animation completes.
+  // This synchronizes React state with the external animation lifecycle —
+  // the extra render is intentional to remove the clamp in the same frame.
+  useEffect(() => {
+    if (wasAnimatingRef.current && !isAnimating) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMaxHeightClamp(undefined);
+      if (targetHeightRef.current !== undefined) {
+        setMinHeight(targetHeightRef.current);
       }
-    };
-  }, [text, isEnabled]);
+    }
+    wasAnimatingRef.current = isAnimating;
+  }, [isAnimating]);
 
   if (!isEnabled) {
     return { ref, style: {} };
@@ -89,6 +99,11 @@ export function usePretextHeight(
     width: '100%',
     transition: 'min-height 500ms ease-out',
   };
+
+  if (isAnimating && maxHeightClamp !== undefined) {
+    style.maxHeight = `${maxHeightClamp}px`;
+    style.overflow = 'hidden';
+  }
 
   if (minHeight !== undefined) {
     style.minHeight = `${minHeight}px`;

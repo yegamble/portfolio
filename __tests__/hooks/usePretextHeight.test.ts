@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 
 vi.mock('@chenglou/pretext', () => ({
   prepare: vi.fn(() => ({ __brand: 'prepared' })),
@@ -14,7 +14,6 @@ const mockLayout = vi.mocked(layout);
 
 function createMockElement(overrides: Partial<HTMLSpanElement> = {}): HTMLSpanElement {
   const el = {
-    offsetHeight: 100,
     clientWidth: 400,
     parentElement: {
       clientWidth: 400,
@@ -22,7 +21,6 @@ function createMockElement(overrides: Partial<HTMLSpanElement> = {}): HTMLSpanEl
     ...overrides,
   } as unknown as HTMLSpanElement;
 
-  // Mock getComputedStyle for this element
   vi.spyOn(window, 'getComputedStyle').mockReturnValue({
     font: '400 16px Inter, Heebo, sans-serif',
     lineHeight: '26px',
@@ -35,11 +33,9 @@ describe('usePretextHeight', () => {
   beforeEach(() => {
     mockPrepare.mockClear();
     mockLayout.mockClear();
-    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -56,28 +52,29 @@ describe('usePretextHeight', () => {
 
   it('should return base block style when enabled but ref not attached', () => {
     const { result } = renderHook(() => usePretextHeight('Hello world', true));
-    // ref.current is null — no DOM element
     expect(result.current.style).toHaveProperty('display', 'inline-block');
     expect(result.current.style).toHaveProperty('width', '100%');
-    expect(result.current.style).not.toHaveProperty('minHeight');
+    expect(result.current.style).not.toHaveProperty('maxHeight');
   });
 
-  it('should compute minHeight when ref is attached and text changes', () => {
+  it('should measure both old and new text via pretext on text change', () => {
     const { result, rerender } = renderHook(
       ({ text }) => usePretextHeight(text, true),
       { initialProps: { text: 'Hello' } }
     );
 
-    // Simulate ref attachment
     const el = createMockElement();
     Object.defineProperty(result.current.ref, 'current', {
       value: el,
       writable: true,
     });
 
-    // Trigger text change
     rerender({ text: 'New text in Hebrew' });
 
+    expect(mockPrepare).toHaveBeenCalledWith(
+      'Hello',
+      '400 16px Inter, Heebo, sans-serif'
+    );
     expect(mockPrepare).toHaveBeenCalledWith(
       'New text in Hebrew',
       '400 16px Inter, Heebo, sans-serif'
@@ -87,13 +84,11 @@ describe('usePretextHeight', () => {
       400,
       26
     );
-    // minHeight should be max(currentHeight=100, targetHeight=120) = 120
-    expect(result.current.style).toHaveProperty('minHeight', '120px');
   });
 
-  it('should transition minHeight to target after animation duration', () => {
+  it('should not apply maxHeight when not animating', () => {
     const { result, rerender } = renderHook(
-      ({ text }) => usePretextHeight(text, true),
+      ({ text }) => usePretextHeight(text, true, false),
       { initialProps: { text: 'Hello' } }
     );
 
@@ -103,44 +98,10 @@ describe('usePretextHeight', () => {
       writable: true,
     });
 
-    rerender({ text: 'New text' });
+    rerender({ text: 'Changed' });
 
-    // Initially max(100, 120) = 120
-    expect(result.current.style).toHaveProperty('minHeight', '120px');
-
-    // After animation duration, should settle to target height
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-
-    expect(result.current.style).toHaveProperty('minHeight', '120px');
-  });
-
-  it('should use max of current and target height to prevent shrink', () => {
-    // Target height (60) < current height (100) → use current during animation
-    mockLayout.mockReturnValueOnce({ height: 60, lineCount: 3 });
-
-    const { result, rerender } = renderHook(
-      ({ text }) => usePretextHeight(text, true),
-      { initialProps: { text: 'Long text' } }
-    );
-
-    const el = createMockElement({ offsetHeight: 100 } as Partial<HTMLSpanElement>);
-    Object.defineProperty(result.current.ref, 'current', {
-      value: el,
-      writable: true,
-    });
-
-    rerender({ text: 'Short' });
-
-    // During animation: max(100, 60) = 100
-    expect(result.current.style).toHaveProperty('minHeight', '100px');
-
-    // After animation: settle to target = 60
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-    expect(result.current.style).toHaveProperty('minHeight', '60px');
+    expect(result.current.style).not.toHaveProperty('maxHeight');
+    expect(result.current.style).not.toHaveProperty('overflow');
   });
 
   it('should return valid style when ref is attached but text has not changed', () => {
@@ -152,7 +113,6 @@ describe('usePretextHeight', () => {
       writable: true,
     });
 
-    // Text hasn't changed — should not throw, should return base style
     expect(result.current.style).toHaveProperty('display', 'inline-block');
     expect(mockPrepare).not.toHaveBeenCalled();
   });
@@ -175,20 +135,123 @@ describe('usePretextHeight', () => {
 
     rerender({ text: 'Changed' });
 
-    // Should use fallback font string
     expect(mockPrepare).toHaveBeenCalledWith(
       'Changed',
       expect.stringContaining('Inter')
     );
   });
 
-  it('should include transition in style', () => {
+  it('should include min-height transition in style', () => {
     const { result } = renderHook(() => usePretextHeight('Hello', true));
     expect(result.current.style).toHaveProperty('transition');
+    const transition = result.current.style.transition as string;
+    expect(transition).toContain('min-height');
   });
 
   it('should handle unmount gracefully', () => {
     const { unmount } = renderHook(() => usePretextHeight('Hello', true));
     expect(() => unmount()).not.toThrow();
+  });
+
+  describe('height clamping with isAnimating', () => {
+    it('should apply maxHeight and overflow hidden when isAnimating is true and text changes', () => {
+      mockLayout
+        .mockReturnValueOnce({ height: 100, lineCount: 4 })
+        .mockReturnValueOnce({ height: 120, lineCount: 5 });
+
+      const { result, rerender } = renderHook(
+        ({ text, isAnimating }) => usePretextHeight(text, true, isAnimating),
+        { initialProps: { text: 'Hello', isAnimating: false } }
+      );
+
+      const el = createMockElement();
+      Object.defineProperty(result.current.ref, 'current', {
+        value: el,
+        writable: true,
+      });
+
+      rerender({ text: 'New text in Hebrew', isAnimating: true });
+
+      expect(result.current.style).toHaveProperty('maxHeight', '120px');
+      expect(result.current.style).toHaveProperty('overflow', 'hidden');
+    });
+
+    it('should remove maxHeight and set minHeight to target when isAnimating goes false', () => {
+      mockLayout
+        .mockReturnValueOnce({ height: 100, lineCount: 4 })
+        .mockReturnValueOnce({ height: 80, lineCount: 3 });
+
+      const { result, rerender } = renderHook(
+        ({ text, isAnimating }) => usePretextHeight(text, true, isAnimating),
+        { initialProps: { text: 'Hello', isAnimating: false } }
+      );
+
+      const el = createMockElement();
+      Object.defineProperty(result.current.ref, 'current', {
+        value: el,
+        writable: true,
+      });
+
+      rerender({ text: 'Short HE', isAnimating: true });
+
+      expect(result.current.style).toHaveProperty('maxHeight', '100px');
+      expect(result.current.style).toHaveProperty('overflow', 'hidden');
+
+      rerender({ text: 'Short HE', isAnimating: false });
+
+      expect(result.current.style).not.toHaveProperty('maxHeight');
+      expect(result.current.style).not.toHaveProperty('overflow');
+      expect(result.current.style).toHaveProperty('minHeight', '80px');
+    });
+
+    it('should measure both old and new text heights via pretext', () => {
+      mockLayout
+        .mockReturnValueOnce({ height: 146, lineCount: 6 })
+        .mockReturnValueOnce({ height: 88, lineCount: 4 });
+
+      const { result, rerender } = renderHook(
+        ({ text, isAnimating }) => usePretextHeight(text, true, isAnimating),
+        { initialProps: { text: 'English paragraph', isAnimating: false } }
+      );
+
+      const el = createMockElement();
+      Object.defineProperty(result.current.ref, 'current', {
+        value: el,
+        writable: true,
+      });
+
+      rerender({ text: 'Hebrew paragraph', isAnimating: true });
+
+      expect(mockPrepare).toHaveBeenCalledTimes(2);
+      expect(mockPrepare).toHaveBeenCalledWith('English paragraph', expect.any(String));
+      expect(mockPrepare).toHaveBeenCalledWith('Hebrew paragraph', expect.any(String));
+    });
+
+    it('should use max of old and new height to prevent overshoot', () => {
+      mockLayout
+        .mockReturnValueOnce({ height: 100, lineCount: 4 })
+        .mockReturnValueOnce({ height: 60, lineCount: 3 });
+
+      const { result, rerender } = renderHook(
+        ({ text, isAnimating }) => usePretextHeight(text, true, isAnimating),
+        { initialProps: { text: 'Long text', isAnimating: false } }
+      );
+
+      const el = createMockElement();
+      Object.defineProperty(result.current.ref, 'current', {
+        value: el,
+        writable: true,
+      });
+
+      rerender({ text: 'Short', isAnimating: true });
+
+      // max(100, 60) = 100 — prevents overshoot
+      expect(result.current.style).toHaveProperty('maxHeight', '100px');
+
+      // Animation completes → release to target = 60
+      rerender({ text: 'Short', isAnimating: false });
+      expect(result.current.style).toHaveProperty('minHeight', '60px');
+      expect(result.current.style).not.toHaveProperty('maxHeight');
+    });
   });
 });

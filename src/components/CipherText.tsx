@@ -81,7 +81,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     isVisible,
     elementRef: isLongText ? longTextRef : undefined,
   });
-  const { ref, style } = usePretextHeight(text, block && isI18nEnabled);
+  const { ref, style } = usePretextHeight(text, block && isI18nEnabled, isAnimating);
   const targetChars = useMemo(() => Array.from(text), [text]);
 
   // --- Render helper: wrap with observer ref when cipher is enabled ---
