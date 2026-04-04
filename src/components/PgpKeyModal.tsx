@@ -22,11 +22,13 @@ function formatFingerprint(fp: string): string {
 }
 
 function decodeArmoredKey(raw: string): string {
-  if (raw.startsWith('-----BEGIN')) return raw;
+  // Handle literal \n from env vars (Cloudflare, .env quoting)
+  const normalized = raw.includes('\\n') ? raw.replace(/\\n/g, '\n') : raw;
+  if (normalized.startsWith('-----BEGIN')) return normalized;
   try {
-    return atob(raw);
+    return atob(normalized);
   } catch {
-    return raw;
+    return normalized;
   }
 }
 
