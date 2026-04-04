@@ -149,7 +149,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
         aria-modal="true"
         aria-labelledby="pgp-modal-title"
         tabIndex={-1}
-        className="w-full max-w-lg rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl outline-none"
+        className="w-full max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl outline-none"
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 id="pgp-modal-title" className="text-lg font-semibold text-text-primary">
@@ -202,8 +202,8 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </div>
         )}
 
-        <div className="mb-4 max-h-40 overflow-y-auto rounded border border-slate-700 bg-slate-950 p-3">
-          <pre className="whitespace-pre-wrap break-all font-mono text-xs text-text-secondary">
+        <div className="mb-4 max-h-40 overflow-auto rounded border border-slate-700 bg-slate-950 p-3 [&]:scrollbar-thin">
+          <pre className="whitespace-pre font-mono text-[10px] leading-relaxed text-text-secondary">
             {decodedKey}
           </pre>
         </div>
