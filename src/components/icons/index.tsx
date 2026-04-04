@@ -50,14 +50,18 @@ export function EmailIcon({ className = 'h-5 w-5' }: IconProps) {
 
 export function SecureEmailIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
-    <BaseIcon viewBox="0 0 24 24" className={className}>
-      <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
-      <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
-      <g transform="translate(14.5,12.5) scale(0.45)">
-        <rect x="2" y="9" width="16" height="11" rx="2" />
-        <path d="M6 9V6a4 4 0 118 0v3" fill="none" stroke="currentColor" strokeWidth="2.5" />
-      </g>
-    </BaseIcon>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      {/* Open envelope — flap, body, bottom V */}
+      <path d="M21 10V19a2 2 0 01-2 2H5a2 2 0 01-2-2V10l9 5 9-5z" />
+      <path d="M3 10l9-5 9 5" />
+      {/* Letter paper peeking out */}
+      <rect x="6" y="2" width="12" height="13" rx="1" fill="none" />
+      {/* Lock on letter */}
+      <rect x="9.5" y="7.5" width="5" height="4" rx="0.75" />
+      <path d="M10.75 7.5V6.25a1.25 1.25 0 012.5 0V7.5" fill="none" />
+      {/* Checkmark inside lock */}
+      <path d="M11 9.75l0.75 0.75L13 9.25" fill="none" />
+    </svg>
   );
 }
 
