@@ -51,9 +51,12 @@ export function EmailIcon({ className = 'h-5 w-5' }: IconProps) {
 export function SecureEmailIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
     <BaseIcon viewBox="0 0 24 24" className={className}>
-      <path d="M1.5 5.25a2.25 2.25 0 012.25-2.25h12.5a2.25 2.25 0 012.25 2.25v.56l-8.5 5.22L1.5 5.81V5.25z" />
-      <path d="M1.5 7.96v7.79a2.25 2.25 0 002.25 2.25H13v-3.5a4 4 0 018 0V18a2.25 2.25 0 00.5-1.42V5.25a2.25 2.25 0 00-.27-1.07L13.5 9.27a3 3 0 01-3 0L1.5 4.19" />
-      <path fillRule="evenodd" d="M17 13a2.5 2.5 0 00-2.5 2.5V17H14a1 1 0 00-1 1v4a1 1 0 001 1h6a1 1 0 001-1v-4a1 1 0 00-1-1h-.5v-1.5A2.5 2.5 0 0017 13zm-1 4v-1.5a1 1 0 112 0V17h-2z" clipRule="evenodd" />
+      <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+      <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+      <g transform="translate(13.5,11)">
+        <rect x="0" y="3.5" width="9" height="6.5" rx="1.2" />
+        <path d="M2 3.5V2a2.5 2.5 0 015 0v1.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      </g>
     </BaseIcon>
   );
 }
