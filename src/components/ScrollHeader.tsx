@@ -107,9 +107,9 @@ export default function ScrollHeader() {
             <p className="text-sm font-medium uppercase tracking-widest text-text-muted">
               <CipherText>{t('hero.title')}</CipherText>
             </p>
+            <HeroContactIcons className="mt-3" />
           </div>
         </div>
-        <HeroContactIcons className="mt-3" />
         <h1 className="mb-8 text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl">
           <CipherText block>{t('hero.tagline')}</CipherText>
         </h1>
