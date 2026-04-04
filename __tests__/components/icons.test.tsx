@@ -19,6 +19,7 @@ const ICONS_CONFIG = [
   { name: 'GitHubIcon', Component: GitHubIcon, viewBox: '0 0 16 16', defaultClass: 'h-5 w-5' },
   { name: 'LinkedInIcon', Component: LinkedInIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
   { name: 'EmailIcon', Component: EmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
+  { name: 'SecureEmailIcon', Component: SecureEmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
   { name: 'ArrowOutwardIcon', Component: ArrowOutwardIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
   { name: 'ArrowRightIcon', Component: ArrowRightIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
   {
@@ -95,21 +96,12 @@ describe('Icon components', () => {
       expect(paths.length).toBe(2);
     });
 
-    it('SecureEmailIcon should render an SVG with stroke-based styling', () => {
+    it('SecureEmailIcon should contain envelope and lock paths', () => {
       const { container } = render(<SecureEmailIcon />);
       const svg = container.querySelector('svg');
-      expect(svg).toBeInTheDocument();
-      expect(svg).toHaveAttribute('stroke', 'currentColor');
-      expect(svg).toHaveAttribute('aria-hidden', 'true');
-      expect(svg).toHaveClass('h-5', 'w-5');
-    });
-
-    it('SecureEmailIcon should contain envelope paths and a lock rect', () => {
-      const { container } = render(<SecureEmailIcon />);
+      expect(svg).toHaveAttribute('fill', 'currentColor');
       const paths = container.querySelectorAll('path');
       expect(paths.length).toBeGreaterThanOrEqual(3);
-      const lockRect = container.querySelector('rect');
-      expect(lockRect).toBeInTheDocument();
     });
 
     it('KeyIcon should contain a path element', () => {

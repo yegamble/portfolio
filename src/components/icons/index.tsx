@@ -50,18 +50,11 @@ export function EmailIcon({ className = 'h-5 w-5' }: IconProps) {
 
 export function SecureEmailIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      {/* Open envelope — flap, body, bottom V */}
-      <path d="M21 10V19a2 2 0 01-2 2H5a2 2 0 01-2-2V10l9 5 9-5z" />
-      <path d="M3 10l9-5 9 5" />
-      {/* Letter paper peeking out */}
-      <rect x="6" y="2" width="12" height="13" rx="1" fill="none" />
-      {/* Lock on letter */}
-      <rect x="9.5" y="7.5" width="5" height="4" rx="0.75" />
-      <path d="M10.75 7.5V6.25a1.25 1.25 0 012.5 0V7.5" fill="none" />
-      {/* Checkmark inside lock */}
-      <path d="M11 9.75l0.75 0.75L13 9.25" fill="none" />
-    </svg>
+    <BaseIcon viewBox="0 0 24 24" className={className}>
+      <path d="M1.5 5.25a2.25 2.25 0 012.25-2.25h12.5a2.25 2.25 0 012.25 2.25v.56l-8.5 5.22L1.5 5.81V5.25z" />
+      <path d="M1.5 7.96v7.79a2.25 2.25 0 002.25 2.25H13v-3.5a4 4 0 018 0V18a2.25 2.25 0 00.5-1.42V5.25a2.25 2.25 0 00-.27-1.07L13.5 9.27a3 3 0 01-3 0L1.5 4.19" />
+      <path fillRule="evenodd" d="M17 13a2.5 2.5 0 00-2.5 2.5V17H14a1 1 0 00-1 1v4a1 1 0 001 1h6a1 1 0 001-1v-4a1 1 0 00-1-1h-.5v-1.5A2.5 2.5 0 0017 13zm-1 4v-1.5a1 1 0 112 0V17h-2z" clipRule="evenodd" />
+    </BaseIcon>
   );
 }
 
