@@ -149,7 +149,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
         aria-modal="true"
         aria-labelledby="pgp-modal-title"
         tabIndex={-1}
-        className="w-full max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl outline-none"
+        className="w-full max-w-xl rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl outline-none"
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 id="pgp-modal-title" className="text-lg font-semibold text-text-primary">
