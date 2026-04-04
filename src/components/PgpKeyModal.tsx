@@ -205,7 +205,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
         )}
 
         <div className="mb-4 max-h-96 overflow-auto rounded border border-slate-700 bg-slate-950 p-5 [&]:scrollbar-thin">
-          <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-relaxed text-text-secondary">
+          <pre className="whitespace-pre font-mono text-[11px] leading-relaxed text-text-secondary">
             {decodedKey}
           </pre>
         </div>
