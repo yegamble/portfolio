@@ -46,36 +46,34 @@ body {
   background: #475569;
 }
 
-/* Cipher text animation — long text scramble (ref-based, no per-char spans) */
-.cipher-text-scramble {
-  opacity: 0.5;
-}
-
-/* Cipher text animation — per-char effect (short text only) */
+/* Cipher text animation — per-line and per-char effects */
 .cipher-char-slot {
   font-kerning: none;
   font-variant-ligatures: none;
 }
 
-.cipher-char-layout {
-  visibility: hidden;
-  white-space: pre;
-}
-
 .cipher-char {
   opacity: 0.35;
   white-space: pre;
-  transition: opacity 400ms ease-out, color 400ms ease-out, text-shadow 400ms ease-out;
+  transition: opacity 400ms ease-out;
 }
 
 .cipher-char.cipher-resolved {
   opacity: 1;
-  color: #5eead4;
-  text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
-  animation: cipher-glow-fade 600ms ease-out forwards;
 }
 
-@keyframes cipher-glow-fade {
+/* Per-line glow: teal flash when all chars in a line resolve */
+.cipher-line {
+  display: inline;
+}
+
+.cipher-line-resolved {
+  color: #5eead4;
+  text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
+  animation: cipher-line-glow-fade 600ms ease-out forwards;
+}
+
+@keyframes cipher-line-glow-fade {
   0% {
     color: #5eead4;
     text-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
@@ -91,7 +89,7 @@ body {
     transition: none;
     opacity: 1;
   }
-  .cipher-char.cipher-resolved {
+  .cipher-line-resolved {
     animation: none;
     color: inherit;
     text-shadow: none;
@@ -100,10 +98,10 @@ body {
 
 @media (pointer: coarse), (max-width: 768px) {
   .cipher-char {
-    transition: opacity 200ms linear, color 200ms linear;
+    transition: opacity 200ms linear;
   }
 
-  .cipher-char.cipher-resolved {
+  .cipher-line-resolved {
     text-shadow: none;
     animation: none;
     color: inherit;

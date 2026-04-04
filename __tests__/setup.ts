@@ -23,6 +23,15 @@ mQENBGAAAAAAAAEIATestKeyDataForUnitTests
 =test
 -----END PGP PUBLIC KEY BLOCK-----`;
 
+// Global ResizeObserver mock for components that measure DOM elements
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof globalThis.ResizeObserver;
+}
+
 afterEach(() => {
   cleanup();
 });

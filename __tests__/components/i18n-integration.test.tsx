@@ -93,8 +93,8 @@ describe('i18n Integration - English Mode', () => {
 
   it('should render hero content in English', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText(testEn.hero.name, { selector: 'section p' })).toBeInTheDocument();
-    expect(screen.getByText(testEn.hero.title, { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testEn.hero.name, { selector: 'section span' })).toBeInTheDocument();
+    expect(screen.getByText(testEn.hero.title, { selector: 'section span' })).toBeInTheDocument();
     const h1 = screen.getByRole('heading', { level: 1 });
     expect(h1).toHaveTextContent(/Senior C\+\+, Rust & Go engineer/);
   });
@@ -153,12 +153,12 @@ describe('i18n Integration - Hebrew Mode', () => {
 
   it('should render hero name in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText(testHe.hero.name, { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testHe.hero.name, { selector: 'section span' })).toBeInTheDocument();
   });
 
   it('should render hero title in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText(testHe.hero.title, { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testHe.hero.title, { selector: 'section span' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Hebrew', () => {
@@ -243,12 +243,12 @@ describe('i18n Integration - Russian Mode', () => {
 
   it('should render hero name in Russian', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText(testRu.hero.name, { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testRu.hero.name, { selector: 'section span' })).toBeInTheDocument();
   });
 
   it('should render hero title in Russian', () => {
     render(<ScrollHeader />);
-    expect(screen.getByText(testRu.hero.title, { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testRu.hero.title, { selector: 'section span' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Russian', () => {
@@ -520,35 +520,35 @@ describe('i18n Regression - RTL design classes', () => {
 describe('i18n Integration - PGP Key Icon Labels', () => {
   it('should render PGP key button with English label', () => {
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testEn.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen.getByText(testEn.hero.name, { selector: 'section span' }).closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'PGP Key' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Hebrew label', async () => {
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section span' }).closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'מפתח PGP' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Russian label', async () => {
     await i18n.changeLanguage('ru');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testRu.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen.getByText(testRu.hero.name, { selector: 'section span' }).closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'Ключ PGP' })).toBeInTheDocument();
   });
 
   it('should render email icon label in Hebrew', async () => {
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section span' }).closest('section');
     expect(within(heroSection!).getByRole('link', { name: 'אימייל' })).toBeInTheDocument();
   });
 
   it('should render secure email icon label in Hebrew', async () => {
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section span' }).closest('section');
     expect(within(heroSection!).getByRole('link', { name: 'אימייל מאובטח' })).toBeInTheDocument();
   });
 });

@@ -2,6 +2,20 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
 
+// Mock pretext — it requires canvas which isn't available in jsdom
+let lastPreparedText = '';
+vi.mock('@chenglou/pretext', () => ({
+  prepareWithSegments: vi.fn((text: string) => {
+    lastPreparedText = text;
+    return { _mock: true };
+  }),
+  layoutWithLines: vi.fn(() => ({
+    height: 20,
+    lineCount: 1,
+    lines: [{ text: lastPreparedText, width: 100, start: { segmentIndex: 0, graphemeIndex: 0 }, end: { segmentIndex: 0, graphemeIndex: lastPreparedText.length } }],
+  })),
+}));
+
 describe('useCipherTransition', () => {
   beforeEach(() => {
     let rafId = 0;
@@ -28,23 +42,27 @@ describe('useCipherTransition', () => {
   });
 
   describe('initial mount', () => {
-    it('should return text as-is on mount without animating', () => {
+    it('should return text as single line on mount without animating', () => {
       const { result } = renderHook(() => useCipherTransition('Hello'));
 
-      expect(result.current.displayChars).toEqual(['H', 'e', 'l', 'l', 'o']);
+      expect(result.current.lines).toHaveLength(1);
+      expect(result.current.lines[0].text).toBe('Hello');
+      expect(result.current.lines[0].chars).toEqual(['H', 'e', 'l', 'l', 'o']);
+      expect(result.current.lines[0].lineResolved).toBe(true);
       expect(result.current.isAnimating).toBe(false);
     });
 
     it('should handle empty string', () => {
       const { result } = renderHook(() => useCipherTransition(''));
 
-      expect(result.current.displayChars).toEqual([]);
+      expect(result.current.lines).toHaveLength(1);
+      expect(result.current.lines[0].text).toBe('');
       expect(result.current.isAnimating).toBe(false);
     });
   });
 
   describe('text changes (disabled mode)', () => {
-    it('should update displayChars when text changes', () => {
+    it('should update lines when text changes', () => {
       const { result, rerender } = renderHook(
         ({ text }) => useCipherTransition(text),
         { initialProps: { text: 'Hello' } }
@@ -52,10 +70,10 @@ describe('useCipherTransition', () => {
 
       rerender({ text: 'World' });
 
-      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
+      expect(result.current.lines[0].chars).toEqual(['W', 'o', 'r', 'l', 'd']);
     });
 
-    it('should return array matching new text length', () => {
+    it('should return lines matching new text', () => {
       const { result, rerender } = renderHook(
         ({ text }) => useCipherTransition(text),
         { initialProps: { text: 'Hi' } }
@@ -63,7 +81,7 @@ describe('useCipherTransition', () => {
 
       rerender({ text: 'Hello World' });
 
-      expect(result.current.displayChars).toHaveLength(11);
+      expect(result.current.lines[0].text).toBe('Hello World');
     });
   });
 
@@ -76,7 +94,7 @@ describe('useCipherTransition', () => {
 
       rerender({ text: 'World' });
 
-      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
+      expect(result.current.lines[0].chars).toEqual(['W', 'o', 'r', 'l', 'd']);
       expect(result.current.isAnimating).toBe(false);
     });
 
@@ -126,7 +144,7 @@ describe('useCipherTransition', () => {
 
       rerender({ text: 'World' });
 
-      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
+      expect(result.current.lines[0].chars).toEqual(['W', 'o', 'r', 'l', 'd']);
       expect(result.current.isAnimating).toBe(false);
     });
 
@@ -167,8 +185,7 @@ describe('useCipherTransition', () => {
       (global.requestAnimationFrame as ReturnType<typeof vi.fn>).mockClear();
       rerender({ text: 'World', isVisible: false });
 
-      // With isVisible=false, text should update instantly without animation
-      expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
+      expect(result.current.lines[0].chars).toEqual(['W', 'o', 'r', 'l', 'd']);
       expect(result.current.isAnimating).toBe(false);
       expect(global.requestAnimationFrame).not.toHaveBeenCalled();
     });
@@ -193,7 +210,7 @@ describe('useCipherTransition', () => {
     it('should handle unmount gracefully', () => {
       const { unmount, result } = renderHook(() => useCipherTransition('Hello'));
 
-      expect(result.current.displayChars).toEqual(['H', 'e', 'l', 'l', 'o']);
+      expect(result.current.lines[0].chars).toEqual(['H', 'e', 'l', 'l', 'o']);
 
       expect(() => unmount()).not.toThrow();
     });
@@ -207,7 +224,54 @@ describe('useCipherTransition', () => {
       rerender({ text: 'World' });
       rerender({ text: 'Test' });
 
-      expect(result.current.displayChars).toEqual(['T', 'e', 's', 't']);
+      expect(result.current.lines[0].chars).toEqual(['T', 'e', 's', 't']);
+    });
+
+    it('should handle interrupted animation without stale chars', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const { rerender, result } = renderHook(
+        ({ text }) => useCipherTransition(text),
+        { initialProps: { text: 'Hello' } }
+      );
+
+      rerender({ text: 'World' });
+
+      if (rafCallbacks.length > 0) {
+        act(() => rafCallbacks[rafCallbacks.length - 1](100));
+      }
+
+      // Interrupt with new text
+      rerender({ text: 'Final' });
+
+      // Lines should reflect either the interrupted target or the new target
+      // The key invariant: no stale chars from previous animation
+      const lineText = result.current.lines[0].text;
+      expect(['World', 'Final']).toContain(lineText);
+    });
+  });
+
+  describe('line structure', () => {
+    it('should return CipherLine objects with text, chars, targetChars, lineResolved', () => {
+      const { result } = renderHook(() => useCipherTransition('Hello'));
+
+      const line = result.current.lines[0];
+      expect(line).toHaveProperty('text');
+      expect(line).toHaveProperty('chars');
+      expect(line).toHaveProperty('targetChars');
+      expect(line).toHaveProperty('lineResolved');
+    });
+
+    it('should mark lines as resolved when not animating', () => {
+      const { result } = renderHook(() => useCipherTransition('Hello'));
+
+      expect(result.current.lines[0].lineResolved).toBe(true);
     });
   });
 });

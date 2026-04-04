@@ -52,19 +52,18 @@ describe('ScrollHeader', () => {
   describe('Hero section', () => {
     it('should render the large name in the hero area', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText(TEST_NAME, {
-        selector: 'section p',
-      });
+      const matches = screen.getAllByText(TEST_NAME);
+      const heroName = matches.find(el => el.closest('section'));
       expect(heroName).toBeInTheDocument();
-      expect(heroName.className).toContain('text-3xl');
+      const heroP = heroName!.closest('p');
+      expect(heroP!.className).toContain('text-3xl');
     });
 
     it('should render the job title in the hero area', () => {
       render(<ScrollHeader />);
-      const title = screen.getByText(TEST_TITLE, {
-        selector: 'section p',
-      });
-      expect(title).toBeInTheDocument();
+      const matches = screen.getAllByText(TEST_TITLE);
+      const heroTitle = matches.find(el => el.closest('section'));
+      expect(heroTitle).toBeInTheDocument();
     });
 
     it('should render the h1 tagline', () => {
@@ -99,10 +98,8 @@ describe('ScrollHeader', () => {
 
     it('should render the teal accent bar', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText(TEST_NAME, {
-        selector: 'section p',
-      });
-      const heroSection = heroName.closest('section');
+      const heroName = screen.getAllByText(TEST_NAME).find(el => el.closest('section'));
+      const heroSection = heroName!.closest('section');
       expect(heroSection).toBeInTheDocument();
       const accentBar = heroSection!.querySelector('[class*="bg-primary"]');
       expect(accentBar).toBeInTheDocument();
@@ -110,33 +107,30 @@ describe('ScrollHeader', () => {
 
     it('should render hero section as a section element', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText(TEST_NAME, {
-        selector: 'section p',
-      });
-      expect(heroName.closest('section')).toBeInTheDocument();
+      const heroName = screen.getAllByText(TEST_NAME).find(el => el.closest('section'));
+      expect(heroName!.closest('section')).toBeInTheDocument();
     });
 
     it('should render the hero name with bold tracking-tight styling', () => {
       render(<ScrollHeader />);
-      const heroName = screen.getByText(TEST_NAME, {
-        selector: 'section p',
-      });
-      expect(heroName).toHaveClass('font-bold', 'tracking-tight');
+      const heroName = screen.getAllByText(TEST_NAME).find(el => el.closest('section'));
+      const heroP = heroName!.closest('p');
+      expect(heroP).toHaveClass('font-bold', 'tracking-tight');
     });
 
     it('should render the job title with uppercase tracking-widest styling', () => {
       render(<ScrollHeader />);
-      const title = screen.getByText(TEST_TITLE, {
-        selector: 'section p',
-      });
-      expect(title).toHaveClass('uppercase', 'tracking-widest');
+      const title = screen.getAllByText(TEST_TITLE).find(el => el.closest('section'));
+      const titleP = title!.closest('p');
+      expect(titleP).toHaveClass('uppercase', 'tracking-widest');
     });
   });
 
   describe('Hero contact icons', () => {
     it('should render contact icons in the hero section', () => {
       render(<ScrollHeader />);
-      const heroSection = screen.getByText(TEST_NAME, { selector: 'section p' }).closest('section');
+      const heroName = screen.getAllByText(TEST_NAME).find(el => el.closest('section'));
+      const heroSection = heroName!.closest('section');
       expect(heroSection).toBeInTheDocument();
       const emailLink = within(heroSection!).getByRole('link', { name: /^email$/i });
       expect(emailLink).toBeInTheDocument();
@@ -144,7 +138,8 @@ describe('ScrollHeader', () => {
 
     it('should render PGP key button in the hero section', () => {
       render(<ScrollHeader />);
-      const heroSection = screen.getByText(TEST_NAME, { selector: 'section p' }).closest('section');
+      const heroName = screen.getAllByText(TEST_NAME).find(el => el.closest('section'));
+      const heroSection = heroName!.closest('section');
       const pgpButton = within(heroSection!).getByRole('button', { name: /pgp key/i });
       expect(pgpButton).toBeInTheDocument();
     });

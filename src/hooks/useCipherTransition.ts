@@ -1,14 +1,27 @@
-import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
+import { getFont, getLineHeight, getWidth, FALLBACK_FONT, FALLBACK_LINE_HEIGHT } from '@/lib/pretext-utils';
 
-interface CipherTransitionResult {
-  displayChars: string[];
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface CipherLine {
+  text: string;
+  chars: string[];
+  targetChars: string[];
+  lineResolved: boolean;
+}
+
+export interface CipherTransitionResult {
+  lines: CipherLine[];
   isAnimating: boolean;
 }
 
-interface CipherTransitionOptions {
+export interface CipherTransitionOptions {
   isVisible?: boolean;
-  elementRef?: RefObject<HTMLElement | null>;
+  elementRef?: React.RefObject<HTMLElement | null>;
 }
 
 interface AnimationProfile {
@@ -16,6 +29,7 @@ interface AnimationProfile {
   spreadDuration: number;
   jitter: number;
   updateInterval: number;
+  lineStagger: number;
 }
 
 const DESKTOP_PROFILE: AnimationProfile = {
@@ -23,6 +37,7 @@ const DESKTOP_PROFILE: AnimationProfile = {
   spreadDuration: 700,
   jitter: 60,
   updateInterval: 50,
+  lineStagger: 80,
 };
 
 const MOBILE_PROFILE: AnimationProfile = {
@@ -30,6 +45,7 @@ const MOBILE_PROFILE: AnimationProfile = {
   spreadDuration: 420,
   jitter: 35,
   updateInterval: 90,
+  lineStagger: 50,
 };
 
 // ---------------------------------------------------------------------------
@@ -71,19 +87,8 @@ function unregisterTick(fn: TickFn) {
 }
 
 // ---------------------------------------------------------------------------
-// Pure helpers (unchanged logic, no side-effects)
+// Pure helpers
 // ---------------------------------------------------------------------------
-
-function calculateResolveTimes(maxLen: number, profile: AnimationProfile): number[] {
-  const resolveTimes: number[] = [];
-  for (let i = 0; i < maxLen; i++) {
-    const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
-    const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
-    resolveTimes[i] =
-      profile.baseDelay + progress * profile.spreadDuration + randomJitter;
-  }
-  return resolveTimes;
-}
 
 function getAnimationProfile(): AnimationProfile {
   if (typeof window === 'undefined') {
@@ -96,42 +101,53 @@ function getAnimationProfile(): AnimationProfile {
   return isCoarsePointer || isNarrowViewport ? MOBILE_PROFILE : DESKTOP_PROFILE;
 }
 
-function generateFrameChars(
-  maxLen: number,
-  newChars: string[],
-  resolveTimes: number[],
-  elapsed: number
-): { chars: string[]; allResolved: boolean } {
-  const chars: string[] = [];
-  let allResolved = true;
-
-  for (let i = 0; i < maxLen; i++) {
-    const resolveTime = resolveTimes[i];
-    const targetChar = i < newChars.length ? newChars[i] : '';
-
-    if (elapsed >= resolveTime) {
-      chars[i] = targetChar;
-    } else {
-      allResolved = false;
-      if (targetChar && isScramblable(targetChar)) {
-        chars[i] = getRandomCipherChar();
-      } else {
-        chars[i] = targetChar;
-      }
-    }
+function calculateResolveTimes(charCount: number, profile: AnimationProfile, lineOffset: number): number[] {
+  const resolveTimes: number[] = [];
+  for (let i = 0; i < charCount; i++) {
+    const progress = charCount > 1 ? i / (charCount - 1) : 0;
+    const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
+    resolveTimes[i] =
+      lineOffset + profile.baseDelay + progress * profile.spreadDuration + randomJitter;
   }
+  return resolveTimes;
+}
 
-  return { chars, allResolved };
+function textToLines(text: string, font: string, maxWidth: number, lineHeight: number): string[] {
+  if (!text) return [''];
+  try {
+    const prepared = prepareWithSegments(text, font);
+    const result = layoutWithLines(prepared, maxWidth, lineHeight);
+    return result.lines.map(l => l.text);
+  } catch {
+    return [text];
+  }
+}
+
+function makeFinalLines(text: string, lineTexts: string[]): CipherLine[] {
+  return lineTexts.map(lineText => {
+    const chars = Array.from(lineText);
+    return {
+      text: lineText,
+      chars,
+      targetChars: chars,
+      lineResolved: true,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
-// Per-char animation loop (existing — for short text)
+// Hook
 // ---------------------------------------------------------------------------
 
-function useCipherAnimationLoop(text: string, isEnabled: boolean) {
-  const [displayChars, setDisplayChars] = useState<string[]>(() =>
-    Array.from(text)
-  );
+export function useCipherTransition(
+  text: string,
+  options?: CipherTransitionOptions
+): CipherTransitionResult {
+  const isEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
+  const isVisible = options?.isVisible ?? true;
+  const elementRef = options?.elementRef;
+
+  const [lines, setLines] = useState<CipherLine[]>(() => makeFinalLines(text, [text]));
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTextRef = useRef(text);
   const tickRef = useRef<TickFn | null>(null);
@@ -144,7 +160,7 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
   }, []);
 
   useEffect(() => {
-    if (!isEnabled) {
+    if (!isEnabled || !isVisible) {
       prevTextRef.current = text;
       return;
     }
@@ -153,11 +169,17 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Measure from DOM
+    const el = elementRef?.current;
+    const font = el ? getFont(el) : FALLBACK_FONT;
+    const lh = el ? getLineHeight(el) : FALLBACK_LINE_HEIGHT;
+    const width = el ? getWidth(el) : 600;
+
     if (prefersReducedMotion) {
       prevTextRef.current = text;
-      // Use a single RAF to update in the next frame
+      const lineTexts = textToLines(text, font, width, lh);
       const id = requestAnimationFrame(() => {
-        setDisplayChars(Array.from(text));
+        setLines(makeFinalLines(text, lineTexts));
         setIsAnimating(false);
       });
       return () => cancelAnimationFrame(id);
@@ -167,13 +189,17 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
       return;
     }
 
-    // Clean up any in-flight animation
     cleanup();
 
-    const newChars = Array.from(text);
-    const maxLen = Math.max(Array.from(prevTextRef.current).length, newChars.length);
+    const lineTexts = textToLines(text, font, width, lh);
     const profile = getAnimationProfile();
-    const resolveTimes = calculateResolveTimes(maxLen, profile);
+
+    // Build per-line resolve times
+    const lineResolveTimes: number[][] = lineTexts.map((lineText, lineIdx) => {
+      const charCount = Array.from(lineText).length;
+      const lineOffset = lineIdx * profile.lineStagger;
+      return calculateResolveTimes(charCount, profile, lineOffset);
+    });
 
     let startTime: number | null = null;
     let lastUpdateTime = 0;
@@ -193,121 +219,43 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
       const timeSinceLastUpdate = currentTime - lastUpdateTime;
       if (timeSinceLastUpdate >= profile.updateInterval) {
         const elapsed = currentTime - startTime;
-        const { chars, allResolved } = generateFrameChars(
-          maxLen,
-          newChars,
-          resolveTimes,
-          elapsed
-        );
+        let allLinesResolved = true;
 
-        setDisplayChars(chars);
+        const newLines: CipherLine[] = lineTexts.map((lineText, lineIdx) => {
+          const targetChars = Array.from(lineText);
+          const resolveTimes = lineResolveTimes[lineIdx];
+          const chars: string[] = [];
+          let lineAllResolved = true;
 
-        if (allResolved) {
-          setIsAnimating(false);
-          prevTextRef.current = text;
-          tickRef.current = null;
-          return false; // done — unregister from scheduler
-        }
+          for (let i = 0; i < targetChars.length; i++) {
+            const resolveTime = resolveTimes[i];
+            const targetChar = targetChars[i];
 
-        lastUpdateTime = currentTime;
-      }
+            if (elapsed >= resolveTime) {
+              chars[i] = targetChar;
+            } else {
+              lineAllResolved = false;
+              if (targetChar && isScramblable(targetChar)) {
+                chars[i] = getRandomCipherChar();
+              } else {
+                chars[i] = targetChar;
+              }
+            }
+          }
 
-      return true; // keep running
-    };
+          if (!lineAllResolved) allLinesResolved = false;
 
-    tickRef.current = tick;
-    registerTick(tick);
-    prevTextRef.current = text;
+          return {
+            text: lineText,
+            chars,
+            targetChars,
+            lineResolved: lineAllResolved,
+          };
+        });
 
-    return cleanup;
-  }, [text, isEnabled, cleanup]);
+        setLines(newLines);
 
-  // Cleanup on unmount
-  useEffect(() => cleanup, [cleanup]);
-
-  return { displayChars, isAnimating };
-}
-
-// ---------------------------------------------------------------------------
-// Ref-based animation loop (new — for long text, bypasses React reconciliation)
-// ---------------------------------------------------------------------------
-
-function useCipherRefAnimationLoop(
-  text: string,
-  elementRef: RefObject<HTMLElement | null> | undefined,
-  isEnabled: boolean
-): { isAnimating: boolean } {
-  const [isAnimating, setIsAnimating] = useState(false);
-  const prevTextRef = useRef(text);
-  const tickRef = useRef<TickFn | null>(null);
-
-  const cleanup = useCallback(() => {
-    if (tickRef.current) {
-      unregisterTick(tickRef.current);
-      tickRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isEnabled) {
-      prevTextRef.current = text;
-      return;
-    }
-
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion) {
-      prevTextRef.current = text;
-      if (elementRef?.current) {
-        elementRef.current.textContent = text;
-      }
-      return;
-    }
-
-    if (text === prevTextRef.current) {
-      return;
-    }
-
-    cleanup();
-
-    const newChars = Array.from(text);
-    const maxLen = Math.max(Array.from(prevTextRef.current).length, newChars.length);
-    const profile = getAnimationProfile();
-    const resolveTimes = calculateResolveTimes(maxLen, profile);
-
-    let startTime: number | null = null;
-    let lastUpdateTime = 0;
-    let started = false;
-
-    const tick: TickFn = (currentTime) => {
-      if (startTime === null) {
-        startTime = currentTime;
-        lastUpdateTime = currentTime - profile.updateInterval;
-      }
-
-      if (!started) {
-        started = true;
-        setIsAnimating(true);
-      }
-
-      const timeSinceLastUpdate = currentTime - lastUpdateTime;
-      if (timeSinceLastUpdate >= profile.updateInterval) {
-        const elapsed = currentTime - startTime;
-        const { chars, allResolved } = generateFrameChars(
-          maxLen,
-          newChars,
-          resolveTimes,
-          elapsed
-        );
-
-        // Direct DOM update — bypasses React reconciliation
-        if (elementRef?.current) {
-          elementRef.current.textContent = chars.join('');
-        }
-
-        if (allResolved) {
+        if (allLinesResolved) {
           setIsAnimating(false);
           prevTextRef.current = text;
           tickRef.current = null;
@@ -324,50 +272,17 @@ function useCipherRefAnimationLoop(
     registerTick(tick);
     prevTextRef.current = text;
 
-    return cleanup;
-  }, [text, isEnabled, cleanup, elementRef]);
+    return () => {
+      cleanup();
+      setLines(makeFinalLines(text, lineTexts));
+    };
+  }, [text, isEnabled, isVisible, cleanup, elementRef]);
 
   useEffect(() => cleanup, [cleanup]);
 
-  return { isAnimating };
-}
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
-
-/**
- * Hook for animating text transitions with a cipher/decryption effect.
- * Uses a shared RAF scheduler so all instances animate in a single frame loop,
- * allowing React to batch state updates into one render pass.
- *
- * Options:
- * - isVisible: when false, skips animation (for viewport-gated instances)
- * - elementRef: when provided, uses direct DOM textContent updates instead of
- *   React state (for long text that would create too many per-char spans)
- */
-export function useCipherTransition(
-  text: string,
-  options?: CipherTransitionOptions
-): CipherTransitionResult {
-  const isEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
-  const isVisible = options?.isVisible ?? true;
-  const elementRef = options?.elementRef;
-
-  const useRefMode = isEnabled && isVisible && elementRef != null;
-  const useCharMode = isEnabled && isVisible && elementRef == null;
-
-  // Both hooks always called (React rules of hooks), but only one is active
-  const charResult = useCipherAnimationLoop(text, useCharMode);
-  const refResult = useCipherRefAnimationLoop(text, elementRef, useRefMode);
-
   if (!isEnabled || !isVisible) {
-    return { displayChars: Array.from(text), isAnimating: false };
+    return { lines: makeFinalLines(text, [text]), isAnimating: false };
   }
 
-  if (useRefMode) {
-    return { displayChars: Array.from(text), isAnimating: refResult.isAnimating };
-  }
-
-  return charResult;
+  return { lines, isAnimating };
 }
