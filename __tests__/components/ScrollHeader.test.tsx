@@ -5,6 +5,18 @@ vi.mock('@/hooks/usePretextHeight', () => ({
   usePretextHeight: () => ({ ref: { current: null }, style: {} }),
 }));
 
+vi.mock('openpgp', () => ({
+  readKey: vi.fn(() =>
+    Promise.resolve({
+      getFingerprint: () => 'abcd1234',
+      getUserIDs: () => ['Test <test@example.com>'],
+      getAlgorithmInfo: () => ({ algorithm: 'rsa', bits: 2048 }),
+      getCreationTime: () => new Date('2016-01-01'),
+      getKeyID: () => ({ toHex: () => 'deadbeef' }),
+    })
+  ),
+}));
+
 import ScrollHeader from '@/components/ScrollHeader';
 import testEn from '../fixtures/translations/en.json';
 
@@ -121,6 +133,23 @@ describe('ScrollHeader', () => {
     });
   });
 
+  describe('Hero contact icons', () => {
+    it('should render contact icons in the hero section', () => {
+      render(<ScrollHeader />);
+      const heroSection = screen.getByText(TEST_NAME, { selector: 'section p' }).closest('section');
+      expect(heroSection).toBeInTheDocument();
+      const emailLink = within(heroSection!).getByRole('link', { name: /^email$/i });
+      expect(emailLink).toBeInTheDocument();
+    });
+
+    it('should render PGP key button in the hero section', () => {
+      render(<ScrollHeader />);
+      const heroSection = screen.getByText(TEST_NAME, { selector: 'section p' }).closest('section');
+      const pgpButton = within(heroSection!).getByRole('button', { name: /pgp key/i });
+      expect(pgpButton).toBeInTheDocument();
+    });
+  });
+
   describe('Navigation bar', () => {
     it('should render navigation links', () => {
       render(<ScrollHeader />);
@@ -174,22 +203,25 @@ describe('ScrollHeader', () => {
 
     it('should render email link', () => {
       render(<ScrollHeader />);
-      const link = screen.getByRole('link', { name: /^email$/i });
+      const header = screen.getByRole('banner');
+      const link = within(header).getByRole('link', { name: /^email$/i });
       expect(link).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
     });
 
     it('should render secure email link', () => {
       render(<ScrollHeader />);
-      const link = screen.getByRole('link', { name: /secure email/i });
+      const header = screen.getByRole('banner');
+      const link = within(header).getByRole('link', { name: /secure email/i });
       expect(link).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
     });
 
     it('should render social links with sr-only labels', () => {
       render(<ScrollHeader />);
-      expect(screen.getByText('GitHub')).toHaveClass('sr-only');
-      expect(screen.getByText('LinkedIn')).toHaveClass('sr-only');
-      expect(screen.getByText('Email')).toHaveClass('sr-only');
-      expect(screen.getByText('Secure email')).toHaveClass('sr-only');
+      const header = screen.getByRole('banner');
+      expect(within(header).getByText('GitHub')).toHaveClass('sr-only');
+      expect(within(header).getByText('LinkedIn')).toHaveClass('sr-only');
+      expect(within(header).getByText('Email')).toHaveClass('sr-only');
+      expect(within(header).getByText('Secure email')).toHaveClass('sr-only');
     });
   });
 

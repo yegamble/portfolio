@@ -79,7 +79,22 @@
     "github": "GitHub",
     "linkedin": "LinkedIn",
     "email": "Email",
-    "secureEmail": "Secure email"
+    "secureEmail": "Secure email",
+    "pgpKey": "PGP Key"
+  },
+  "pgp": {
+    "title": "PGP Public Key",
+    "fingerprint": "Fingerprint",
+    "userId": "User ID",
+    "algorithm": "Algorithm",
+    "created": "Created",
+    "keyId": "Key ID",
+    "copyKey": "Copy Key",
+    "copied": "Copied!",
+    "close": "Close",
+    "loading": "Loading key details...",
+    "error": "Could not parse key details",
+    "verifyNotice": "Verify this fingerprint through a trusted channel before use."
   },
   "language": {
     "toggle": "עב",

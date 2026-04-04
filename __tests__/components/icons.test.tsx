@@ -9,6 +9,7 @@ import {
   ArrowRightIcon,
   FolderIcon,
   LayersIcon,
+  KeyIcon,
   USFlagIcon,
   IsraelFlagIcon,
   RussiaFlagIcon,
@@ -32,6 +33,12 @@ const ICONS_CONFIG = [
     Component: LayersIcon,
     viewBox: '0 0 24 24',
     defaultClass: 'h-9 w-9 text-primary/90',
+  },
+  {
+    name: 'KeyIcon',
+    Component: KeyIcon,
+    viewBox: '0 0 24 24',
+    defaultClass: 'h-5 w-5',
   },
 ] as const;
 
@@ -89,11 +96,18 @@ describe('Icon components', () => {
       expect(paths.length).toBe(2);
     });
 
-    it('SecureEmailIcon should contain a path with clip-rule', () => {
+    it('SecureEmailIcon should contain envelope paths and a lock group', () => {
       const { container } = render(<SecureEmailIcon />);
-      const path = container.querySelector('path[clip-rule]');
-      expect(path).toBeInTheDocument();
-      expect(path).toHaveAttribute('clip-rule', 'evenodd');
+      const paths = container.querySelectorAll('path');
+      expect(paths.length).toBeGreaterThanOrEqual(2);
+      const lockGroup = container.querySelector('g');
+      expect(lockGroup).toBeInTheDocument();
+    });
+
+    it('KeyIcon should contain a path element', () => {
+      const { container } = render(<KeyIcon />);
+      const paths = container.querySelectorAll('path');
+      expect(paths.length).toBeGreaterThanOrEqual(1);
     });
 
     it('ArrowOutwardIcon should contain a path with clip-rule', () => {

@@ -79,7 +79,22 @@
     "github": "GitHub",
     "linkedin": "LinkedIn",
     "email": "אימייל",
-    "secureEmail": "אימייל מאובטח"
+    "secureEmail": "אימייל מאובטח",
+    "pgpKey": "מפתח PGP"
+  },
+  "pgp": {
+    "title": "מפתח PGP ציבורי",
+    "fingerprint": "טביעת אצבע",
+    "userId": "מזהה משתמש",
+    "algorithm": "אלגוריתם",
+    "created": "נוצר",
+    "keyId": "מזהה מפתח",
+    "copyKey": "העתק מפתח",
+    "copied": "הועתק!",
+    "close": "סגור",
+    "loading": "טוען פרטי מפתח...",
+    "error": "לא ניתן לנתח פרטי מפתח",
+    "verifyNotice": "אמת את טביעת האצבע דרך ערוץ מהימן לפני שימוש."
   },
   "language": {
     "toggle": "EN",

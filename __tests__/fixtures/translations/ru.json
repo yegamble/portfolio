@@ -79,7 +79,22 @@
     "github": "GitHub",
     "linkedin": "LinkedIn",
     "email": "Эл. почта",
-    "secureEmail": "Защищённая почта"
+    "secureEmail": "Защищённая почта",
+    "pgpKey": "Ключ PGP"
+  },
+  "pgp": {
+    "title": "Публичный ключ PGP",
+    "fingerprint": "Отпечаток",
+    "userId": "Идентификатор",
+    "algorithm": "Алгоритм",
+    "created": "Создан",
+    "keyId": "ID ключа",
+    "copyKey": "Копировать ключ",
+    "copied": "Скопировано!",
+    "close": "Закрыть",
+    "loading": "Загрузка данных ключа...",
+    "error": "Не удалось разобрать данные ключа",
+    "verifyNotice": "Проверьте отпечаток через доверенный канал перед использованием."
   },
   "language": {
     "selectLabel": "Выбрать язык",

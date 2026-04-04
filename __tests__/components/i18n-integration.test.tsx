@@ -12,6 +12,18 @@ import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
 import testRu from '../fixtures/translations/ru.json';
 
+vi.mock('openpgp', () => ({
+  readKey: vi.fn(() =>
+    Promise.resolve({
+      getFingerprint: () => 'abcd1234',
+      getUserIDs: () => ['Test <test@example.com>'],
+      getAlgorithmInfo: () => ({ algorithm: 'rsa', bits: 2048 }),
+      getCreationTime: () => new Date('2016-01-01'),
+      getKeyID: () => ({ toHex: () => 'deadbeef' }),
+    })
+  ),
+}));
+
 vi.mock('@/data/experience', () => ({
   experienceEntries: [
     {
@@ -502,5 +514,41 @@ describe('i18n Regression - RTL design classes', () => {
     const { container } = render(<Experience />);
     const arrows = container.querySelectorAll('.ms-1');
     expect(arrows.length).toBeGreaterThan(0);
+  });
+});
+
+describe('i18n Integration - PGP Key Icon Labels', () => {
+  it('should render PGP key button with English label', () => {
+    render(<ScrollHeader />);
+    const heroSection = screen.getByText(testEn.hero.name, { selector: 'section p' }).closest('section');
+    expect(within(heroSection!).getByRole('button', { name: 'PGP Key' })).toBeInTheDocument();
+  });
+
+  it('should render PGP key button with Hebrew label', async () => {
+    await i18n.changeLanguage('he');
+    render(<ScrollHeader />);
+    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    expect(within(heroSection!).getByRole('button', { name: 'מפתח PGP' })).toBeInTheDocument();
+  });
+
+  it('should render PGP key button with Russian label', async () => {
+    await i18n.changeLanguage('ru');
+    render(<ScrollHeader />);
+    const heroSection = screen.getByText(testRu.hero.name, { selector: 'section p' }).closest('section');
+    expect(within(heroSection!).getByRole('button', { name: 'Ключ PGP' })).toBeInTheDocument();
+  });
+
+  it('should render email icon label in Hebrew', async () => {
+    await i18n.changeLanguage('he');
+    render(<ScrollHeader />);
+    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    expect(within(heroSection!).getByRole('link', { name: 'אימייל' })).toBeInTheDocument();
+  });
+
+  it('should render secure email icon label in Hebrew', async () => {
+    await i18n.changeLanguage('he');
+    render(<ScrollHeader />);
+    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    expect(within(heroSection!).getByRole('link', { name: 'אימייל מאובטח' })).toBeInTheDocument();
   });
 });

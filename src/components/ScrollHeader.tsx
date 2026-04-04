@@ -7,6 +7,7 @@ import SocialLinks from '@/components/SocialLinks';
 import LanguageSelector from '@/components/LanguageSelector';
 import CipherText from '@/components/CipherText';
 import ProfilePicture from '@/components/ProfilePicture';
+import HeroContactIcons from '@/components/HeroContactIcons';
 
 export default function ScrollHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -108,6 +109,7 @@ export default function ScrollHeader() {
             </p>
           </div>
         </div>
+        <HeroContactIcons className="mt-3" />
         <h1 className="mb-8 text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl">
           <CipherText block>{t('hero.tagline')}</CipherText>
         </h1>

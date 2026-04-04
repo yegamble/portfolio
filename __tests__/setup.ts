@@ -16,6 +16,12 @@ i18n.addResourceBundle('ru', 'translation', testRu, false, true);
 process.env.NEXT_PUBLIC_I18N_ENABLED = 'true';
 process.env.NEXT_PUBLIC_CONTACT_EMAIL = 'test@example.com';
 process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = 'secure-test@example.com';
+process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: Test v1.0
+
+mQENBGAAAAAAAAEIATestKeyDataForUnitTests
+=test
+-----END PGP PUBLIC KEY BLOCK-----`;
 
 afterEach(() => {
   cleanup();
