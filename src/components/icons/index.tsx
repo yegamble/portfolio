@@ -53,10 +53,10 @@ export function SecureEmailIcon({ className = 'h-5 w-5' }: IconProps) {
     <BaseIcon viewBox="0 0 24 24" className={className}>
       <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
       <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
-      <circle cx="18.5" cy="16.5" r="6" fill="var(--color-bg-dark, #0f172a)" />
-      <circle cx="18.5" cy="16.5" r="5" />
-      <rect x="16" y="16.5" width="5" height="3.5" rx="0.7" fill="var(--color-bg-dark, #0f172a)" />
-      <path d="M17 16.5v-1.1a1.5 1.5 0 013 0v1.1" fill="none" stroke="var(--color-bg-dark, #0f172a)" strokeWidth="1.1" strokeLinecap="round" />
+      <circle cx="12" cy="14" r="7.5" fill="var(--color-bg-dark, #0f172a)" />
+      <circle cx="12" cy="14" r="6.2" />
+      <rect x="9" y="14" width="6" height="4.2" rx="0.8" fill="var(--color-bg-dark, #0f172a)" />
+      <path d="M10.2 14v-1.4a1.8 1.8 0 013.6 0V14" fill="none" stroke="var(--color-bg-dark, #0f172a)" strokeWidth="1.3" strokeLinecap="round" />
     </BaseIcon>
   );
 }
