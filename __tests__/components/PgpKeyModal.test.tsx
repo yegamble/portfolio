@@ -169,4 +169,14 @@ describe('PgpKeyModal', () => {
       expect(screen.getByText('Could not parse key details')).toBeInTheDocument();
     });
   });
+
+  it('should display normalized string when base64 decode fails', () => {
+    const invalidBase64 = 'invalid_base64_string_!!!🔥';
+    render(
+      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={invalidBase64} />
+    );
+    // Since it doesn't start with -----BEGIN, it attempts atob().
+    // atob() throws on invalid characters, falling back to the original string.
+    expect(screen.getByText(invalidBase64)).toBeInTheDocument();
+  });
 });
