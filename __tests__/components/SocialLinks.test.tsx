@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import SocialLinks from '@/components/SocialLinks';
 
 describe('SocialLinks', () => {
@@ -75,6 +75,84 @@ describe('SocialLinks', () => {
       expect(emailLink).not.toHaveAttribute('target');
       const secureEmailLink = screen.getByRole('link', { name: /secure email/i });
       expect(secureEmailLink).not.toHaveAttribute('target');
+    });
+  });
+
+  describe('Conditional rendering (dynamic import)', () => {
+    it('should not render email links when no env vars are set', async () => {
+      vi.resetModules();
+      const origEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      const origSecure = process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      delete process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      delete process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+
+      const { default: SocialLinksDynamic } = await import('@/components/SocialLinks');
+      render(<SocialLinksDynamic />);
+
+      const links = screen.getAllByRole('link');
+      expect(links).toHaveLength(2); // GitHub and LinkedIn
+      expect(screen.queryByRole('link', { name: /^email$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /secure email/i })).not.toBeInTheDocument();
+
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = origEmail;
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = origSecure;
+    });
+
+    it('should not render email links for invalid email', async () => {
+      vi.resetModules();
+      const origEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      const origSecure = process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = 'not-an-email';
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = 'invalid-secure-email';
+
+      const { default: SocialLinksDynamic } = await import('@/components/SocialLinks');
+      render(<SocialLinksDynamic />);
+
+      const links = screen.getAllByRole('link');
+      expect(links).toHaveLength(2);
+      expect(screen.queryByRole('link', { name: /^email$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /secure email/i })).not.toBeInTheDocument();
+
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = origEmail;
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = origSecure;
+    });
+
+    it('should not render email links when email is an empty string', async () => {
+      vi.resetModules();
+      const origEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      const origSecure = process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = '';
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = '';
+
+      const { default: SocialLinksDynamic } = await import('@/components/SocialLinks');
+      render(<SocialLinksDynamic />);
+
+      const links = screen.getAllByRole('link');
+      expect(links).toHaveLength(2);
+      expect(screen.queryByRole('link', { name: /^email$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /secure email/i })).not.toBeInTheDocument();
+
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = origEmail;
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = origSecure;
+    });
+
+    it('should not render email links when email is a string of spaces', async () => {
+      vi.resetModules();
+      const origEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      const origSecure = process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = '   ';
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = '   ';
+
+      const { default: SocialLinksDynamic } = await import('@/components/SocialLinks');
+      render(<SocialLinksDynamic />);
+
+      const links = screen.getAllByRole('link');
+      expect(links).toHaveLength(2);
+      expect(screen.queryByRole('link', { name: /^email$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /secure email/i })).not.toBeInTheDocument();
+
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL = origEmail;
+      process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = origSecure;
     });
   });
 
