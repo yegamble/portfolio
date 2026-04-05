@@ -40,6 +40,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
   const [copied, setCopied] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const focusableElementsRef = useRef<HTMLElement[]>([]);
 
   const decodedKey = useMemo(() => decodeArmoredKey(armoredKey), [armoredKey]);
 
@@ -95,6 +96,16 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
   }, [isOpen]);
 
   useEffect(() => {
+    if (isOpen && dialogRef.current) {
+      focusableElementsRef.current = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      );
+    }
+  }, [isOpen, loading, error, keyInfo, copied]);
+
+  useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -102,11 +113,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
         return;
       }
       if (e.key === 'Tab') {
-        const dialog = dialogRef.current;
-        if (!dialog) return;
-        const focusable = dialog.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+        const focusable = focusableElementsRef.current;
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
