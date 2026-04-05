@@ -4,10 +4,12 @@ const PERSON_URL = 'https://yosefgamble.com';
 const JSON_LD_TYPE = 'application/ld+json';
 const CITY_TYPE = 'City';
 const COLLEGE_OR_UNIVERSITY_TYPE = 'CollegeOrUniversity';
+const CONTEXT_KEY = '@context';
+const TYPE_KEY = '@type';
 
 const personSchema = {
-  '@context': SCHEMA_ORG,
-  '@type': 'Person',
+  [CONTEXT_KEY]: SCHEMA_ORG,
+  [TYPE_KEY]: 'Person',
   name: PERSON_NAME,
   jobTitle: 'Senior Software Engineer',
   url: PERSON_URL,
@@ -28,18 +30,18 @@ const personSchema = {
     'PostgreSQL',
   ],
   workLocation: [
-    { '@type': CITY_TYPE, name: 'New York' },
-    { '@type': CITY_TYPE, name: 'Auckland' },
+    { [TYPE_KEY]: CITY_TYPE, name: 'New York' },
+    { [TYPE_KEY]: CITY_TYPE, name: 'Auckland' },
   ],
   alumniOf: [
-    { '@type': COLLEGE_OR_UNIVERSITY_TYPE, name: 'University of Auckland' },
-    { '@type': COLLEGE_OR_UNIVERSITY_TYPE, name: 'Central Washington University' },
+    { [TYPE_KEY]: COLLEGE_OR_UNIVERSITY_TYPE, name: 'University of Auckland' },
+    { [TYPE_KEY]: COLLEGE_OR_UNIVERSITY_TYPE, name: 'Central Washington University' },
   ],
 };
 
 const websiteSchema = {
-  '@context': SCHEMA_ORG,
-  '@type': 'WebSite',
+  [CONTEXT_KEY]: SCHEMA_ORG,
+  [TYPE_KEY]: 'WebSite',
   name: PERSON_NAME,
   url: PERSON_URL,
 };
