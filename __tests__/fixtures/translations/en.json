@@ -54,17 +54,28 @@
     "heading": "Projects",
     "ariaLabel": "Selected projects",
     "techAriaLabel": "Technologies used",
-    "opensInNewTab": "(opens in a new tab)",
+    "viewOnGitHub": "View {{name}} on GitHub",
+    "viewRepos": "View repositories",
     "items": [
       {
-        "id": "uber-proj",
-        "title": "Unicode Engine",
-        "description": "A real-time text processor supporting all 154,998 Unicode characters including Mathematical Bold Fraktur, Zero-Width-Joiners, and right-to-left overrides. Built with C++ & Rust for 99.99% accuracy."
+        "id": "vidra",
+        "title": "Vidra",
+        "description": "PeerTube-compatible video streaming backend in Go with P2P distribution and federation via ActivityPub and ATProto."
       },
       {
-        "id": "nihon-proj",
-        "title": "Naive Bayes Cafe",
-        "description": "An ML-powered cafe recommendation system that handles menus in 42 languages from Spanish to Afrikaans. 3k+ stars on GitHub. Warning: may contain 'quotes', \"double quotes\", and guillemets."
+        "id": "aurialis",
+        "title": "Aurialis",
+        "description": "Browser-based audio mastering app with genre presets, parametric EQ, and real-time LUFS metering in AudioWorklets."
+      },
+      {
+        "id": "goimg",
+        "title": "GoImg",
+        "description": "Full-stack image gallery with Go backend and Next.js frontend. Photo upload, album management, and S3 storage."
+      },
+      {
+        "id": "iota-token-creator",
+        "title": "IOTA Token Creator",
+        "description": "Token creation platform for the IOTA distributed ledger with Next.js frontend and Go API."
       }
     ]
   },

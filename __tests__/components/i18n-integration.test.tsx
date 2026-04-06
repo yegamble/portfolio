@@ -47,16 +47,39 @@ vi.mock('@/data/experience', () => ({
 vi.mock('@/data/projects', () => ({
   projectEntries: [
     {
-      id: 'uber-proj',
-      url: 'https://example.com/unicode-engine',
-      technologies: ['C++', 'Rust', 'WASM'],
+      id: 'vidra',
+      repos: [
+        { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
+        { name: 'vidra-user', url: '#' },
+      ],
+      technologies: ['Go', 'ActivityPub', 'Docker'],
+      icon: 'layers',
+    },
+    {
+      id: 'aurialis',
+      repos: [
+        { name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' },
+      ],
+      technologies: ['Next.js', 'TypeScript'],
+      icon: 'layers',
+    },
+    {
+      id: 'goimg',
+      repos: [
+        { name: 'goimg-user', url: '#' },
+        { name: 'goimg-datalayer', url: '#' },
+      ],
+      technologies: ['Go', 'PostgreSQL'],
       icon: 'folder',
     },
     {
-      id: 'nihon-proj',
-      url: '#',
-      technologies: ['Python', 'TensorFlow', 'FastAPI'],
-      icon: 'layers',
+      id: 'iota-token-creator',
+      repos: [
+        { name: 'iota-token-creator-web', url: '#' },
+        { name: 'iota-token-creator-api', url: '#' },
+      ],
+      technologies: ['Next.js', 'Go'],
+      icon: 'folder',
     },
   ],
 }));
@@ -218,7 +241,7 @@ describe('i18n Integration - Hebrew Mode', () => {
   it('should render project descriptions in Hebrew', () => {
     render(<Projects />);
     const section = screen.getByRole('region', { name: /פרויקטים נבחרים/ });
-    expect(section).toHaveTextContent(/מעבד טקסט בזמן-אמת/);
+    expect(section).toHaveTextContent(/Vidra/);
   });
 
   it('should render footer attribution in Hebrew', () => {
@@ -330,10 +353,10 @@ describe('i18n Integration - Russian Mode', () => {
     expect(items).toHaveLength(3);
   });
 
-  it('should render two project cards in Russian', () => {
+  it('should render four project cards in Russian', () => {
     render(<Projects />);
     const headings = screen.getAllByRole('heading', { level: 3 });
-    expect(headings).toHaveLength(2);
+    expect(headings).toHaveLength(4);
   });
 
   it('should render three about paragraphs in Russian', () => {
@@ -461,11 +484,11 @@ describe('i18n Regression - Structural integrity across languages', () => {
     expect(items).toHaveLength(3);
   });
 
-  it('should render two project cards in Hebrew', async () => {
+  it('should render four project cards in Hebrew', async () => {
     await i18n.changeLanguage('he');
     render(<Projects />);
     const headings = screen.getAllByRole('heading', { level: 3 });
-    expect(headings).toHaveLength(2);
+    expect(headings).toHaveLength(4);
   });
 
   it('should render three about paragraphs in Hebrew', async () => {

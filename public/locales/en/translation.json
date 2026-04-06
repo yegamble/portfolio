@@ -54,17 +54,28 @@
     "heading": "Projects",
     "ariaLabel": "Selected projects",
     "techAriaLabel": "Technologies used",
-    "opensInNewTab": "(opens in a new tab)",
+    "viewOnGitHub": "View {{name}} on GitHub",
+    "viewRepos": "View repositories",
     "items": [
       {
-        "id": "project-alpha",
-        "title": "Project Alpha",
-        "description": "A distributed data processing engine capable of handling petabytes of logs in real-time. Built with Rust and Kafka to ensure high availability."
+        "id": "vidra",
+        "title": "Vidra",
+        "description": "PeerTube-compatible video streaming backend in Go with P2P distribution, live streaming, and multi-protocol federation via ActivityPub and ATProto."
       },
       {
-        "id": "neon-ui-kit",
-        "title": "Neon UI Kit",
-        "description": "An open-source React component library focused on accessibility and dark mode aesthetics. 2k+ stars on GitHub."
+        "id": "aurialis",
+        "title": "Aurialis",
+        "description": "Browser-based audio mastering application with genre presets, parametric EQ, compressor, limiter, and real-time LUFS metering — all running in AudioWorklets."
+      },
+      {
+        "id": "goimg",
+        "title": "GoImg",
+        "description": "Full-stack image gallery platform with a Go backend and Next.js frontend. Photo upload, album management, sharing controls, and S3-compatible storage."
+      },
+      {
+        "id": "iota-token-creator",
+        "title": "IOTA Token Creator",
+        "description": "Token creation platform for the IOTA distributed ledger with a Next.js frontend and Go API backend."
       }
     ]
   },

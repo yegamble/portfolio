@@ -54,17 +54,28 @@
     "heading": "פרויקטים",
     "ariaLabel": "פרויקטים נבחרים",
     "techAriaLabel": "טכנולוגיות בשימוש",
-    "opensInNewTab": "(נפתח בלשונית חדשה)",
+    "viewOnGitHub": "צפה ב-{{name}} ב-GitHub",
+    "viewRepos": "צפה במאגרים",
     "items": [
       {
-        "id": "project-alpha",
-        "title": "Project Alpha",
-        "description": "מנוע עיבוד נתונים מבוזר שמסוגל לעבד petabytes של לוגים בזמן אמת. נבנה עם Rust ו-Kafka להבטחת high availability."
+        "id": "vidra",
+        "title": "Vidra",
+        "description": "שרת הזרמת וידאו תואם PeerTube בשפת Go עם הפצת P2P, שידור חי ופדרציה רב-פרוטוקולית באמצעות ActivityPub ו-ATProto."
       },
       {
-        "id": "neon-ui-kit",
-        "title": "Neon UI Kit",
-        "description": "ספריית רכיבי React בקוד פתוח עם דגש על נגישות ואסתטיקה של dark mode. מעל 2,000 כוכבים ב-GitHub."
+        "id": "aurialis",
+        "title": "Aurialis",
+        "description": "אפליקציית mastering אודיו מבוססת דפדפן עם פריסטים לפי ז'אנר, EQ פרמטרי, קומפרסור, לימיטר ומדידת LUFS בזמן אמת — הכל רץ ב-AudioWorklets."
+      },
+      {
+        "id": "goimg",
+        "title": "GoImg",
+        "description": "פלטפורמת גלריית תמונות full-stack עם שרת Go וצד לקוח Next.js. העלאת תמונות, ניהול אלבומים, הגדרות שיתוף ואחסון תואם S3."
+      },
+      {
+        "id": "iota-token-creator",
+        "title": "IOTA Token Creator",
+        "description": "פלטפורמה ליצירת טוקנים על ה-ledger המבוזר IOTA עם צד לקוח Next.js ו-API backend בשפת Go."
       }
     ]
   },

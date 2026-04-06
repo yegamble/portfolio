@@ -17,10 +17,16 @@ describe('Projects Data validation', () => {
       expect(typeof entry.id).toBe('string');
       expect(entry.id.trim().length).toBeGreaterThan(0);
 
-      // Validate url
-      expect(entry.url, 'Entry url should be defined and non-empty').toBeDefined();
-      expect(typeof entry.url).toBe('string');
-      expect(entry.url.trim().length).toBeGreaterThan(0);
+      // Validate repos array (replaces single url)
+      expect(entry.repos, 'Entry repos should be a non-empty array').toBeDefined();
+      expect(Array.isArray(entry.repos)).toBe(true);
+      expect(entry.repos.length).toBeGreaterThan(0);
+      entry.repos.forEach((repo) => {
+        expect(typeof repo.name).toBe('string');
+        expect(repo.name.trim().length).toBeGreaterThan(0);
+        expect(typeof repo.url).toBe('string');
+        expect(repo.url.trim().length).toBeGreaterThan(0);
+      });
 
       // Validate technologies
       expect(entry.technologies, 'Entry technologies should be defined and a non-empty array').toBeDefined();
@@ -33,7 +39,7 @@ describe('Projects Data validation', () => {
 
       // Validate icon
       expect(entry.icon, 'Entry icon should be defined').toBeDefined();
-      expect(typeof entry.icon).toBe('string');
+      expect(['folder', 'layers']).toContain(entry.icon);
     });
   });
 
@@ -41,5 +47,17 @@ describe('Projects Data validation', () => {
     const ids = projectEntries.map((entry) => entry.id);
     const uniqueIds = new Set(ids);
     expect(uniqueIds.size).toBe(ids.length);
+  });
+
+  it('should have exactly 4 project entries', () => {
+    expect(projectEntries).toHaveLength(4);
+  });
+
+  it('should contain the 4 expected projects', () => {
+    const ids = projectEntries.map((e) => e.id);
+    expect(ids).toContain('vidra');
+    expect(ids).toContain('aurialis');
+    expect(ids).toContain('goimg');
+    expect(ids).toContain('iota-token-creator');
   });
 });

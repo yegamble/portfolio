@@ -1,0 +1,263 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link:
+        - /url: /
+        - generic: Yosef Gamble
+        - generic: Senior Software Engineer
+      - generic [ref=e4]:
+        - navigation "Main navigation" [ref=e5]:
+          - list [ref=e6]:
+            - listitem [ref=e7]:
+              - link "About" [ref=e8] [cursor=pointer]:
+                - /url: "#about"
+            - listitem [ref=e9]:
+              - link "Experience" [ref=e10] [cursor=pointer]:
+                - /url: "#experience"
+            - listitem [ref=e11]:
+              - link "Projects" [ref=e12] [cursor=pointer]:
+                - /url: "#projects"
+        - button "Select language" [ref=e14]:
+          - img [ref=e15]
+          - generic [ref=e37]: EN
+        - generic [ref=e38]:
+          - link "GitHub" [ref=e39] [cursor=pointer]:
+            - /url: https://github.com/yegamble
+            - generic [ref=e40]: GitHub
+            - img [ref=e41]
+          - link "LinkedIn" [ref=e43] [cursor=pointer]:
+            - /url: https://linkedin.com/in/yosefgamble
+            - generic [ref=e44]: LinkedIn
+            - img [ref=e45]
+          - link "Email" [ref=e47] [cursor=pointer]:
+            - /url: mailto:yegamble@gmail.com
+            - generic [ref=e48]: Email
+            - img [ref=e49]
+          - link "Secure email" [ref=e52] [cursor=pointer]:
+            - /url: mailto:yosef.gamble@protonmail.com
+            - generic [ref=e53]: Secure email
+            - img [ref=e54]
+  - generic [ref=e61]:
+    - generic [ref=e62]:
+      - generic [ref=e64]:
+        - img [ref=e65]
+        - img "Yosef Gamble profile photo" [ref=e69]
+      - generic [ref=e70]:
+        - paragraph [ref=e71]: Yosef Gamble
+        - paragraph [ref=e72]: Senior Software Engineer
+        - paragraph [ref=e73]: NYC | Auckland
+        - generic [ref=e74]:
+          - link "Email" [ref=e75] [cursor=pointer]:
+            - /url: mailto:yegamble@gmail.com
+            - img [ref=e76]
+          - link "Secure email" [ref=e79] [cursor=pointer]:
+            - /url: mailto:yosef.gamble@protonmail.com
+            - img [ref=e80]
+          - button "PGP Key" [ref=e87] [cursor=pointer]:
+            - img [ref=e88]
+    - heading "Senior Go & TypeScript engineer. Video streaming, real estate portals, and cloud infrastructure." [level=1] [ref=e90]:
+      - generic [ref=e92]: Senior Go & TypeScript engineer. Video streaming, real estate portals, and cloud infrastructure.
+  - main [ref=e94]:
+    - region "About me" [ref=e95]:
+      - generic [ref=e96]:
+        - heading "About" [level=2] [ref=e97]
+        - separator [ref=e98]
+      - generic [ref=e99]:
+        - paragraph [ref=e100]:
+          - generic [ref=e102]: I started writing code at Central Washington University in 2013, where I served as Student Government President and earned the Boeing Scholarship. My path took me across the Pacific to New Zealand — first for a degree at the University of Auckland, then into the tech industry as a software engineer building systems that would reach millions of users.
+        - paragraph [ref=e103]:
+          - text: At
+          - link "realestate.co.nz" [ref=e104] [cursor=pointer]:
+            - /url: https://www.realestate.co.nz
+          - text: ", I became a key engineer on New Zealand’s most established real estate portal. I shipped industry-first features — instant price change alerts and transparent price history — that competitors copied months later. I designed a serverless notification system on AWS Lambda integrated with Braze that delivered listing alerts to every user on the platform, and led company-wide workshops on serverless architecture and observability."
+        - paragraph [ref=e105]:
+          - generic [ref=e107]: I’m building an open-source video streaming backend in Go (Golang) — implementing ActivityPub federation and ATProto for decentralized content sharing, and cutting bandwidth costs to nearly $0 through Cloudflare CDN and Backblaze B2 integration. I care about scalable systems, infrastructure automation, and the open web.
+    - region "Work experience" [ref=e108]:
+      - generic [ref=e109]:
+        - heading "Experience" [level=2] [ref=e110]
+        - separator [ref=e111]
+      - list [ref=e112]:
+        - listitem [ref=e113]:
+          - generic [ref=e114]:
+            - generic "2024 — Present" [ref=e115]
+            - generic [ref=e116]:
+              - heading "Full Stack Engineer at Independent (opens in a new tab)" [level=3] [ref=e117]:
+                - link "Full Stack Engineer at Independent (opens in a new tab)" [ref=e118] [cursor=pointer]:
+                  - /url: https://github.com/yegamble
+                  - generic [ref=e119]: Full Stack Engineer · Independent
+                  - img [ref=e120]
+              - paragraph [ref=e122]:
+                - generic [ref=e124]: Building an open-source, PeerTube-compatible video streaming backend in Go with decentralized social networking protocols — ActivityPub federation and ATProto integration for cross-platform content sharing. Cut bandwidth costs from hundreds of dollars monthly to nearly $0 by integrating Backblaze B2 and Cloudflare CDN via the Bandwidth Alliance. Containerized with Docker, CI/CD via GitHub Actions, PostgreSQL for storage, Redis for caching and rate-limiting.
+              - list "Technologies used" [ref=e125]:
+                - listitem [ref=e126]:
+                  - generic [ref=e127]: Go
+                - listitem [ref=e128]:
+                  - generic [ref=e129]: ActivityPub
+                - listitem [ref=e130]:
+                  - generic [ref=e131]: Docker
+                - listitem [ref=e132]:
+                  - generic [ref=e133]: PostgreSQL
+                - listitem [ref=e134]:
+                  - generic [ref=e135]: Redis
+                - listitem [ref=e136]:
+                  - generic [ref=e137]: Cloudflare
+        - listitem [ref=e138]:
+          - generic [ref=e139]:
+            - generic "2021 — 2024" [ref=e140]
+            - generic [ref=e141]:
+              - heading "Full Stack Engineer at realestate.co.nz (opens in a new tab)" [level=3] [ref=e142]:
+                - link "Full Stack Engineer at realestate.co.nz (opens in a new tab)" [ref=e143] [cursor=pointer]:
+                  - /url: https://www.realestate.co.nz
+                  - generic [ref=e144]: Full Stack Engineer · realestate.co.nz
+                  - img [ref=e145]
+              - paragraph [ref=e147]:
+                - generic [ref=e149]: Shipped industry-first features for New Zealand’s most established real estate portal — instant price change alerts and transparent price history that competitors copied months later. Designed and built a serverless notification system on AWS Lambda integrated with Braze, delivering daily and weekly listing alerts platform-wide. Led company-wide workshops on Serverless architecture and New Relic observability. Contributed to the EmberJS frontend rebuild that received positive feedback from agents and users nationally.
+              - list "Technologies used" [ref=e150]:
+                - listitem [ref=e151]:
+                  - generic [ref=e152]: AWS Lambda
+                - listitem [ref=e153]:
+                  - generic [ref=e154]: CDK
+                - listitem [ref=e155]:
+                  - generic [ref=e156]: EmberJS
+                - listitem [ref=e157]:
+                  - generic [ref=e158]: PHP
+                - listitem [ref=e159]:
+                  - generic [ref=e160]: Braze
+                - listitem [ref=e161]:
+                  - generic [ref=e162]: New Relic
+        - listitem [ref=e163]:
+          - generic [ref=e164]:
+            - generic "2019 — 2024" [ref=e165]
+            - generic [ref=e166]:
+              - heading "Software Developer at ProStock (opens in a new tab)" [level=3] [ref=e167]:
+                - link "Software Developer at ProStock (opens in a new tab)" [ref=e168] [cursor=pointer]:
+                  - /url: "#"
+                  - generic [ref=e169]: Software Developer · ProStock
+                  - img [ref=e170]
+              - paragraph [ref=e172]:
+                - generic [ref=e174]: Built the core platform for a warehouse management system saving operators over $250K annually. Developed APIs supporting international order fulfillment for Zoono across NZ, Australia, and Asia. Deployed an Android scanner application for warehouse staff to receive, transfer, and ship products globally. Created an AngularJS portal for clients to track product status and orders in real-time. Migrated infrastructure to Digital Ocean, improving uptime across production environments.
+              - list "Technologies used" [ref=e175]:
+                - listitem [ref=e176]:
+                  - generic [ref=e177]: PHP
+                - listitem [ref=e178]:
+                  - generic [ref=e179]: AngularJS
+                - listitem [ref=e180]:
+                  - generic [ref=e181]: Android
+                - listitem [ref=e182]:
+                  - generic [ref=e183]: Digital Ocean
+                - listitem [ref=e184]:
+                  - generic [ref=e185]: REST APIs
+      - link "View Full Résumé" [ref=e187] [cursor=pointer]:
+        - /url: https://www.linkedin.com/in/yosefgamble/
+        - generic [ref=e188]: View Full Résumé
+        - img [ref=e189]
+    - region "Selected projects" [ref=e191]:
+      - generic [ref=e192]:
+        - heading "Projects" [level=2] [ref=e193]
+        - separator [ref=e194]
+      - generic [ref=e195]:
+        - generic [ref=e196]:
+          - img [ref=e198]
+          - heading "Vidra" [level=3] [ref=e202]
+          - paragraph [ref=e203]:
+            - generic [ref=e205]: PeerTube-compatible video streaming backend in Go with P2P distribution, live streaming, and multi-protocol federation via ActivityPub and ATProto.
+          - list "Technologies used" [ref=e206]:
+            - listitem [ref=e207]: Go
+            - listitem [ref=e208]: ActivityPub
+            - listitem [ref=e209]: ATProto
+            - listitem [ref=e210]: PostgreSQL
+            - listitem [ref=e211]: Redis
+            - listitem [ref=e212]: Docker
+          - generic "View repositories" [ref=e213]:
+            - link "View vidra-core on GitHub" [ref=e214] [cursor=pointer]:
+              - /url: https://github.com/yegamble/vidra-core
+              - img [ref=e215]
+              - generic [ref=e217]: vidra-core
+            - link "View vidra-user on GitHub" [ref=e218] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e219]
+              - generic [ref=e221]: vidra-user
+        - generic [ref=e222]:
+          - img [ref=e224]
+          - heading "Aurialis" [level=3] [ref=e228]
+          - paragraph [ref=e229]:
+            - generic [ref=e231]: Browser-based audio mastering application with genre presets, parametric EQ, compressor, limiter, and real-time LUFS metering — all running in AudioWorklets.
+          - list "Technologies used" [ref=e232]:
+            - listitem [ref=e233]: Next.js
+            - listitem [ref=e234]: TypeScript
+            - listitem [ref=e235]: Web Audio API
+            - listitem [ref=e236]: Tailwind CSS
+          - generic "View repositories" [ref=e237]:
+            - link "View Aurialis on GitHub" [ref=e238] [cursor=pointer]:
+              - /url: https://github.com/yegamble/Aurialis
+              - img [ref=e239]
+              - generic [ref=e241]: Aurialis
+        - generic [ref=e242]:
+          - img [ref=e244]
+          - heading "GoImg" [level=3] [ref=e246]
+          - paragraph [ref=e247]:
+            - generic [ref=e249]: Full-stack image gallery platform with a Go backend and Next.js frontend. Photo upload, album management, sharing controls, and S3-compatible storage.
+          - list "Technologies used" [ref=e250]:
+            - listitem [ref=e251]: Next.js
+            - listitem [ref=e252]: TypeScript
+            - listitem [ref=e253]: Go
+            - listitem [ref=e254]: PostgreSQL
+            - listitem [ref=e255]: S3
+          - generic "View repositories" [ref=e256]:
+            - link "View goimg-user on GitHub" [ref=e257] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e258]
+              - generic [ref=e260]: goimg-user
+            - link "View goimg-datalayer on GitHub" [ref=e261] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e262]
+              - generic [ref=e264]: goimg-datalayer
+        - generic [ref=e265]:
+          - img [ref=e267]
+          - heading "IOTA Token Creator" [level=3] [ref=e269]
+          - paragraph [ref=e270]:
+            - generic [ref=e272]: Token creation platform for the IOTA distributed ledger with a Next.js frontend and Go API backend.
+          - list "Technologies used" [ref=e273]:
+            - listitem [ref=e274]: Next.js
+            - listitem [ref=e275]: TypeScript
+            - listitem [ref=e276]: Go
+            - listitem [ref=e277]: IOTA
+          - generic "View repositories" [ref=e278]:
+            - link "View iota-token-creator-web on GitHub" [ref=e279] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e280]
+              - generic [ref=e282]: iota-token-creator-web
+            - link "View iota-token-creator-api on GitHub" [ref=e283] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e284]
+              - generic [ref=e286]: iota-token-creator-api
+    - generic [ref=e287]:
+      - generic [ref=e288]:
+        - link "GitHub" [ref=e289] [cursor=pointer]:
+          - /url: https://github.com/yegamble
+          - generic [ref=e290]: GitHub
+          - img [ref=e291]
+        - link "LinkedIn" [ref=e293] [cursor=pointer]:
+          - /url: https://linkedin.com/in/yosefgamble
+          - generic [ref=e294]: LinkedIn
+          - img [ref=e295]
+        - link "Email" [ref=e297] [cursor=pointer]:
+          - /url: mailto:yegamble@gmail.com
+          - generic [ref=e298]: Email
+          - img [ref=e299]
+        - link "Secure email" [ref=e302] [cursor=pointer]:
+          - /url: mailto:yosef.gamble@protonmail.com
+          - generic [ref=e303]: Secure email
+          - img [ref=e304]
+      - paragraph [ref=e311]:
+        - text: Coded in
+        - link "Visual Studio Code" [ref=e312] [cursor=pointer]:
+          - /url: https://code.visualstudio.com/
+        - text: . Built with
+        - link "Tailwind CSS" [ref=e313] [cursor=pointer]:
+          - /url: https://tailwindcss.com/
+        - text: and
+        - link "Inter" [ref=e314] [cursor=pointer]:
+          - /url: https://fonts.google.com/specimen/Inter
+        - text: font.
+  - alert [ref=e315]

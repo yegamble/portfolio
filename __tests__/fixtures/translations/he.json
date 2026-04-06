@@ -54,17 +54,28 @@
     "heading": "פרויקטים",
     "ariaLabel": "פרויקטים נבחרים",
     "techAriaLabel": "טכנולוגיות בשימוש",
-    "opensInNewTab": "(נפתח בלשונית חדשה)",
+    "viewOnGitHub": "צפה ב-{{name}} ב-GitHub",
+    "viewRepos": "צפה במאגרים",
     "items": [
       {
-        "id": "uber-proj",
-        "title": "Unicode Engine",
-        "description": "מעבד טקסט בזמן-אמת שתומך בכל 154,998 תווי Unicode כולל Mathematical Bold Fraktur, מחברי אפס-רוחב, ודריסות ימין-לשמאל. נבנה עם C++ ו-Rust עם 99.99% דיוק."
+        "id": "vidra",
+        "title": "Vidra",
+        "description": "שרת הזרמת וידאו תואם PeerTube ב-Go עם P2P ופדרציה דרך ActivityPub ו-ATProto."
       },
       {
-        "id": "nihon-proj",
-        "title": "Naive Bayes Cafe",
-        "description": "מערכת המלצות ML-מונעת לבתי קפה שמטפלת בתפריטים ב-42 שפות מספרדית ועד אפריקאנס. מעל 3k כוכבים ב-GitHub. אזהרה: עלול להכיל 'מירכאות', \"מירכאות כפולות\", ו-guillemets."
+        "id": "aurialis",
+        "title": "Aurialis",
+        "description": "אפליקציית mastering אודיו מבוססת דפדפן עם פריסטים, EQ פרמטרי ומדידת LUFS ב-AudioWorklets."
+      },
+      {
+        "id": "goimg",
+        "title": "GoImg",
+        "description": "פלטפורמת גלריית תמונות full-stack עם שרת Go וצד לקוח Next.js. העלאה, ניהול אלבומים ואחסון S3."
+      },
+      {
+        "id": "iota-token-creator",
+        "title": "IOTA Token Creator",
+        "description": "פלטפורמה ליצירת טוקנים על ה-ledger המבוזר IOTA עם Next.js ו-Go."
       }
     ]
   },

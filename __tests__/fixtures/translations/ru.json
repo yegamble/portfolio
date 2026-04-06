@@ -54,17 +54,28 @@
     "heading": "Проекты",
     "ariaLabel": "Избранные проекты",
     "techAriaLabel": "Используемые технологии",
-    "opensInNewTab": "(откроется в новой вкладке)",
+    "viewOnGitHub": "Открыть {{name}} на GitHub",
+    "viewRepos": "Просмотреть репозитории",
     "items": [
       {
-        "id": "uber-proj",
-        "title": "Unicode Engine",
-        "description": "Текстовый процессор реального времени, поддерживающий все 154 998 символов Unicode, включая Mathematical Bold Fraktur, соединители нулевой ширины и переопределения справа налево. Построен на C++ и Rust с точностью 99,99%."
+        "id": "vidra",
+        "title": "Vidra",
+        "description": "Бэкенд для видеостриминга, совместимый с PeerTube, на Go с P2P-раздачей и федерацией через ActivityPub и ATProto."
       },
       {
-        "id": "nihon-proj",
-        "title": "Naive Bayes Cafe",
-        "description": "ML-система рекомендаций кафе, обрабатывающая меню на 42 языках — от испанского до африкаанс. 3000+ звёзд на GitHub. Внимание: может содержать 'кавычки', «ёлочки» и guillemets."
+        "id": "aurialis",
+        "title": "Aurialis",
+        "description": "Браузерное приложение для мастеринга аудио с пресетами, параметрическим эквалайзером и измерением LUFS в AudioWorklets."
+      },
+      {
+        "id": "goimg",
+        "title": "GoImg",
+        "description": "Полностековая фотогалерея с Go-бэкендом и Next.js-фронтендом. Загрузка фото, альбомы и S3-хранилище."
+      },
+      {
+        "id": "iota-token-creator",
+        "title": "IOTA Token Creator",
+        "description": "Платформа для создания токенов в реестре IOTA с Next.js-фронтендом и Go-бэкендом."
       }
     ]
   },

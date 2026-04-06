@@ -33,16 +33,39 @@ vi.mock('@/data/experience', () => ({
 vi.mock('@/data/projects', () => ({
   projectEntries: [
     {
-      id: 'uber-proj',
-      url: 'https://example.com/unicode-engine',
-      technologies: ['C++', 'Rust', 'WASM'],
+      id: 'vidra',
+      repos: [
+        { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
+        { name: 'vidra-user', url: '#' },
+      ],
+      technologies: ['Go', 'ActivityPub', 'Docker'],
+      icon: 'layers',
+    },
+    {
+      id: 'aurialis',
+      repos: [
+        { name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' },
+      ],
+      technologies: ['Next.js', 'TypeScript'],
+      icon: 'layers',
+    },
+    {
+      id: 'goimg',
+      repos: [
+        { name: 'goimg-user', url: '#' },
+        { name: 'goimg-datalayer', url: '#' },
+      ],
+      technologies: ['Go', 'PostgreSQL'],
       icon: 'folder',
     },
     {
-      id: 'nihon-proj',
-      url: '#',
-      technologies: ['Python', 'TensorFlow', 'FastAPI'],
-      icon: 'layers',
+      id: 'iota-token-creator',
+      repos: [
+        { name: 'iota-token-creator-web', url: '#' },
+        { name: 'iota-token-creator-api', url: '#' },
+      ],
+      technologies: ['Next.js', 'Go'],
+      icon: 'folder',
     },
   ],
 }));
@@ -234,36 +257,36 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
   });
 
   describe('Projects section', () => {
-    it('should render two project cards in both languages', async () => {
+    it('should render four project cards in both languages', async () => {
       const { unmount } = render(<Projects />);
-      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<Projects />);
-      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
     });
 
-    it('should preserve two technology lists in both languages', async () => {
+    it('should preserve four technology lists in both languages', async () => {
       const { unmount } = render(<Projects />);
       let techLists = screen.getAllByRole('list', { name: /technologies used/i });
-      expect(techLists).toHaveLength(2);
+      expect(techLists).toHaveLength(4);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<Projects />);
       techLists = screen.getAllByRole('list', { name: /טכנולוגיות בשימוש/ });
-      expect(techLists).toHaveLength(2);
+      expect(techLists).toHaveLength(4);
     });
 
-    it('should preserve two project links in both languages', async () => {
+    it('should preserve project repo links in both languages', async () => {
       const { unmount } = render(<Projects />);
-      expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(4);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<Projects />);
-      expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(4);
     });
   });
 
@@ -342,11 +365,11 @@ describe('Cipher Integration - Language switch preserves structure', () => {
   it('should preserve Projects card count after switching language', async () => {
     render(<Projects />);
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
 
     await i18n.changeLanguage('he');
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
   });
 
   it('should preserve About p2 link after switching language', async () => {

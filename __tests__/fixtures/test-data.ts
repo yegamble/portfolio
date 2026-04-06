@@ -21,15 +21,36 @@ export const testExperienceEntries: ExperienceEntry[] = [
 
 export const testProjectEntries: ProjectEntry[] = [
   {
-    id: 'uber-proj',
-    url: 'https://example.com/unicode-engine',
-    technologies: ['C++', 'Rust', 'WASM'],
+    id: 'vidra',
+    repos: [
+      { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
+      { name: 'vidra-user', url: '#' },
+    ],
+    technologies: ['Go', 'ActivityPub', 'Docker'],
+    icon: 'layers',
+  },
+  {
+    id: 'aurialis',
+    repos: [{ name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' }],
+    technologies: ['Next.js', 'TypeScript'],
+    icon: 'layers',
+  },
+  {
+    id: 'goimg',
+    repos: [
+      { name: 'goimg-user', url: '#' },
+      { name: 'goimg-datalayer', url: '#' },
+    ],
+    technologies: ['Go', 'PostgreSQL'],
     icon: 'folder',
   },
   {
-    id: 'nihon-proj',
-    url: '#',
-    technologies: ['Python', 'TensorFlow', 'FastAPI'],
-    icon: 'layers',
+    id: 'iota-token-creator',
+    repos: [
+      { name: 'iota-token-creator-web', url: '#' },
+      { name: 'iota-token-creator-api', url: '#' },
+    ],
+    technologies: ['Next.js', 'Go'],
+    icon: 'folder',
   },
 ];

@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
 import CipherText from '@/components/CipherText';
-import { ArrowOutwardIcon, FolderIcon, LayersIcon } from '@/components/icons';
+import { FolderIcon, GitHubIcon, LayersIcon } from '@/components/icons';
 import { projectEntries } from '@/data/projects';
 
 const iconMap = {
@@ -22,6 +22,8 @@ const METADATA_BY_ID = new Map(projectEntries.map((entry) => [entry.id, entry]))
 
 export default function Projects() {
   const { t } = useTranslation();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const items = t('projects.items', { returnObjects: true }) as ProjectItem[];
 
@@ -33,6 +35,33 @@ export default function Projects() {
       }),
     [items]
   );
+
+  useEffect(() => {
+    if (itemsWithMetadata.length === 0) return;
+
+    const observers: IntersectionObserver[] = [];
+
+    itemsWithMetadata.forEach((_, index) => {
+      const el = cardRefs.current[index];
+      if (!el) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setActiveIndex(index);
+          }
+        },
+        { threshold: 0.5 }
+      );
+
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => {
+      observers.forEach((o) => o.disconnect());
+    };
+  }, [itemsWithMetadata]);
 
   if (itemsWithMetadata.length === 0) {
     return null;
@@ -48,47 +77,80 @@ export default function Projects() {
         title={<CipherText>{t('projects.heading')}</CipherText>}
         className="mb-12"
       />
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-        {itemsWithMetadata.map(({ project, meta }) => {
-          return (
-            <div
-              key={project.id}
-              className="group relative flex flex-col rounded-2xl border border-border-card bg-bg-card p-8 shadow-xl shadow-black/20 transition-all hover:border-border-card-hover hover:bg-bg-card-hover"
-            >
-              <div className="mb-6 flex items-start justify-between">
-                {iconMap[meta.icon]}
-                <ArrowOutwardIcon className="h-5 w-5 text-text-muted transition-colors group-hover:text-primary" />
-              </div>
-              <h3 className="mb-3 text-xl font-bold text-slate-100">
-                <a
-                  className="before:absolute before:inset-0"
-                  href={meta.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={`${project.title} ${t('projects.opensInNewTab')}`}
-                >
-                  <CipherText>{project.title}</CipherText>
-                </a>
-              </h3>
-              <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">
-                <CipherText block>{project.description}</CipherText>
-              </p>
-              <ul
-                className="mt-auto flex flex-wrap gap-x-4 gap-y-2"
-                aria-label={t('projects.techAriaLabel')}
-              >
-                {meta.technologies.map((tech) => (
-                  <li
-                    key={tech}
-                    className="text-[11px] font-bold uppercase tracking-widest text-text-muted"
-                  >
-                    {tech}
-                  </li>
-                ))}
-              </ul>
+
+      {/* Carousel on mobile, grid on md+ */}
+      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:gap-8 md:overflow-visible md:pb-0">
+        {itemsWithMetadata.map(({ project, meta }, index) => (
+          <div
+            key={project.id}
+            ref={(el) => { cardRefs.current[index] = el; }}
+            className="group relative flex shrink-0 snap-center flex-col rounded-2xl border border-border-card bg-bg-card p-8 shadow-xl shadow-black/20 transition-all hover:border-border-card-hover hover:bg-bg-card-hover w-[85vw] md:w-auto"
+          >
+            <div className="mb-6 flex items-start justify-between">
+              {iconMap[meta.icon]}
             </div>
-          );
-        })}
+
+            <h3 className="mb-3 text-xl font-bold text-slate-100">
+              <CipherText>{project.title}</CipherText>
+            </h3>
+
+            <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">
+              <CipherText block>{project.description}</CipherText>
+            </p>
+
+            <ul
+              className="flex flex-wrap gap-x-4 gap-y-2"
+              aria-label={t('projects.techAriaLabel')}
+            >
+              {meta.technologies.map((tech) => (
+                <li
+                  key={tech}
+                  className="text-[11px] font-bold uppercase tracking-widest text-text-muted"
+                >
+                  {tech}
+                </li>
+              ))}
+            </ul>
+
+            {/* Repo links */}
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2" aria-label={t('projects.viewRepos')}>
+              {meta.repos.map((repo) => (
+                <a
+                  key={repo.name}
+                  href={repo.url}
+                  target={repo.url !== '#' ? '_blank' : undefined}
+                  rel={repo.url !== '#' ? 'noreferrer noopener' : undefined}
+                  aria-label={`View ${repo.name} on GitHub`}
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
+                >
+                  <GitHubIcon className="h-3.5 w-3.5" />
+                  <span>{repo.name}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Dot indicators — visible on mobile only */}
+      <div className="mt-6 flex justify-center gap-2 md:hidden">
+        {itemsWithMetadata.map((_, index) => (
+          <button
+            key={index}
+            aria-label={`Go to project ${index + 1}`}
+            aria-current={index === activeIndex ? 'true' : undefined}
+            onClick={() => {
+              cardRefs.current[index]?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'center',
+              });
+            }}
+            className={`h-2 w-2 rounded-full transition-colors ${
+              index === activeIndex ? 'bg-primary' : 'bg-slate-600'
+            }`}
+          />
+        ))}
       </div>
     </section>
   );
