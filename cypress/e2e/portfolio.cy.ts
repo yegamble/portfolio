@@ -15,7 +15,7 @@ describe('Portfolio Site', () => {
   it('should display large name in the hero section', () => {
     cy.get('section').first().within(() => {
       cy.contains('Yosef Gamble').should('be.visible');
-      cy.contains('Senior Full-Stack Engineer').should('be.visible');
+      cy.contains('Senior Software Engineer').should('be.visible');
     });
   });
 
@@ -41,8 +41,7 @@ describe('Portfolio Site', () => {
   });
 
   it('should display the hero section with large heading', () => {
-    cy.get('h1').should('contain.text', 'NYC based');
-    cy.get('h1').should('contain.text', 'pixel-perfect digital experiences');
+    cy.get('h1').should('contain.text', 'Senior Go & TypeScript engineer');
   });
 
   it('should display the About section with content', () => {
@@ -66,8 +65,8 @@ describe('Portfolio Site', () => {
 
   it('should display the Projects section with card layout', () => {
     cy.get('#projects').should('exist');
-    cy.get('#projects').should('contain.text', 'Project Alpha');
-    cy.get('#projects').should('contain.text', 'Neon UI Kit');
+    cy.get('#projects').should('contain.text', 'Vidra');
+    cy.get('#projects').should('contain.text', 'Aurialis');
   });
 
   it('should have social links in the header', () => {
