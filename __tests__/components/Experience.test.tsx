@@ -217,7 +217,7 @@ describe('Experience', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
       const link = within(section).getByRole('link', { name: /view full/i });
-      expect(link).toHaveAttribute('href', '/resume.pdf');
+      expect(link).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
     });
 
     it('should have descriptive aria-label on resume link', () => {

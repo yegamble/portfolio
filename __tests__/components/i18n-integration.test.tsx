@@ -447,7 +447,7 @@ describe('i18n Regression - Structural integrity across languages', () => {
     await i18n.changeLanguage('he');
     render(<Experience />);
     const resumeLink = screen.getByRole('link', { name: /צפה בקורות חיים מלאים/ });
-    expect(resumeLink).toHaveAttribute('href', '/resume.pdf');
+    expect(resumeLink).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
   });
 
   it('should preserve technology tags in Hebrew Experience (not translated)', async () => {
