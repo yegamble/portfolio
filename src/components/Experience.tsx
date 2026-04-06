@@ -89,7 +89,7 @@ export default function Experience() {
       <div className="mt-16 flex justify-start">
         <a
           className="group inline-flex items-center gap-2 font-semibold text-text-primary"
-          href="/resume.pdf"
+          href="https://www.linkedin.com/in/yosefgamble/"
           aria-label={t('experience.viewResume')}
         >
           <span className="border-b border-transparent pb-px transition-all group-hover:border-primary">
