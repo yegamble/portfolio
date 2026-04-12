@@ -266,5 +266,36 @@ describe('useCipherTransition', () => {
       // displayChars should never be longer than new target
       expect(result.current.displayChars.length).toBeLessThanOrEqual(5);
     });
+
+    it('should update a late-mounted ref during ref-mode animation', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const element = document.createElement('span');
+      const elementRef = { current: null as HTMLSpanElement | null };
+      const nextText = 'B'.repeat(96);
+
+      const { rerender } = renderHook(
+        ({ text }) => useCipherTransition(text, { elementRef }),
+        { initialProps: { text: 'A'.repeat(96) } }
+      );
+
+      rerender({ text: nextText });
+
+      act(() => rafCallbacks.shift()?.(100));
+      expect(element.textContent).toBe('');
+
+      elementRef.current = element;
+
+      act(() => rafCallbacks.shift()?.(160));
+
+      expect(element.textContent).toHaveLength(nextText.length);
+      expect(element.textContent).not.toBe(nextText);
+    });
   });
 });

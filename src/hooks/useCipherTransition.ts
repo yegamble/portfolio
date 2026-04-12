@@ -254,6 +254,13 @@ function useCipherRefAnimationLoop(
   }, []);
 
   useEffect(() => {
+    const writeText = (value: string) => {
+      const currentEl = elementRef?.current;
+      if (currentEl) {
+        currentEl.textContent = value;
+      }
+    };
+
     if (!isEnabled) {
       prevTextRef.current = text;
       return;
@@ -265,9 +272,7 @@ function useCipherRefAnimationLoop(
 
     if (prefersReducedMotion) {
       prevTextRef.current = text;
-      if (elementRef?.current) {
-        elementRef.current.textContent = text;
-      }
+      writeText(text);
       return;
     }
 
@@ -276,8 +281,6 @@ function useCipherRefAnimationLoop(
     }
 
     cleanup();
-
-    const el = elementRef?.current ?? null;
     const newChars = Array.from(text);
     const maxLen = newChars.length;
     const profile = getAnimationProfile();
@@ -308,10 +311,9 @@ function useCipherRefAnimationLoop(
           elapsed
         );
 
-        // Direct DOM update — bypasses React reconciliation
-        if (el) {
-          el.textContent = chars.join('');
-        }
+        // Read the ref lazily so long-text spans that mount after the first
+        // animation frame still receive the live scramble updates.
+        writeText(chars.join(''));
 
         if (allResolved) {
           setIsAnimating(false);
@@ -333,9 +335,7 @@ function useCipherRefAnimationLoop(
     return () => {
       cleanup();
       // Reset DOM to target text on interruption to prevent stale cipher chars
-      if (el) {
-        el.textContent = text;
-      }
+      writeText(text);
       setIsAnimating(false);
     };
   }, [text, isEnabled, cleanup, elementRef]);
