@@ -40,13 +40,13 @@ export default function ScrollHeader() {
         }`}
       >
         <div
-          className={`mx-auto flex h-16 w-full max-w-5xl items-center px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:px-8 ${
+          className={`mx-auto flex h-16 w-full max-w-5xl items-center gap-4 px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:gap-6 xl:px-8 ${
             isScrolled ? 'justify-between' : 'justify-center'
           }`}
         >
           {/* Name — visible only when scrolled past hero */}
           <Link
-            className="text-base font-bold tracking-tight text-text-primary"
+            className="min-w-0 flex-1 text-base font-bold tracking-tight text-text-primary"
             href={homeHref}
             tabIndex={isScrolled ? 0 : -1}
             onClick={(e) => {
@@ -59,27 +59,27 @@ export default function ScrollHeader() {
               });
             }}
           >
-          <div
-            className={`flex items-center gap-4 overflow-hidden whitespace-nowrap transition-all duration-500 ease-out motion-reduce:duration-0 ${
-              isScrolled
-                ? 'max-w-[11rem] lg:max-w-[28rem] translate-y-0 opacity-100'
-                : 'max-w-0 -translate-y-2 opacity-0 pointer-events-none'
-            }`}
-            aria-hidden={!isScrolled}
-          >
+            <div
+              className={`flex w-full min-w-0 items-center gap-4 overflow-hidden whitespace-nowrap transition-all duration-500 ease-out motion-reduce:duration-0 ${
+                isScrolled
+                  ? 'max-w-[10rem] lg:max-w-[14rem] xl:max-w-[28rem] translate-y-0 opacity-100'
+                  : 'max-w-0 -translate-y-2 opacity-0 pointer-events-none'
+              }`}
+              aria-hidden={!isScrolled}
+            >
               <CipherText>{t('hero.name')}</CipherText>
 
-            <span className="hidden h-4 w-px shrink-0 bg-slate-700 lg:inline-block" />
-            <span className="hidden text-xs font-medium uppercase tracking-widest text-text-muted lg:inline-block">
-              <CipherText>{t('hero.title')}</CipherText>
-            </span>
-          </div>
-        </Link>
+              <span className="hidden h-4 w-px shrink-0 bg-slate-700 lg:inline-block" />
+              <span className="hidden text-xs font-medium uppercase tracking-widest text-text-muted xl:inline-block">
+                <CipherText>{t('hero.title')}</CipherText>
+              </span>
+            </div>
+          </Link>
 
           {/* Nav links + social icons + language toggle — always visible */}
-          <div className="flex shrink-0 items-center gap-6 md:gap-8">
+          <div className="flex shrink-0 items-center gap-4 md:gap-5 lg:gap-6">
             <nav aria-label="Main navigation" className="hidden sm:block">
-              <ul className="flex items-center gap-6">
+              <ul className="flex items-center gap-4 lg:gap-5 xl:gap-6">
                 {(['about', 'experience', 'projects'] as const).map((key) => (
                   <li key={key}>
                     <a
@@ -93,7 +93,10 @@ export default function ScrollHeader() {
               </ul>
             </nav>
             <LanguageSelector />
-            <SocialLinks className="ps-2 sm:border-s sm:border-slate-800 sm:ps-6" />
+            <SocialLinks
+              gap="gap-2 sm:gap-3"
+              className="ps-2 sm:border-s sm:border-slate-800 sm:ps-4 lg:ps-6"
+            />
           </div>
         </div>
       </header>

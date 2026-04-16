@@ -131,6 +131,33 @@ function expectWithinEnvelope(
 }
 
 test.describe('language toggle layout stability', () => {
+  test('scrolled desktop header keeps the brand clear of the nav controls', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1120, height: 900 });
+    await waitForPortfolioReady(page);
+
+    await page.evaluate(() => {
+      window.scrollTo({ top: 260, behavior: 'instant' });
+    });
+
+    const brand = page.locator('header [aria-hidden="false"]').first();
+    await expect(brand).toBeVisible();
+
+    const controls = page.locator('header > div > div:last-child');
+    const brandBox = await brand.boundingBox();
+    const controlsBox = await controls.boundingBox();
+    const brandMetrics = await brand.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    }));
+
+    expect(brandBox).not.toBeNull();
+    expect(controlsBox).not.toBeNull();
+    expect(brandBox!.x + brandBox!.width).toBeLessThanOrEqual(controlsBox!.x - 12);
+    expect(brandMetrics.scrollWidth).toBeLessThanOrEqual(brandMetrics.clientWidth + 1);
+  });
+
   test('desktop transition avoids width and height overshoot during animation', async ({
     page,
   }) => {
