@@ -54,7 +54,6 @@ function getCharThreshold(): number {
 export default function CipherText({ children, block = false }: CipherTextProps) {
   const text = children || '';
   const isCipherEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
-  const isI18nEnabled = process.env.NEXT_PUBLIC_I18N_ENABLED === 'true';
 
   // --- Viewport gating via IntersectionObserver ---
   const observerRef = useRef<HTMLSpanElement>(null);
@@ -81,7 +80,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     isVisible,
     elementRef: isLongText ? longTextRef : undefined,
   });
-  const { ref, style } = usePretextHeight(text, block && isI18nEnabled, isAnimating);
+  const { ref, style } = usePretextHeight(text, block, isAnimating);
   const targetChars = useMemo(() => Array.from(text), [text]);
 
   // --- Render helper: wrap with observer ref when cipher is enabled ---

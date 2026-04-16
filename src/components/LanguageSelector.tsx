@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { USFlagIcon, IsraelFlagIcon, RussiaFlagIcon } from '@/components/icons';
+import { getLocalizedPathname, type AppLocale } from '@/lib/i18n';
 
 interface LanguageOption {
-  code: string;
+  code: AppLocale;
   label: string;
   initials: string;
   Flag: (props: { className?: string }) => React.ReactElement;
@@ -17,103 +20,71 @@ const LANGUAGES: LanguageOption[] = [
   { code: 'ru', label: 'Русский', initials: 'RU', Flag: RussiaFlagIcon },
 ];
 
-const AUTO_CLOSE_DELAY = 1500;
+function buildLanguageHref(
+  pathname: string | null,
+  locale: AppLocale,
+  searchParams: { toString(): string } | null
+) {
+  const localizedPath = getLocalizedPathname(pathname, locale);
+  const query = searchParams?.toString() ?? '';
+
+  return query ? `${localizedPath}?${query}` : localizedPath;
+}
 
 export default function LanguageSelector() {
-  const isEnabled = process.env.NEXT_PUBLIC_I18N_ENABLED === 'true';
   const { t, i18n } = useTranslation();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const menuId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const currentLang = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0];
+  const currentLang = LANGUAGES.find((language) => language.code === i18n.language) ?? LANGUAGES[0];
 
   const close = useCallback(() => {
     setIsOpen(false);
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
   }, []);
 
-  const selectLanguage = useCallback(
-    (code: string) => {
-      i18n.changeLanguage(code);
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (containerRef.current?.contains(event.target as Node)) {
+        return;
+      }
+
       close();
-    },
-    [i18n, close]
-  );
+    };
 
-  // Click outside handler
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         close();
+        triggerRef.current?.focus();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, close]);
-
-  // Escape key handler
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        close();
-      }
-    };
-
+    document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, close]);
 
-  const handleMouseLeave = () => {
-    if (!isOpen) return;
-    timerRef.current = setTimeout(() => {
-      setIsOpen(false);
-      timerRef.current = null;
-    }, AUTO_CLOSE_DELAY);
-  };
-
-  const handleMouseEnter = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
-
-  if (!isEnabled) {
-    return null;
-  }
+  }, [close, isOpen]);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative"
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={handleMouseEnter}
-    >
+    <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setIsOpen((previous) => !previous)}
         className="flex items-center gap-1.5 rounded-md border border-slate-700 px-2 py-1 text-xs font-bold tracking-wide text-text-muted transition-colors hover:border-primary hover:text-primary"
-        aria-label={t('language.selectLabel')}
         aria-expanded={isOpen}
-        aria-haspopup="listbox"
+        aria-controls={menuId}
+        aria-label={t('language.selectLabel')}
       >
         <currentLang.Flag className="h-3.5 w-5" />
         <span>{currentLang.initials}</span>
@@ -121,31 +92,44 @@ export default function LanguageSelector() {
 
       {isOpen && (
         <div
-          role="listbox"
-          aria-label={t('language.selectLabel')}
-          className="absolute end-0 top-full z-50 mt-1 min-w-[140px] overflow-hidden rounded-md border border-slate-700 bg-slate-800 shadow-lg"
+          id={menuId}
+          className="absolute end-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-slate-700 bg-slate-800 p-1 shadow-lg"
         >
-          {LANGUAGES.map((lang) => {
-            const isCurrent = lang.code === i18n.language;
-            return (
-              <button
-                key={lang.code}
-                type="button"
-                role="option"
-                aria-selected={isCurrent}
-                onClick={() => selectLanguage(lang.code)}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                  isCurrent
-                    ? 'bg-slate-700/50 text-primary'
-                    : 'text-text-muted hover:bg-slate-700 hover:text-text-primary'
-                }`}
-              >
-                <lang.Flag className="h-3.5 w-5" />
-                <span className="flex-1 text-start">{lang.label}</span>
-                <span className="text-xs font-bold tracking-wide opacity-60">{lang.initials}</span>
-              </button>
-            );
-          })}
+          <nav aria-label={t('language.selectLabel')}>
+            <ul className="space-y-1">
+              {LANGUAGES.map((language) => {
+                const isCurrent = language.code === i18n.language;
+                const href = buildLanguageHref(pathname, language.code, searchParams);
+
+                return (
+                  <li key={language.code}>
+                    <Link
+                      href={href}
+                      lang={language.code}
+                      hrefLang={language.code}
+                      prefetch={false}
+                      aria-current={isCurrent ? 'page' : undefined}
+                      onClick={() => {
+                        void i18n.changeLanguage(language.code);
+                        close();
+                      }}
+                      className={`flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-colors ${
+                        isCurrent
+                          ? 'bg-slate-700/50 text-primary'
+                          : 'text-text-muted hover:bg-slate-700 hover:text-text-primary'
+                      }`}
+                    >
+                      <language.Flag className="h-3.5 w-5" />
+                      <span className="flex-1 text-start">{language.label}</span>
+                      <span className="text-xs font-bold tracking-wide opacity-60">
+                        {language.initials}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
         </div>
       )}
     </div>

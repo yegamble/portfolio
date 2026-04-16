@@ -17,10 +17,11 @@ describe('Experience Data validation', () => {
       expect(typeof entry.id).toBe('string');
       expect(entry.id.trim().length).toBeGreaterThan(0);
 
-      // Validate companyUrl
-      expect(entry.companyUrl, 'Entry companyUrl should be defined and non-empty').toBeDefined();
-      expect(typeof entry.companyUrl).toBe('string');
-      expect(entry.companyUrl.trim().length).toBeGreaterThan(0);
+      // Validate companyUrl when present
+      if (entry.companyUrl != null) {
+        expect(typeof entry.companyUrl).toBe('string');
+        expect(entry.companyUrl.trim().length).toBeGreaterThan(0);
+      }
 
       // Validate technologies
       expect(entry.technologies, 'Entry technologies should be defined and a non-empty array').toBeDefined();

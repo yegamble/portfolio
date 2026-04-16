@@ -276,7 +276,7 @@ describe('ScrollHeader', () => {
     it('should make nav name link tabbable only when scrolled', () => {
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
       expect(navNameLink).toHaveAttribute('tabIndex', '-1');
 
       act(() => {
@@ -378,9 +378,9 @@ describe('ScrollHeader', () => {
     it('should display the name in the nav area', () => {
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
       expect(navNameLink).toBeInTheDocument();
-      expect(navNameLink).toHaveAttribute('href', '/');
+      expect(navNameLink).toHaveAttribute('href', '/en');
     });
 
     it('should scroll to top when nav name is clicked', async () => {
@@ -389,7 +389,7 @@ describe('ScrollHeader', () => {
 
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
 
       const user = (await import('@testing-library/user-event')).default.setup();
       await user.click(navNameLink);
@@ -408,7 +408,7 @@ describe('ScrollHeader', () => {
 
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector('a[href="/"]') as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
 
       const user = (await import('@testing-library/user-event')).default.setup();
       await user.click(navNameLink);

@@ -18,7 +18,7 @@ async function waitForPortfolioReady(page: Page) {
 /** Open the language dropdown and click the target language option. */
 async function switchLanguage(page: Page, langLabel: string) {
   await page.getByRole('button', { name: /select language/i }).click();
-  await page.getByRole('option', { name: langLabel }).click();
+  await page.getByRole('link', { name: langLabel }).click();
 }
 
 test.describe('cipher animation performance', () => {

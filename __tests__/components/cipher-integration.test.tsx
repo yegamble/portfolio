@@ -213,13 +213,13 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       expect(dateHeaders).toHaveLength(3);
     });
 
-    it('should preserve three company links in both languages', async () => {
+    it('should preserve the two external company links in both languages', async () => {
       const { unmount } = render(<Experience />);
       let section = screen.getByRole('region', { name: /work experience/i });
       let companyLinks = within(section).getAllByRole('link').filter(
         (l) => l.getAttribute('target') === '_blank'
       );
-      expect(companyLinks).toHaveLength(3);
+      expect(companyLinks).toHaveLength(2);
       unmount();
 
       await i18n.changeLanguage('he');
@@ -228,7 +228,7 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       companyLinks = within(section).getAllByRole('link').filter(
         (l) => l.getAttribute('target') === '_blank'
       );
-      expect(companyLinks).toHaveLength(3);
+      expect(companyLinks).toHaveLength(2);
     });
   });
 

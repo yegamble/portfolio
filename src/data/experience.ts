@@ -1,6 +1,6 @@
 export interface ExperienceEntry {
   id: string;
-  companyUrl: string;
+  companyUrl?: string | null;
   technologies: string[];
 }
 
@@ -17,7 +17,7 @@ export const experienceEntries: ExperienceEntry[] = [
   },
   {
     id: 'prostock',
-    companyUrl: '#',
+    companyUrl: null,
     technologies: ['PHP', 'AngularJS', 'Android', 'Digital Ocean', 'REST APIs'],
   },
 ];

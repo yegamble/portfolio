@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import i18n from '@/lib/i18n';
@@ -376,11 +377,13 @@ describe('i18n Integration - Language Selector Flow', () => {
     expect(within(nav).getByText('About')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /select language/i }));
-    await user.click(screen.getByRole('option', { name: /עברית/i }));
+    await user.click(screen.getByRole('link', { name: /עברית/i }));
 
-    expect(within(nav).getByText('אודות')).toBeInTheDocument();
-    expect(within(nav).getByText('ניסיון')).toBeInTheDocument();
-    expect(within(nav).getByText('פרויקטים')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(nav).getByText('אודות')).toBeInTheDocument();
+      expect(within(nav).getByText('ניסיון')).toBeInTheDocument();
+      expect(within(nav).getByText('פרויקטים')).toBeInTheDocument();
+    });
   });
 
   it('should switch to Russian via dropdown', async () => {
@@ -388,12 +391,14 @@ describe('i18n Integration - Language Selector Flow', () => {
     render(<ScrollHeader />);
 
     await user.click(screen.getByRole('button', { name: /select language/i }));
-    await user.click(screen.getByRole('option', { name: /Русский/i }));
+    await user.click(screen.getByRole('link', { name: /Русский/i }));
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
-    expect(within(nav).getByText('Обо мне')).toBeInTheDocument();
-    expect(within(nav).getByText('Опыт')).toBeInTheDocument();
-    expect(within(nav).getByText('Проекты')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(nav).getByText('Обо мне')).toBeInTheDocument();
+      expect(within(nav).getByText('Опыт')).toBeInTheDocument();
+      expect(within(nav).getByText('Проекты')).toBeInTheDocument();
+    });
   });
 
   it('should switch back to English from Hebrew via dropdown', async () => {
@@ -402,10 +407,12 @@ describe('i18n Integration - Language Selector Flow', () => {
     render(<ScrollHeader />);
 
     await user.click(screen.getByRole('button', { name: /בחר שפה/i }));
-    await user.click(screen.getByRole('option', { name: /English/i }));
+    await user.click(screen.getByRole('link', { name: /English/i }));
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
-    expect(within(nav).getByText('About')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(nav).getByText('About')).toBeInTheDocument();
+    });
   });
 
   it('should render language selector button in navbar', () => {

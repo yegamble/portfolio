@@ -8,11 +8,13 @@ import LanguageSelector from '@/components/LanguageSelector';
 import CipherText from '@/components/CipherText';
 import ProfilePicture from '@/components/ProfilePicture';
 import HeroContactIcons from '@/components/HeroContactIcons';
+import { getLocaleHref, type AppLocale } from '@/lib/i18n';
 
 export default function ScrollHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const homeHref = getLocaleHref(i18n.language as AppLocale);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -45,7 +47,7 @@ export default function ScrollHeader() {
           {/* Name — visible only when scrolled past hero */}
           <Link
             className="text-base font-bold tracking-tight text-text-primary"
-            href="/"
+            href={homeHref}
             tabIndex={isScrolled ? 0 : -1}
             onClick={(e) => {
               e.preventDefault();
@@ -96,7 +98,6 @@ export default function ScrollHeader() {
         </div>
       </header>
 
-      {/* Hero Section — large name + tagline, scrolls with content */}
       <section className="mx-auto flex w-full max-w-3xl flex-col justify-center px-6 pb-16 pt-16 md:pb-16 md:pt-16 lg:px-8">
         <div className="mb-8 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
           <ProfilePicture />

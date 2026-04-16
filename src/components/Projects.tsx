@@ -91,12 +91,10 @@ export default function Projects() {
             </div>
 
             <h3 className="mb-3 text-xl font-bold text-slate-100">
-              <CipherText>{project.title}</CipherText>
+              {project.title}
             </h3>
 
-            <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">
-              <CipherText block>{project.description}</CipherText>
-            </p>
+            <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">{project.description}</p>
 
             <ul
               className="flex flex-wrap gap-x-4 gap-y-2"
@@ -120,7 +118,7 @@ export default function Projects() {
                   href={repo.url}
                   target={repo.url !== '#' ? '_blank' : undefined}
                   rel={repo.url !== '#' ? 'noreferrer noopener' : undefined}
-                  aria-label={`View ${repo.name} on GitHub`}
+                  aria-label={t('projects.viewOnGitHub', { name: repo.name })}
                   className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
                 >
                   <GitHubIcon className="h-3.5 w-3.5" />
@@ -137,7 +135,7 @@ export default function Projects() {
         {itemsWithMetadata.map((_, index) => (
           <button
             key={index}
-            aria-label={`Go to project ${index + 1}`}
+            aria-label={`${t('projects.heading')} ${index + 1}`}
             aria-current={index === activeIndex ? 'true' : undefined}
             onClick={() => {
               cardRefs.current[index]?.scrollIntoView({

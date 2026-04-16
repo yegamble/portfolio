@@ -1,176 +1,72 @@
-import { render, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import i18n from '@/lib/i18n';
+import { render, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
 import I18nProvider from '@/components/I18nProvider';
 
-beforeEach(async () => {
-  await i18n.changeLanguage('en');
-  document.documentElement.lang = 'en';
-  document.documentElement.dir = 'ltr';
-  localStorage.clear();
-});
-
 describe('I18nProvider', () => {
-  it('should render children', () => {
+  beforeEach(() => {
+    document.documentElement.lang = 'en';
+    document.documentElement.dir = 'ltr';
+    document.cookie = '';
+  });
+
+  it('renders children', () => {
     const { getByText } = render(
-      <I18nProvider>
+      <I18nProvider locale="en">
         <div>Test child</div>
       </I18nProvider>
     );
+
     expect(getByText('Test child')).toBeInTheDocument();
   });
 
-  it('should set html lang attribute to en initially', () => {
+  it('applies html lang and dir for English', async () => {
     render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-    expect(document.documentElement.lang).toBe('en');
-  });
-
-  it('should set html dir attribute to ltr initially', () => {
-    render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-    expect(document.documentElement.dir).toBe('ltr');
-  });
-
-  it('should update html lang to he when language changes', async () => {
-    render(
-      <I18nProvider>
+      <I18nProvider locale="en">
         <div />
       </I18nProvider>
     );
 
-    await act(async () => {
-      await i18n.changeLanguage('he');
+    await waitFor(() => {
+      expect(document.documentElement.lang).toBe('en');
+      expect(document.documentElement.dir).toBe('ltr');
     });
-
-    expect(document.documentElement.lang).toBe('he');
   });
 
-  it('should update html dir to rtl when switching to Hebrew', async () => {
+  it('applies html lang and dir for Hebrew', async () => {
     render(
-      <I18nProvider>
+      <I18nProvider locale="he">
         <div />
       </I18nProvider>
     );
 
-    await act(async () => {
-      await i18n.changeLanguage('he');
+    await waitFor(() => {
+      expect(document.documentElement.lang).toBe('he');
+      expect(document.documentElement.dir).toBe('rtl');
     });
-
-    expect(document.documentElement.dir).toBe('rtl');
   });
 
-  it('should revert html dir to ltr when switching back to English', async () => {
+  it('applies html lang and dir for Russian', async () => {
     render(
-      <I18nProvider>
+      <I18nProvider locale="ru">
         <div />
       </I18nProvider>
     );
 
-    await act(async () => {
-      await i18n.changeLanguage('he');
+    await waitFor(() => {
+      expect(document.documentElement.lang).toBe('ru');
+      expect(document.documentElement.dir).toBe('ltr');
     });
-    expect(document.documentElement.dir).toBe('rtl');
+  });
 
-    await act(async () => {
-      await i18n.changeLanguage('en');
+  it('persists the locale in a cookie', async () => {
+    render(
+      <I18nProvider locale="he">
+        <div />
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(document.cookie).toContain('locale=he');
     });
-    expect(document.documentElement.dir).toBe('ltr');
-  });
-
-  it('should set dir to ltr for Russian', async () => {
-    render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-
-    await act(async () => {
-      await i18n.changeLanguage('ru');
-    });
-
-    expect(document.documentElement.lang).toBe('ru');
-    expect(document.documentElement.dir).toBe('ltr');
-  });
-});
-
-describe('I18nProvider - localStorage persistence', () => {
-  it('should save language to localStorage on language change', async () => {
-    render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-
-    await act(async () => {
-      await i18n.changeLanguage('he');
-    });
-
-    expect(localStorage.getItem('language')).toBe('he');
-  });
-
-  it('should save Russian language to localStorage', async () => {
-    render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-
-    await act(async () => {
-      await i18n.changeLanguage('ru');
-    });
-
-    expect(localStorage.getItem('language')).toBe('ru');
-  });
-
-  it('should apply html attributes for pre-initialized language on mount', async () => {
-    // Language restoration from localStorage now happens at i18n init time
-    // (in lib/i18n.ts), not in the provider. This test verifies that the
-    // provider correctly sets lang/dir attributes when i18n starts with a
-    // non-English language.
-    await i18n.changeLanguage('ru');
-
-    render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-
-    await act(async () => {});
-
-    expect(document.documentElement.lang).toBe('ru');
-    expect(document.documentElement.dir).toBe('ltr');
-  });
-
-  it('should ignore invalid localStorage values', async () => {
-    localStorage.setItem('language', 'invalid');
-
-    render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-
-    await act(async () => {});
-
-    expect(i18n.language).toBe('en');
-  });
-
-  it('should default to English when localStorage is empty', async () => {
-    render(
-      <I18nProvider>
-        <div />
-      </I18nProvider>
-    );
-
-    await act(async () => {});
-
-    expect(i18n.language).toBe('en');
   });
 });

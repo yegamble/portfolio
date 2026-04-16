@@ -30,12 +30,12 @@ describe('i18n initialization', () => {
     expect(i18n.hasResourceBundle('ru', 'translation')).toBe(true);
   });
 
-  it('escapes HTML special characters in interpolated values', () => {
+  it('leaves interpolation unescaped so React can handle escaping at render time', () => {
     // i18next by default uses {{ }} for interpolation
     // We add a temporary resource for testing
     i18n.addResource('en', 'translation', 'security_test', 'Hello {{name}}');
 
     const result = i18n.t('security_test', { name: '<script>alert("xss")</script>' });
-    expect(result).toBe('Hello &lt;script&gt;alert(&quot;xss&quot;)&lt;&#x2F;script&gt;');
+    expect(result).toBe('Hello <script>alert("xss")</script>');
   });
 });

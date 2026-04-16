@@ -19,7 +19,7 @@ vi.mock('@/data/experience', () => ({
     },
     {
       id: 'open-src',
-      companyUrl: '#',
+      companyUrl: null,
       technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
     },
   ],
@@ -110,7 +110,7 @@ describe('Experience', () => {
   });
 
   describe('Company links', () => {
-    it('should render links for each company', () => {
+    it('should render links only for entries with valid company URLs', () => {
       render(<Experience />);
       const edgeLink = screen.getByRole('link', {
         name: /principal engineer.*at edge corp/i,
@@ -121,6 +121,12 @@ describe('Experience', () => {
         name: /full-stack developer at cafe societe/i,
       });
       expect(cafeLink).toHaveAttribute('href', 'https://cafe-societe.example.com/');
+
+      expect(
+        screen.queryByRole('link', {
+          name: /intern to mid-level engineer at open-source foundation/i,
+        })
+      ).not.toBeInTheDocument();
     });
 
     it('should open company links in new tabs', () => {
@@ -140,10 +146,10 @@ describe('Experience', () => {
         })
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('link', {
+        screen.queryByRole('link', {
           name: /intern to mid-level engineer at open-source foundation \(opens in a new tab\)/i,
         })
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -306,8 +312,8 @@ describe('Experience', () => {
           screen.getByRole('link', { name: /full-stack developer at cafe societe/i })
         ).toHaveAttribute('href', 'https://cafe-societe.example.com/');
         expect(
-          screen.getByRole('link', { name: /intern to mid-level engineer at open-source foundation/i })
-        ).toHaveAttribute('href', '#');
+          screen.queryByRole('link', { name: /intern to mid-level engineer at open-source foundation/i })
+        ).not.toBeInTheDocument();
       } finally {
         i18n.addResourceBundle('en', 'translation', original, false, true);
       }

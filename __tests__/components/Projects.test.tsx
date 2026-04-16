@@ -193,7 +193,7 @@ describe('Projects', () => {
 
     it('should render dot indicators for carousel', () => {
       render(<Projects />);
-      const dots = screen.getAllByRole('button', { name: /go to project/i });
+      const dots = screen.getAllByRole('button', { name: /projects \d+/i });
       expect(dots).toHaveLength(4);
     });
   });

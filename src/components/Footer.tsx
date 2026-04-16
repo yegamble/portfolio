@@ -2,7 +2,6 @@
 
 import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
-import CipherText from '@/components/CipherText';
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -16,25 +15,25 @@ export default function Footer() {
         className="mb-8 justify-center"
       />
       <p className="mx-auto max-w-md">
-        <CipherText>{t('footer.codedIn')}</CipherText>{' '}
+        {t('footer.codedIn')}{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://code.visualstudio.com/"
           target="_blank"
           rel="noreferrer noopener"
         >
-          <CipherText>{t('footer.vscode')}</CipherText>
+          {t('footer.vscode')}
         </a>
-        . <CipherText>{t('footer.builtWith')}</CipherText>{' '}
+        . {t('footer.builtWith')}{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://tailwindcss.com/"
           target="_blank"
           rel="noreferrer noopener"
         >
-          <CipherText>{t('footer.tailwind')}</CipherText>
+          {t('footer.tailwind')}
         </a>
-        {' '}<CipherText>{t('footer.and')}</CipherText>{' '}
+        {' '}{t('footer.and')}{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://fonts.google.com/specimen/Inter"
@@ -43,7 +42,7 @@ export default function Footer() {
         >
           Inter
         </a>
-        {' '}<CipherText>{t('footer.font')}</CipherText>.
+        {' '}{t('footer.font')}.
       </p>
     </footer>
   );

@@ -1,7 +1,19 @@
 import type { ReactNode } from 'react';
-import type { Metadata } from 'next';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+
+const { headersMock, notFoundMock } = vi.hoisted(() => ({
+  headersMock: vi.fn(),
+  notFoundMock: vi.fn(),
+}));
+
+vi.mock('next/headers', () => ({
+  headers: headersMock,
+}));
+
+vi.mock('next/navigation', () => ({
+  notFound: notFoundMock,
+}));
 
 vi.mock('next/font/google', () => ({
   Inter: () => ({
@@ -16,70 +28,66 @@ vi.mock('@/components/I18nProvider', () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-import RootLayout, { metadata } from '@/app/layout';
+import RootLayout from '@/app/layout';
+import LocaleLayout, {
+  generateMetadata,
+  generateStaticParams,
+} from '@/app/[locale]/layout';
 
 describe('RootLayout', () => {
-  it('renders children inside the layout shell', () => {
+  beforeEach(() => {
+    headersMock.mockReset();
+    notFoundMock.mockReset();
+  });
+
+  it('renders children inside the layout shell with server locale attributes', async () => {
+    headersMock.mockResolvedValue(new Headers([['x-locale', 'he']]));
+
     const markup = renderToStaticMarkup(
-      <RootLayout>
-        <div>Smoke Child</div>
-      </RootLayout>
+      await RootLayout({
+        children: <div>Smoke Child</div>,
+      })
     );
 
     expect(markup).toContain('Smoke Child');
-    expect(markup).toContain('lang="en"');
+    expect(markup).toContain('lang="he"');
+    expect(markup).toContain('dir="rtl"');
     expect(markup).toContain('pointer-events-none');
   });
 });
 
-describe('metadata', () => {
-  it('has a non-empty title', () => {
-    expect(typeof metadata.title).toBe('string');
-    expect((metadata.title as string).length).toBeGreaterThan(0);
+describe('LocaleLayout', () => {
+  it('renders children inside the locale provider wrapper', async () => {
+    const markup = renderToStaticMarkup(
+      await LocaleLayout({
+        children: <div>Locale Child</div>,
+        params: Promise.resolve({ locale: 'en' }),
+      })
+    );
+
+    expect(markup).toContain('Locale Child');
   });
 
-  it('has a non-empty description', () => {
-    const desc = metadata.description as string;
-    expect(typeof desc).toBe('string');
-    expect(desc.length).toBeGreaterThan(0);
+  it('provides static params for each supported locale', () => {
+    expect(generateStaticParams()).toEqual([{ locale: 'en' }, { locale: 'he' }, { locale: 'ru' }]);
   });
 
-  it('has Open Graph metadata with image', () => {
-    const og = metadata.openGraph as Record<string, unknown>;
-    expect(og).toBeDefined();
-    expect(typeof og.title).toBe('string');
-    expect(og.type).toBe('website');
-    expect(og.images).toBeDefined();
-
-    const images = og.images as Array<{ url: string; width: number; height: number }>;
-    expect(images).toHaveLength(1);
-    expect(images[0].url).toMatch(/\.(jpg|png|webp)$/);
-    expect(images[0].width).toBe(1200);
-    expect(images[0].height).toBe(630);
-  });
-
-  it('has Twitter Card set to summary_large_image', () => {
-    const twitter = metadata.twitter as Record<string, unknown>;
-    expect(twitter).toBeDefined();
-    expect(twitter.card).toBe('summary_large_image');
-    expect(typeof twitter.title).toBe('string');
-  });
-
-  it('has canonical URL in alternates', () => {
-    const alternates = metadata.alternates as NonNullable<Metadata['alternates']>;
-    expect(alternates).toBeDefined();
-    expect(typeof alternates.canonical).toBe('string');
-    expect((alternates.canonical as string)).toMatch(/^https:\/\//);
-  });
-
-  it('has keywords array with relevant terms', () => {
-    const keywords = metadata.keywords as string[];
-    expect(keywords).toBeDefined();
-    expect(Array.isArray(keywords)).toBe(true);
-    expect(keywords.length).toBeGreaterThan(0);
-    keywords.forEach((kw) => {
-      expect(typeof kw).toBe('string');
-      expect(kw.length).toBeGreaterThan(0);
+  it('returns locale-specific metadata with canonical URLs', async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'he' }),
     });
+
+    expect(metadata.alternates?.canonical).toBe('https://yosefgamble.com/he');
+    expect(metadata.openGraph?.url).toBe('https://yosefgamble.com/he');
+    expect(metadata.openGraph?.locale).toBe('he_IL');
+  });
+
+  it('calls notFound for invalid locales', async () => {
+    await LocaleLayout({
+      children: <div>Ignored</div>,
+      params: Promise.resolve({ locale: 'de' }),
+    });
+
+    expect(notFoundMock).toHaveBeenCalled();
   });
 });

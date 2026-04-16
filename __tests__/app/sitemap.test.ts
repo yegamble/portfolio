@@ -2,19 +2,27 @@ import { describe, it, expect } from 'vitest';
 import sitemap from '@/app/sitemap';
 
 describe('sitemap', () => {
-  it('returns an array with the homepage entry', () => {
+  it('returns an entry for each localized homepage', () => {
     const result = sitemap();
-    expect(result).toHaveLength(1);
-    expect(result[0].url).toBe('https://yosefgamble.com');
+    expect(result).toHaveLength(3);
+    expect(result.map((entry) => entry.url)).toEqual([
+      'https://yosefgamble.com/en',
+      'https://yosefgamble.com/he',
+      'https://yosefgamble.com/ru',
+    ]);
   });
 
   it('sets changeFrequency to monthly', () => {
     const result = sitemap();
-    expect(result[0].changeFrequency).toBe('monthly');
+    result.forEach((entry) => {
+      expect(entry.changeFrequency).toBe('monthly');
+    });
   });
 
-  it('sets priority to 1', () => {
+  it('prioritizes the English page highest', () => {
     const result = sitemap();
     expect(result[0].priority).toBe(1);
+    expect(result[1].priority).toBe(0.8);
+    expect(result[2].priority).toBe(0.8);
   });
 });

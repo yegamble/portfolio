@@ -12,9 +12,8 @@ export default defineConfig({
   },
   webServer: {
     command:
-      `NEXT_PUBLIC_I18N_ENABLED=true ` +
       `NEXT_PUBLIC_CIPHER_TRANSITION=true ` +
-      `npx -y node@20 ./node_modules/next/dist/bin/next dev --turbopack --port ${PORT}`,
+      `pnpm exec next dev --turbopack --hostname 127.0.0.1 --port ${PORT}`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
