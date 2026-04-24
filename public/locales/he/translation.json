@@ -18,7 +18,7 @@
     "p2_before": "ב-",
     "p2_link": "realestate.co.nz",
     "p2_after": ", הפכתי למהנדס מוביל בפורטל הנדל\"ן הוותיק בניו זילנד. פיתחתי יכולות ראשונות בתעשייה — התראות מיידיות על שינויי מחירים והיסטוריית מחירים שקופה — שמתחרים העתיקו חודשים אחר כך. תכננתי ובניתי מערכת התראות serverless על AWS Lambda עם אינטגרציה ל-Braze, שסיפקה התראות על נכסים לכל משתמשי הפלטפורמה. הובלתי סדנאות בכל החברה על ארכיטקטורת serverless ו-observability.",
-    "p3": "כיום אני בונה backend להזרמת וידאו בקוד פתוח ב-Go — עם תמיכה ב-ActivityPub federation ו-ATProto לשיתוף תוכן מבוזר, וחיתוך עלויות רוחב פס לכמעט $0 באמצעות Cloudflare CDN ו-Backblaze B2. מתמקד במערכות scalable, אוטומציית תשתיות והאינטרנט הפתוח."
+    "p3": "כיום אני בונה את Vidra — פלטפורמת הזרמת וידאו בקוד פתוח ב-Go, תואמת PeerTube — המפוצלת ל-vidra-core (הזרמה, transcoding והפצת P2P) ול-vidra-user (זהות ו-federation). הפלטפורמה מתחברת ל-PeerTube ול-Mastodon דרך ActivityPub ול-Bluesky דרך ATProto, כך שיוצרי תוכן מגיעים לקהלים חוצי רשתות ללא תלות בספק יחיד. עלויות bandwidth על אינסטנס קטן עד בינוני יכולות לנוע בין מאות לעשרות אלפי דולרים בחודש; הורדתי אותן לכמעט $0 באמצעות Backblaze B2 וה-Bandwidth Alliance של Cloudflare. מתמקד במערכות scalable, אוטומציית תשתיות והאינטרנט הפתוח."
   },
   "experience": {
     "heading": "ניסיון",
@@ -32,7 +32,7 @@
         "dates": "2024 — הווה",
         "title": "מהנדס Full Stack",
         "company": "עצמאי",
-        "description": "בונה backend להזרמת וידאו בקוד פתוח, תואם PeerTube, ב-Go — עם פרוטוקולי רשתות חברתיות מבוזרות: ActivityPub federation ואינטגרציית ATProto לשיתוף תוכן cross-platform. חתכתי עלויות רוחב פס ממאות דולרים בחודש לכמעט $0 באמצעות Backblaze B2 ו-Cloudflare CDN דרך Bandwidth Alliance. הפרויקט רץ ב-Docker containers, עם CI/CD דרך GitHub Actions, PostgreSQL לאחסון ו-Redis ל-caching ו-rate limiting."
+        "description": "מתכנן ובונה את Vidra — פלטפורמת הזרמת וידאו בקוד פתוח ב-Go, תואמת PeerTube — כמערכת production בשני שירותים: vidra-core אחראי על הזרמה, transcoding והפצת P2P; vidra-user אחראי על זהות, federation והגרף החברתי. המערכת מתחברת ל-PeerTube ול-Mastodon דרך ActivityPub ול-Bluesky דרך ATProto, ומספקת הגעה חוצת פלטפורמות ללא תלות בספק יחיד. עלויות bandwidth על אינסטנס קטן עד בינוני נעות בדרך כלל בין מאות לעשרות אלפי דולרים בחודש; הורדתי אותן לכמעט $0 על ידי ניתוב אחסון ה-origin דרך Backblaze B2 ומסירה דרך Cloudflare במסגרת ה-Bandwidth Alliance. Production stack: Docker, GitHub Actions CI/CD, PostgreSQL, Redis ל-caching ו-rate limiting, ותוכנן ל-horizontal scale מאחורי load balancer."
       },
       {
         "id": "realestate",
@@ -60,7 +60,7 @@
       {
         "id": "vidra",
         "title": "Vidra",
-        "description": "שרת הזרמת וידאו תואם PeerTube בשפת Go עם הפצת P2P, שידור חי ופדרציה רב-פרוטוקולית באמצעות ActivityPub ו-ATProto."
+        "description": "פלטפורמת הזרמת וידאו בקוד פתוח ב-Go, תואמת PeerTube — ארכיטקטורה דו-שירותית (vidra-core ו-vidra-user) עם שידור חי, הפצת P2P ופדרציה רב-פרוטוקולית דרך ActivityPub (PeerTube, Mastodon) ו-ATProto (Bluesky). בנויה ל-egress כמעט אפסי בסקייל production."
       },
       {
         "id": "aurialis",
