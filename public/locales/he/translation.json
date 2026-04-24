@@ -32,7 +32,7 @@
         "dates": "2024 — הווה",
         "title": "מהנדס Full Stack",
         "company": "עצמאי",
-        "description": "בונה backend להזרמת וידאו בקוד פתוח, תואם PeerTube, ב-Go — עם פרוטוקולי רשתות חברתיות מבוזרות: ActivityPub federation ואינטגרציית ATProto לשיתוף תוכן cross-platform. חתכתי עלויות רוחב פס ממאות דולרים בחודש לכמעט $0 באמצעות Backblaze B2 ו-Cloudflare CDN דרך Bandwidth Alliance. הפרויקט רץ ב-Docker containers, עם CI/CD דרך GitHub Actions, PostgreSQL לאחסון ו-Redis ל-caching ו-rate limiting."
+        "description": "בונה backend להזרמת וידאו בקוד פתוח, תואם PeerTube, ב-Go — עם פרוטוקולי רשתות חברתיות מבוזרות: ActivityPub federation ואינטגרציית ATProto לשיתוף תוכן cross-platform. חתכתי עלויות רוחב פס ממאות אלפי דולרים בחודש לכמעט $0 באמצעות Backblaze B2 ו-Cloudflare CDN דרך Bandwidth Alliance. הפרויקט רץ ב-Docker containers, עם CI/CD דרך GitHub Actions, PostgreSQL לאחסון ו-Redis ל-caching ו-rate limiting."
       },
       {
         "id": "realestate",

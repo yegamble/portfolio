@@ -32,7 +32,7 @@
         "dates": "2024 — Present",
         "title": "Full Stack Engineer",
         "company": "Independent",
-        "description": "Building an open-source, PeerTube-compatible video streaming backend in Go with decentralized social networking protocols — ActivityPub federation and ATProto integration for cross-platform content sharing. Cut bandwidth costs from hundreds of dollars monthly to nearly $0 by integrating Backblaze B2 and Cloudflare CDN via the Bandwidth Alliance. Containerized with Docker, CI/CD via GitHub Actions, PostgreSQL for storage, Redis for caching and rate-limiting."
+        "description": "Building an open-source, PeerTube-compatible video streaming backend in Go with decentralized social networking protocols — ActivityPub federation and ATProto integration for cross-platform content sharing. Cut bandwidth costs from hundreds of thousands of dollars monthly to nearly $0 by integrating Backblaze B2 and Cloudflare CDN via the Bandwidth Alliance. Containerized with Docker, CI/CD via GitHub Actions, PostgreSQL for storage, Redis for caching and rate-limiting."
       },
       {
         "id": "realestate",
