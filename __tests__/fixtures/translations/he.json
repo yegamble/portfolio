@@ -1,5 +1,6 @@
 {
   "nav": {
+    "ariaLabel": "Main navigation",
     "about": "אודות",
     "experience": "ניסיון",
     "projects": "פרויקטים"

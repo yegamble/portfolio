@@ -12,6 +12,7 @@
 /coverage
 /test-results/
 .playwright-cli/
+.playwright-mcp/
 cypress/screenshots/
 cypress/videos/
 

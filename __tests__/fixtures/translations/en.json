@@ -1,5 +1,6 @@
 {
   "nav": {
+    "ariaLabel": "Main navigation",
     "about": "About",
     "experience": "Experience",
     "projects": "Projects"
