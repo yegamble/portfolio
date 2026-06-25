@@ -1,5 +1,6 @@
 {
   "nav": {
+    "ariaLabel": "ניווט ראשי",
     "about": "אודות",
     "experience": "ניסיון",
     "projects": "פרויקטים"
@@ -109,8 +110,6 @@
     "verifyNotice": "אמת את טביעת האצבע דרך ערוץ מהימן לפני שימוש."
   },
   "language": {
-    "toggle": "EN",
-    "label": "עבור לאנגלית",
     "selectLabel": "בחר שפה",
     "current": "שפה נוכחית"
   }

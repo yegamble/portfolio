@@ -73,7 +73,29 @@ export default function CipherText({ children, block = false }: CipherTextProps)
 
   // --- Long text: ref for direct DOM updates (bypasses React) ---
   const longTextRef = useRef<HTMLSpanElement>(null);
-  const isLongText = Array.from(text).length > getCharThreshold();
+  const targetChars = useMemo(() => Array.from(text), [text]);
+
+  // Resolve the long-text threshold on the client (and on viewport changes) instead
+  // of calling matchMedia in the render body — which would run on every animation
+  // frame for every instance. Starts at the desktop value so SSR and the first
+  // client render agree; animation never runs on that first frame anyway.
+  const [charThreshold, setCharThreshold] = useState(CHAR_THRESHOLD_DESKTOP);
+  useEffect(() => {
+    const update = () => setCharThreshold(getCharThreshold());
+    update();
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+    const queries = [
+      window.matchMedia('(pointer: coarse)'),
+      window.matchMedia('(max-width: 768px)'),
+    ];
+    queries.forEach((query) => query.addEventListener('change', update));
+    return () => {
+      queries.forEach((query) => query.removeEventListener('change', update));
+    };
+  }, []);
+  const isLongText = targetChars.length > charThreshold;
 
   // --- Animation hook ---
   const { displayChars, isAnimating } = useCipherTransition(text, {
@@ -81,7 +103,6 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     elementRef: isLongText ? longTextRef : undefined,
   });
   const { ref, style } = usePretextHeight(text, block, isAnimating);
-  const targetChars = useMemo(() => Array.from(text), [text]);
 
   // --- Render helper: wrap with observer ref when cipher is enabled ---
   const wrapObserver = (content: React.ReactNode): React.ReactNode =>

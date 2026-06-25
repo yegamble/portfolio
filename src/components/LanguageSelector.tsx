@@ -1,11 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { USFlagIcon, IsraelFlagIcon, RussiaFlagIcon } from '@/components/icons';
-import { getLocalizedPathname, type AppLocale } from '@/lib/i18n';
+import { getDirection, getLocalizedPathname, type AppLocale } from '@/lib/i18n';
 
 interface LanguageOption {
   code: AppLocale;
@@ -45,6 +44,45 @@ export default function LanguageSelector() {
   const close = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  const selectLanguage = useCallback(
+    (
+      event: React.MouseEvent<HTMLAnchorElement>,
+      code: AppLocale,
+      href: string
+    ) => {
+      // Let the browser handle modifier / non-primary clicks so the localized URL
+      // can still open in a new tab, etc.
+      if (
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      close();
+
+      if (code === i18n.language) {
+        return;
+      }
+
+      // Flip <html lang/dir> synchronously (before the next paint) so RTL/LTR
+      // direction never lags the new text by a frame, then animate the text in
+      // place via i18n. We deliberately avoid a Next.js route navigation here:
+      // navigating remounts the tree, which both cuts the cipher decrypt animation
+      // short and causes a layout jump. history.replaceState keeps the URL (and a
+      // refresh / share / crawl) on the correct localized route without remounting.
+      document.documentElement.lang = code;
+      document.documentElement.dir = getDirection(code);
+      void i18n.changeLanguage(code);
+      window.history.replaceState(window.history.state, '', href);
+    },
+    [close, i18n]
+  );
 
   useEffect(() => {
     if (!isOpen) {
@@ -103,16 +141,12 @@ export default function LanguageSelector() {
 
                 return (
                   <li key={language.code}>
-                    <Link
+                    <a
                       href={href}
                       lang={language.code}
                       hrefLang={language.code}
-                      prefetch={false}
                       aria-current={isCurrent ? 'page' : undefined}
-                      onClick={() => {
-                        void i18n.changeLanguage(language.code);
-                        close();
-                      }}
+                      onClick={(event) => selectLanguage(event, language.code, href)}
                       className={`flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-colors ${
                         isCurrent
                           ? 'bg-slate-700/50 text-primary'
@@ -124,7 +158,7 @@ export default function LanguageSelector() {
                       <span className="text-xs font-bold tracking-wide opacity-60">
                         {language.initials}
                       </span>
-                    </Link>
+                    </a>
                   </li>
                 );
               })}

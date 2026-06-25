@@ -12,24 +12,35 @@ interface CipherTransitionOptions {
 }
 
 interface AnimationProfile {
-  baseDelay: number;
-  spreadDuration: number;
+  /** Minimum time (ms) every character keeps scrambling before the first one resolves. */
+  scrambleDuration: number;
+  /** Extra time (ms) over which the remaining characters resolve, left to right. */
+  revealStagger: number;
+  /** Random ± variance (ms) applied per character so the reveal wave feels organic. */
   jitter: number;
+  /** How often (ms) scramble glyphs re-roll and the DOM repaints — the flicker rate. */
   updateInterval: number;
 }
 
+// Timeline (desktop): char 0 resolves at ~scrambleDuration (650ms), the last char at
+// ~scrambleDuration + revealStagger (~1.35s). With updateInterval 45ms every character
+// re-rolls ~14–30 times before locking in, so the scramble is clearly readable rather
+// than snapping to the final text almost instantly.
 const DESKTOP_PROFILE: AnimationProfile = {
-  baseDelay: 180,
-  spreadDuration: 700,
-  jitter: 60,
-  updateInterval: 50,
+  scrambleDuration: 650,
+  revealStagger: 700,
+  jitter: 90,
+  updateInterval: 45,
 };
 
+// Mobile keeps the same per-frame work as before (a re-roll touches the same nodes)
+// but uses a ~15fps flicker and a shorter reveal so the total commit count stays low
+// and the work is spread evenly — no single long frame that could stutter on a phone.
 const MOBILE_PROFILE: AnimationProfile = {
-  baseDelay: 80,
-  spreadDuration: 420,
-  jitter: 35,
-  updateInterval: 90,
+  scrambleDuration: 420,
+  revealStagger: 360,
+  jitter: 45,
+  updateInterval: 65,
 };
 
 // ---------------------------------------------------------------------------
@@ -80,7 +91,7 @@ function calculateResolveTimes(maxLen: number, profile: AnimationProfile): numbe
     const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
     const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
     resolveTimes[i] =
-      profile.baseDelay + progress * profile.spreadDuration + randomJitter;
+      profile.scrambleDuration + progress * profile.revealStagger + randomJitter;
   }
   return resolveTimes;
 }

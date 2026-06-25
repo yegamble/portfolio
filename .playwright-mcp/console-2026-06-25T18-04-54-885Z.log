@@ -1,0 +1,60 @@
+[     135ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[     151ms] [LOG] [HMR] connected @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[     156ms] [INFO] 🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙 @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[     187ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <LoadingBoundary name="en/" loading={null}>
+      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <InnerLayoutRouter url="/en" tree={[...]} params={{locale:"en"}} cacheNode={{rsc:<Fragment>, ...}} ...>
+              <SegmentViewNode type="page" pagePath="[locale]/p...">
+                <SegmentTrieNode>
+                <LocalizedHomePage>
+                  <main className="mx-auto w-...">
+                    <ScrollHeader>
+                      <header className="sticky top...">
+                        <div className="mx-auto fl...">
+                          <LinkComponent>
+                          <div className="flex shrin...">
+                            <nav>
+                            <LanguageSelector>
+                              <div ref={{current:null}} className="relative">
+                                <button
+                                  ref={{current:null}}
+                                  type="button"
+                                  onClick={function onClick}
+                                  className="flex items-center gap-1.5 rounded-md border border-slate-700 px-2 py-1 te..."
+                                  aria-expanded={false}
++                                 aria-controls="_R_aclrknflb_"
+-                                 aria-controls="_R_2iclrknflb_"
+                                  aria-label="Select language"
+                                >
+                            ...
+                      ...
+                    ...
+              ...
+            ...
+ @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:3127
+[     261ms] [LOG] [Fast Refresh] rebuilding @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[     262ms] [LOG] [Fast Refresh] done in 102ms @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[   11518ms] [WARNING] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  404202ms] [LOG] [Fast Refresh] rebuilding @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  404333ms] [LOG] [Fast Refresh] done in 98ms @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  412799ms] [LOG] [Fast Refresh] rebuilding @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  412826ms] [LOG] [Fast Refresh] done in 50ms @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  431627ms] [LOG] [Fast Refresh] rebuilding @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  431654ms] [LOG] [Fast Refresh] done in 25ms @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  443330ms] [LOG] [Fast Refresh] rebuilding @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297
+[  443357ms] [LOG] [Fast Refresh] done in 21ms @ http://127.0.0.1:3210/_next/static/chunks/5c78b_next_dist_6af78c43._.js:2297

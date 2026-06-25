@@ -1,5 +1,6 @@
 {
   "nav": {
+    "ariaLabel": "Основная навигация",
     "about": "Обо мне",
     "experience": "Опыт",
     "projects": "Проекты"

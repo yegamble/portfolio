@@ -1,5 +1,6 @@
 {
   "nav": {
+    "ariaLabel": "Main navigation",
     "about": "About",
     "experience": "Experience",
     "projects": "Projects"
@@ -109,8 +110,6 @@
     "verifyNotice": "Verify this fingerprint through a trusted channel before use."
   },
   "language": {
-    "toggle": "עב",
-    "label": "Switch to Hebrew",
     "selectLabel": "Select language",
     "current": "Current language"
   }

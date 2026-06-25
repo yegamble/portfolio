@@ -111,21 +111,25 @@ export default function Projects() {
             </ul>
 
             {/* Repo links */}
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2" aria-label={t('projects.viewRepos')}>
+            <ul
+              className="mt-4 flex flex-wrap gap-x-4 gap-y-2"
+              aria-label={t('projects.viewRepos')}
+            >
               {meta.repos.map((repo) => (
-                <a
-                  key={repo.name}
-                  href={repo.url}
-                  target={repo.url !== '#' ? '_blank' : undefined}
-                  rel={repo.url !== '#' ? 'noreferrer noopener' : undefined}
-                  aria-label={t('projects.viewOnGitHub', { name: repo.name })}
-                  className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
-                >
-                  <GitHubIcon className="h-3.5 w-3.5" />
-                  <span>{repo.name}</span>
-                </a>
+                <li key={repo.name}>
+                  <a
+                    href={repo.url}
+                    target={repo.url !== '#' ? '_blank' : undefined}
+                    rel={repo.url !== '#' ? 'noreferrer noopener' : undefined}
+                    aria-label={t('projects.viewOnGitHub', { name: repo.name })}
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
+                  >
+                    <GitHubIcon className="h-3.5 w-3.5" />
+                    <span>{repo.name}</span>
+                  </a>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         ))}
       </div>

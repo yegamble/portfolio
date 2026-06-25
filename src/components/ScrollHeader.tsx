@@ -48,6 +48,7 @@ export default function ScrollHeader() {
           <Link
             className="min-w-0 flex-1 text-base font-bold tracking-tight text-text-primary"
             href={homeHref}
+            aria-label={t('hero.name')}
             tabIndex={isScrolled ? 0 : -1}
             onClick={(e) => {
               e.preventDefault();
@@ -78,7 +79,7 @@ export default function ScrollHeader() {
 
           {/* Nav links + social icons + language toggle — always visible */}
           <div className="flex shrink-0 items-center gap-4 md:gap-5 lg:gap-6">
-            <nav aria-label="Main navigation" className="hidden sm:block">
+            <nav aria-label={t('nav.ariaLabel')} className="hidden sm:block">
               <ul className="flex items-center gap-4 lg:gap-5 xl:gap-6">
                 {(['about', 'experience', 'projects'] as const).map((key) => (
                   <li key={key}>
