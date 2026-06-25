@@ -4,16 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EmailIcon, SecureEmailIcon, KeyIcon } from '@/components/icons';
 import PgpKeyModal from '@/components/PgpKeyModal';
-
-function validateMailto(email: string | undefined): string | null {
-  const trimmed = email?.trim();
-  if (!trimmed) return null;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? `mailto:${trimmed}` : null;
-}
-
-const primaryEmailHref = validateMailto(process.env.NEXT_PUBLIC_CONTACT_EMAIL);
-const secureEmailHref = validateMailto(process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL);
-const pgpPublicKey = process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY?.trim() || null;
+import { primaryEmailHref, secureEmailHref, pgpPublicKey } from '@/lib/contact';
 
 interface HeroContactIconsProps {
   className?: string;

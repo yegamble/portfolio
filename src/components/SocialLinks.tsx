@@ -7,6 +7,7 @@ import {
   EmailIcon,
   SecureEmailIcon,
 } from '@/components/icons';
+import { primaryEmailHref, secureEmailHref } from '@/lib/contact';
 
 interface SocialLinkItem {
   labelKey: string;
@@ -14,15 +15,6 @@ interface SocialLinkItem {
   icon: (props: { className?: string }) => React.ReactNode;
   external?: boolean;
 }
-
-function validateMailto(email: string | undefined): string | null {
-  const trimmed = email?.trim();
-  if (!trimmed) return null;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? `mailto:${trimmed}` : null;
-}
-
-const primaryEmailHref = validateMailto(process.env.NEXT_PUBLIC_CONTACT_EMAIL);
-const secureEmailHref = validateMailto(process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL);
 
 const socialLinks: SocialLinkItem[] = [
   {
