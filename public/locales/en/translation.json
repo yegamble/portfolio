@@ -112,5 +112,20 @@
   "language": {
     "selectLabel": "Select language",
     "current": "Current language"
+  },
+  "meta": {
+    "title": "Yosef Gamble | Senior Software Engineer — Go, TypeScript, AWS",
+    "description": "Yosef Gamble — Senior Software Engineer in New York & Auckland. Go (Golang), TypeScript, AWS specialist. Real estate portals, video streaming platforms, and scalable cloud systems.",
+    "ogDescription": "Senior Software Engineer in New York & Auckland. Go (Golang), TypeScript, AWS. Real estate portals, video streaming, and scalable cloud systems."
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The page you're looking for doesn't exist.",
+    "backHome": "Back to Home"
+  },
+  "error": {
+    "title": "Something Went Wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "retry": "Try Again"
   }
 }

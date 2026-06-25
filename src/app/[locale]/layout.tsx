@@ -4,6 +4,7 @@ import I18nProvider from '@/components/I18nProvider';
 import {
   DEFAULT_LOCALE,
   getLocaleHref,
+  getLocaleMessages,
   isAppLocale,
   LOCALES,
   type AppLocale,
@@ -13,15 +14,15 @@ const SITE_URL = 'https://yosefgamble.com';
 
 function getMetadataForLocale(locale: AppLocale): Metadata {
   const href = `${SITE_URL}${getLocaleHref(locale)}`;
+  const meta = getLocaleMessages(locale).meta;
   const languages = Object.fromEntries(
     LOCALES.map((supportedLocale) => [supportedLocale, `${SITE_URL}${getLocaleHref(supportedLocale)}`])
   );
 
   return {
     metadataBase: new URL(SITE_URL),
-    title: 'Yosef Gamble | Senior Software Engineer — Go, TypeScript, AWS',
-    description:
-      'Yosef Gamble — Senior Software Engineer in New York & Auckland. Go (Golang), TypeScript, AWS specialist. Real estate portals, video streaming platforms, and scalable cloud systems.',
+    title: meta.title,
+    description: meta.description,
     keywords: [
       'Yosef Gamble',
       'senior software engineer',
@@ -46,9 +47,8 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
       },
     },
     openGraph: {
-      title: 'Yosef Gamble | Senior Software Engineer — Go, TypeScript, AWS',
-      description:
-        'Senior Software Engineer in New York & Auckland. Go (Golang), TypeScript, AWS. Real estate portals, video streaming, and scalable cloud systems.',
+      title: meta.title,
+      description: meta.ogDescription,
       url: href,
       siteName: 'Yosef Gamble',
       locale: locale === 'he' ? 'he_IL' : locale === 'ru' ? 'ru_RU' : 'en_US',
@@ -64,9 +64,8 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Yosef Gamble | Senior Software Engineer — Go, TypeScript, AWS',
-      description:
-        'Senior Software Engineer in New York & Auckland. Go (Golang), TypeScript, AWS. Real estate portals, video streaming, and scalable cloud systems.',
+      title: meta.title,
+      description: meta.ogDescription,
       images: ['/images/og-image.jpg'],
     },
     robots: {
