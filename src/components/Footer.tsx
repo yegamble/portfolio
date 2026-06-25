@@ -7,7 +7,7 @@ export default function Footer() {
   const { t } = useTranslation();
 
   return (
-    <footer className="mt-12 border-t border-slate-800/30 pb-8 pt-12 text-center text-sm text-text-muted">
+    <footer className="mx-auto w-full max-w-3xl border-t border-slate-800/30 px-6 pb-8 pt-12 text-center text-sm text-text-muted lg:px-8">
       <SocialLinks
         iconSize="h-6 w-6"
         gap="gap-8"

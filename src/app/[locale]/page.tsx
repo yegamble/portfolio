@@ -18,12 +18,18 @@ export default async function LocalizedHomePage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-6 pb-24 lg:px-8">
+    <>
+      {/* ScrollHeader renders the <header> banner and the hero <section> as
+          adjacent siblings (the layout-stability suite selects the hero via
+          `header + section`). Keeping <header> and <footer> outside <main>
+          exposes them as the banner and contentinfo landmarks. */}
       <ScrollHeader />
-      <About />
-      <Experience />
-      <Projects />
+      <main className="mx-auto w-full max-w-3xl px-6 pb-24 lg:px-8">
+        <About />
+        <Experience />
+        <Projects />
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }

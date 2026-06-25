@@ -40,7 +40,7 @@ export default function ScrollHeader() {
         }`}
       >
         <div
-          className={`mx-auto flex h-16 w-full max-w-5xl items-center gap-4 px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:gap-6 xl:px-8 ${
+          className={`mx-auto flex h-16 w-full max-w-3xl items-center gap-4 px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:gap-6 lg:px-8 ${
             isScrolled ? 'justify-between' : 'justify-center'
           }`}
         >
