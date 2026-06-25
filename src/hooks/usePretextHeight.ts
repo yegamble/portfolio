@@ -90,6 +90,31 @@ export function usePretextHeight(
     wasAnimatingRef.current = isAnimating;
   }, [isAnimating]);
 
+  // Re-measure the reserved height when the container WIDTH changes (e.g. window
+  // resize or phone rotation). Without this the once-computed minHeight goes stale
+  // and the tagline reflowing to fewer/more lines leaves a gap or clips. Only adjust
+  // an already-established reservation; a visitor who never triggered an animation
+  // keeps natural layout (minHeight undefined).
+  useEffect(() => {
+    if (!isEnabled) return;
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+
+    let lastWidth = getWidth(el);
+    const observer = new ResizeObserver(() => {
+      const width = getWidth(el);
+      if (width <= 0 || width === lastWidth) return;
+      lastWidth = width;
+
+      const { height } = layout(prepare(prevTextRef.current, getFont(el)), width, getLineHeight(el));
+      targetHeightRef.current = height;
+      setMinHeight((current) => (current === undefined ? current : height));
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isEnabled]);
+
   if (!isEnabled) {
     return { ref, style: {} };
   }
