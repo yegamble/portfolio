@@ -89,7 +89,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     const queries = [
       window.matchMedia('(pointer: coarse)'),
       window.matchMedia('(max-width: 768px)'),
-    ];
+    ].filter((query) => typeof query?.addEventListener === 'function');
     queries.forEach((query) => query.addEventListener('change', update));
     return () => {
       queries.forEach((query) => query.removeEventListener('change', update));
