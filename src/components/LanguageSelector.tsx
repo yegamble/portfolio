@@ -30,6 +30,59 @@ function buildLanguageHref(
   return query ? `${localizedPath}?${query}` : localizedPath;
 }
 
+/**
+ * Keep the content the reader is looking at visually stationary while the page
+ * reflows into the new language. Different languages have different text
+ * lengths, so content above the fold grows/shrinks and would otherwise jerk the
+ * whole page up or down. We pin the landmark currently under the viewport
+ * centre and scroll to cancel its drift for the duration of the transition.
+ * Cancels immediately on any user scroll/keypress so it never fights the reader.
+ */
+function pinViewportDuringReflow(durationMs = 1500) {
+  if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') {
+    return;
+  }
+
+  const centerY = window.innerHeight / 2;
+  const anchor = Array.from(
+    document.querySelectorAll<HTMLElement>('header, section, footer')
+  ).find((el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.top <= centerY && rect.bottom >= centerY;
+  });
+  if (!anchor) return;
+
+  const startTop = anchor.getBoundingClientRect().top;
+  const deadline = performance.now() + durationMs;
+  let active = true;
+
+  const stop = () => {
+    active = false;
+    window.removeEventListener('wheel', stop);
+    window.removeEventListener('touchstart', stop);
+    window.removeEventListener('keydown', stop);
+  };
+  window.addEventListener('wheel', stop, { passive: true });
+  window.addEventListener('touchstart', stop, { passive: true });
+  window.addEventListener('keydown', stop);
+
+  const compensate = (now: number) => {
+    if (!active) return;
+    const drift = anchor.getBoundingClientRect().top - startTop;
+    if (Math.abs(drift) >= 1) {
+      // behavior:'auto' overrides the page's smooth scroll-behavior so the
+      // per-frame correction applies instantly and can keep up with the reflow.
+      window.scrollBy({ top: drift, behavior: 'auto' });
+    }
+    if (now < deadline) {
+      requestAnimationFrame(compensate);
+    } else {
+      stop();
+    }
+  };
+  requestAnimationFrame(compensate);
+}
+
 export default function LanguageSelector() {
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
@@ -80,6 +133,8 @@ export default function LanguageSelector() {
       document.documentElement.dir = getDirection(code);
       void i18n.changeLanguage(code);
       window.history.replaceState(window.history.state, '', href);
+      // Hold the reader's view steady while the new-language text reflows.
+      pinViewportDuringReflow();
     },
     [close, i18n]
   );
