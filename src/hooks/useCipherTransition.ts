@@ -136,13 +136,20 @@ function generateFrameChars(
 }
 
 // ---------------------------------------------------------------------------
-// Per-char animation loop (existing — for short text)
+// Shared animation driver
 // ---------------------------------------------------------------------------
+// Owns the RAF tick lifecycle, the reduced-motion settle and the interruption
+// reset. The per-char and ref-based loops differ only in WHERE each frame goes,
+// so one passes a React state setter (`setChars`) and the other a DOM ref
+// (`elementRef`); the write itself happens inside the effect, where side
+// effects are allowed. This removes ~100 lines of duplicated tick logic.
 
-function useCipherAnimationLoop(text: string, isEnabled: boolean) {
-  const [displayChars, setDisplayChars] = useState<string[]>(() =>
-    Array.from(text)
-  );
+function useCipherLoop(
+  text: string,
+  isEnabled: boolean,
+  setChars: ((chars: string[]) => void) | undefined,
+  elementRef: RefObject<HTMLElement | null> | undefined
+): { isAnimating: boolean } {
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTextRef = useRef(text);
   const tickRef = useRef<TickFn | null>(null);
@@ -155,6 +162,28 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
   }, []);
 
   useEffect(() => {
+    // Build the per-frame writers inside the effect so the DOM mutation (ref
+    // mode) stays out of render-phase code.
+    const commitFrame = (chars: string[]) => {
+      if (setChars) {
+        setChars(chars);
+        return;
+      }
+      const el = elementRef?.current;
+      if (el) el.textContent = chars.join('');
+    };
+    const commitFinal = (value: string) => {
+      if (setChars) {
+        setChars(Array.from(value));
+        return;
+      }
+      const el = elementRef?.current;
+      if (el) el.textContent = value;
+    };
+    // Char mode defers the reduced-motion settle one RAF so React commits the
+    // resolved text once; ref mode writes the DOM synchronously.
+    const deferReducedMotion = setChars != null;
+
     if (!isEnabled) {
       prevTextRef.current = text;
       return;
@@ -166,12 +195,16 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
 
     if (prefersReducedMotion) {
       prevTextRef.current = text;
-      // Use a single RAF to update in the next frame
-      const id = requestAnimationFrame(() => {
-        setDisplayChars(Array.from(text));
-        setIsAnimating(false);
-      });
-      return () => cancelAnimationFrame(id);
+      if (deferReducedMotion) {
+        // Update in the next frame so React commits the resolved text once.
+        const id = requestAnimationFrame(() => {
+          commitFinal(text);
+          setIsAnimating(false);
+        });
+        return () => cancelAnimationFrame(id);
+      }
+      commitFinal(text);
+      return;
     }
 
     if (text === prevTextRef.current) {
@@ -211,7 +244,7 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
           elapsed
         );
 
-        setDisplayChars(chars);
+        commitFrame(chars);
 
         if (allResolved) {
           setIsAnimating(false);
@@ -232,20 +265,37 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
 
     return () => {
       cleanup();
-      // Reset to target text on interruption to prevent stale cipher chars
-      setDisplayChars(Array.from(text));
+      // Reset to the target text on interruption so stale cipher glyphs never linger.
+      commitFinal(text);
       setIsAnimating(false);
     };
-  }, [text, isEnabled, cleanup]);
+    // setChars/elementRef are stable; elementRef changing (ref mode swapping the
+    // target span) restarts the loop, which is correct.
+  }, [text, isEnabled, cleanup, setChars, elementRef]);
 
   // Cleanup on unmount
   useEffect(() => cleanup, [cleanup]);
+
+  return { isAnimating };
+}
+
+// ---------------------------------------------------------------------------
+// Per-char animation loop (short text) — per-character React state + glow
+// ---------------------------------------------------------------------------
+
+function useCipherAnimationLoop(text: string, isEnabled: boolean) {
+  const [displayChars, setDisplayChars] = useState<string[]>(() =>
+    Array.from(text)
+  );
+
+  const { isAnimating } = useCipherLoop(text, isEnabled, setDisplayChars, undefined);
 
   return { displayChars, isAnimating };
 }
 
 // ---------------------------------------------------------------------------
-// Ref-based animation loop (new — for long text, bypasses React reconciliation)
+// Ref-based animation loop (long text) — one span updated via textContent,
+// bypassing React reconciliation.
 // ---------------------------------------------------------------------------
 
 function useCipherRefAnimationLoop(
@@ -253,107 +303,9 @@ function useCipherRefAnimationLoop(
   elementRef: RefObject<HTMLElement | null> | undefined,
   isEnabled: boolean
 ): { isAnimating: boolean } {
-  const [isAnimating, setIsAnimating] = useState(false);
-  const prevTextRef = useRef(text);
-  const tickRef = useRef<TickFn | null>(null);
-
-  const cleanup = useCallback(() => {
-    if (tickRef.current) {
-      unregisterTick(tickRef.current);
-      tickRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => {
-    const writeText = (value: string) => {
-      const currentEl = elementRef?.current;
-      if (currentEl) {
-        currentEl.textContent = value;
-      }
-    };
-
-    if (!isEnabled) {
-      prevTextRef.current = text;
-      return;
-    }
-
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion) {
-      prevTextRef.current = text;
-      writeText(text);
-      return;
-    }
-
-    if (text === prevTextRef.current) {
-      return;
-    }
-
-    cleanup();
-    const newChars = Array.from(text);
-    const maxLen = newChars.length;
-    const profile = getAnimationProfile();
-    const resolveTimes = calculateResolveTimes(maxLen, profile);
-
-    let startTime: number | null = null;
-    let lastUpdateTime = 0;
-    let started = false;
-
-    const tick: TickFn = (currentTime) => {
-      if (startTime === null) {
-        startTime = currentTime;
-        lastUpdateTime = currentTime - profile.updateInterval;
-      }
-
-      if (!started) {
-        started = true;
-        setIsAnimating(true);
-      }
-
-      const timeSinceLastUpdate = currentTime - lastUpdateTime;
-      if (timeSinceLastUpdate >= profile.updateInterval) {
-        const elapsed = currentTime - startTime;
-        const { chars, allResolved } = generateFrameChars(
-          maxLen,
-          newChars,
-          resolveTimes,
-          elapsed
-        );
-
-        // Read the ref lazily so long-text spans that mount after the first
-        // animation frame still receive the live scramble updates.
-        writeText(chars.join(''));
-
-        if (allResolved) {
-          setIsAnimating(false);
-          prevTextRef.current = text;
-          tickRef.current = null;
-          return false;
-        }
-
-        lastUpdateTime = currentTime;
-      }
-
-      return true;
-    };
-
-    tickRef.current = tick;
-    registerTick(tick);
-    prevTextRef.current = text;
-
-    return () => {
-      cleanup();
-      // Reset DOM to target text on interruption to prevent stale cipher chars
-      writeText(text);
-      setIsAnimating(false);
-    };
-  }, [text, isEnabled, cleanup, elementRef]);
-
-  useEffect(() => cleanup, [cleanup]);
-
-  return { isAnimating };
+  // The ref is read lazily inside the loop's effect each frame, so a span that
+  // mounts after the first animation frame still receives live updates.
+  return useCipherLoop(text, isEnabled, undefined, elementRef);
 }
 
 // ---------------------------------------------------------------------------
