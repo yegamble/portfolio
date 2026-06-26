@@ -91,10 +91,12 @@ export default function Projects() {
             </div>
 
             <h3 className="mb-3 text-xl font-bold text-slate-100">
-              {project.title}
+              <CipherText>{project.title}</CipherText>
             </h3>
 
-            <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">{project.description}</p>
+            <p className="mb-6 flex-grow text-sm leading-relaxed text-text-secondary">
+              <CipherText block>{project.description}</CipherText>
+            </p>
 
             <ul
               className="flex flex-wrap gap-x-4 gap-y-2"
@@ -105,7 +107,7 @@ export default function Projects() {
                   key={tech}
                   className="text-[11px] font-bold uppercase tracking-widest text-text-muted"
                 >
-                  {tech}
+                  <CipherText>{tech}</CipherText>
                 </li>
               ))}
             </ul>
@@ -125,7 +127,9 @@ export default function Projects() {
                     className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
                   >
                     <GitHubIcon className="h-3.5 w-3.5" />
-                    <span>{repo.name}</span>
+                    <span>
+                      <CipherText>{repo.name}</CipherText>
+                    </span>
                   </a>
                 </li>
               ))}

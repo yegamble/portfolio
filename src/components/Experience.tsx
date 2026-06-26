@@ -77,19 +77,21 @@ export default function Experience() {
                         aria-label={`${job.title} at ${job.company} ${t('experience.opensInNewTab')}`}
                       >
                         <span>
-                          {job.title} &middot; {job.company}
+                          <CipherText>{`${job.title} · ${job.company}`}</CipherText>
                         </span>
                         <ArrowOutwardIcon className="ms-1 inline-block h-4 w-4 shrink-0 translate-y-px transition-transform group-hover/link:-translate-y-1 group-hover/link:translate-x-1 rtl:group-hover/link:-translate-x-1" />
                       </a>
                     ) : (
                       <span className="inline-flex items-baseline font-medium leading-tight text-text-primary">
                         <span>
-                          {job.title} &middot; {job.company}
+                          <CipherText>{`${job.title} · ${job.company}`}</CipherText>
                         </span>
                       </span>
                     )}
                   </h3>
-                  <p className="mt-2 text-base leading-relaxed text-text-secondary">{job.description}</p>
+                  <p className="mt-2 text-base leading-relaxed text-text-secondary">
+                    <CipherText block>{job.description}</CipherText>
+                  </p>
                   <ul
                     className="mt-4 flex flex-wrap gap-2"
                     aria-label={t('experience.techAriaLabel')}
@@ -111,7 +113,7 @@ export default function Experience() {
           aria-label={t('experience.viewResume')}
         >
           <span className="border-b border-transparent pb-px transition-all group-hover:border-primary">
-            {t('experience.viewResume')}
+            <CipherText>{t('experience.viewResume')}</CipherText>
           </span>
           <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
         </a>
