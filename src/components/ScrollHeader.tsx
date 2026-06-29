@@ -40,8 +40,10 @@ export default function ScrollHeader() {
         }`}
       >
         <div
-          className={`mx-auto flex h-16 w-full max-w-3xl items-center gap-4 px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:gap-6 lg:px-8 ${
-            isScrolled ? 'justify-between' : 'justify-center'
+          className={`mx-auto flex h-16 w-full items-center gap-4 px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:gap-6 lg:px-8 ${
+            isScrolled
+              ? 'max-w-3xl justify-between xl:max-w-5xl'
+              : 'max-w-3xl justify-center'
           }`}
         >
           {/* Name — visible only when scrolled past hero */}
@@ -63,7 +65,7 @@ export default function ScrollHeader() {
             <div
               className={`flex w-full min-w-0 items-center gap-4 overflow-hidden whitespace-nowrap transition-all duration-500 ease-out motion-reduce:duration-0 ${
                 isScrolled
-                  ? 'max-w-[10rem] lg:max-w-[14rem] xl:max-w-[28rem] translate-y-0 opacity-100'
+                  ? 'max-w-0 min-[375px]:max-w-[10rem] lg:max-w-[14rem] xl:max-w-[28rem] translate-y-0 opacity-100'
                   : 'max-w-0 -translate-y-2 opacity-0 pointer-events-none'
               }`}
               aria-hidden={!isScrolled}
