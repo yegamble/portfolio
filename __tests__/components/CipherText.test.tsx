@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CipherText from '@/components/CipherText';
-import type { CSSProperties, RefObject } from 'react';
 
 const mockResult = { displayChars: [] as string[], isAnimating: false };
 vi.mock('@/hooks/useCipherTransition', () => ({
@@ -13,14 +12,6 @@ vi.mock('@/hooks/useCipherTransition', () => ({
   },
 }));
 
-const mockPretextStyle: { style: CSSProperties } = { style: {} };
-vi.mock('@/hooks/usePretextHeight', () => ({
-  usePretextHeight: () => ({
-    ref: { current: null } as RefObject<HTMLSpanElement | null>,
-    style: mockPretextStyle.style,
-  }),
-}));
-
 describe('CipherText', () => {
   let observeMock: ReturnType<typeof vi.fn>;
   let disconnectMock: ReturnType<typeof vi.fn>;
@@ -28,7 +19,6 @@ describe('CipherText', () => {
   beforeEach(() => {
     mockResult.displayChars = [];
     mockResult.isAnimating = false;
-    mockPretextStyle.style = { display: 'inline-block', width: '100%', transition: 'min-height 500ms ease-out' };
 
     observeMock = vi.fn();
     disconnectMock = vi.fn();
@@ -303,21 +293,15 @@ describe('CipherText', () => {
       expect(wrapper?.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
     });
 
-    it('should apply pretext height style to wrapper when block is true', () => {
-      mockPretextStyle.style = {
-        display: 'inline-block',
-        width: '100%',
-        minHeight: '120px',
-        transition: 'min-height 500ms ease-out',
-      };
-
+    it('should render a full-width inline-block wrapper when block is true', () => {
       const { container } = render(<CipherText block>Tall text</CipherText>);
 
       const wrapper = container.querySelector('span');
-      expect(wrapper?.style.minHeight).toBe('120px');
+      expect(wrapper?.style.display).toBe('inline-block');
+      expect(wrapper?.style.width).toBe('100%');
     });
 
-    it('should keep ref attached when switching between animating and non-animating states', () => {
+    it('should keep the block wrapper when switching between animating and non-animating states', () => {
       const { container, rerender } = render(<CipherText block>Text A</CipherText>);
 
       // Non-animating: wrapper span exists
@@ -374,6 +358,30 @@ describe('CipherText', () => {
 
       // Long text should NOT use per-char spans — uses ref-based text update instead
       expect(container.querySelectorAll('.cipher-char-slot').length).toBe(0);
+    });
+
+    it('should render ghost word slots that pin layout to the target text during animation', () => {
+      const longText = 'alpha beta gamma '.repeat(10).trim();
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      const slots = container.querySelectorAll('.cipher-word-slot');
+      expect(slots.length).toBe(30);
+
+      // Hidden ghost carries the target word (owns the layout)
+      const firstGhost = slots[0].querySelector('.cipher-char-layout');
+      expect(firstGhost).toHaveTextContent('alpha');
+
+      // Overlay carries code-point indices for the frame writer
+      const firstOverlay = slots[0].querySelector('.cipher-word');
+      expect(firstOverlay).toHaveAttribute('data-start', '0');
+      expect(firstOverlay).toHaveAttribute('data-end', '5');
+
+      const secondOverlay = slots[1].querySelector('.cipher-word');
+      expect(secondOverlay).toHaveAttribute('data-start', '6');
+      expect(secondOverlay).toHaveAttribute('data-end', '10');
     });
 
     it('should still render sr-only text for accessibility during long text animation', () => {

@@ -2,12 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
-import { usePretextHeight } from '@/hooks/usePretextHeight';
 
 interface CipherTextProps {
   children?: string;
   block?: boolean;
 }
+
+const BLOCK_STYLE = {
+  display: 'inline-block',
+  width: '100%',
+} as const;
 
 const CHAR_STYLE = {
   position: 'absolute',
@@ -24,6 +28,38 @@ const CHAR_SLOT_STYLE = {
   whiteSpace: 'pre',
   verticalAlign: 'baseline',
 } as const;
+
+// Word slots reuse CHAR_SLOT_STYLE. Notably they must NOT set overflow:hidden —
+// a non-visible overflow moves an inline-block's baseline to its bottom edge,
+// which inflates every line box and shifts the page during the animation.
+
+interface WordSegment {
+  text: string;
+  start: number;
+  end: number;
+  scramble: boolean;
+}
+
+// Split into words and whitespace runs, indexed in code points so slices line
+// up with the animation's char arrays. Whitespace renders as plain text nodes,
+// so the browser breaks lines exactly where the final text will.
+function segmentWords(chars: string[]): WordSegment[] {
+  const segments: WordSegment[] = [];
+  let start = 0;
+  while (start < chars.length) {
+    const isSpace = /\s/.test(chars[start]);
+    let end = start + 1;
+    while (end < chars.length && /\s/.test(chars[end]) === isSpace) end++;
+    segments.push({
+      text: chars.slice(start, end).join(''),
+      start,
+      end,
+      scramble: !isSpace,
+    });
+    start = end;
+  }
+  return segments;
+}
 
 const CHAR_THRESHOLD_DESKTOP = 80;
 const CHAR_THRESHOLD_MOBILE = 40;
@@ -45,11 +81,15 @@ function getCharThreshold(): number {
  *
  * Performance optimizations:
  * - Viewport gating: off-screen instances skip animation entirely
- * - Long text (>80 chars desktop, >40 mobile): uses direct DOM textContent updates
- *   instead of per-character <span> elements, reducing DOM nodes from thousands to one
+ * - Long text (>80 chars desktop, >40 mobile): per-WORD slots instead of
+ *   per-character spans (an order of magnitude fewer nodes); a hidden ghost of
+ *   the target text pins layout so scramble frames never reflow the page, and
+ *   the hook writes overlay text via the DOM, bypassing React reconciliation
  *
- * When block={true}, wraps content in a height-reserved span using pretext
- * to prevent layout jumps during language transitions.
+ * When block={true}, wraps content in a full-width inline-block span so the
+ * text behaves as its own paragraph box. Layout stability during transitions
+ * comes from the ghost layers above (per-char and per-word), which pin the
+ * box to the final text's geometry for the whole animation.
  */
 export default function CipherText({ children, block = false }: CipherTextProps) {
   const text = children || '';
@@ -102,7 +142,6 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     isVisible,
     elementRef: isLongText ? longTextRef : undefined,
   });
-  const { ref, style } = usePretextHeight(text, block, isAnimating);
 
   // --- Render helper: wrap with observer ref when cipher is enabled ---
   const wrapObserver = (content: React.ReactNode): React.ReactNode =>
@@ -114,18 +153,17 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   }
 
   if (!isAnimating && block) {
-    return wrapObserver(
-      <span ref={ref} style={style}>
-        {text}
-      </span>
-    );
+    return wrapObserver(<span style={BLOCK_STYLE}>{text}</span>);
   }
 
   // --- Animating: choose rendering path ---
   let animationContent: React.ReactNode;
 
   if (isLongText) {
-    // Long text: single ref'd span, textContent updated directly by the hook
+    // Long text: hidden ghost words pin the layout (line breaks and height
+    // match the final text from the first frame), while the hook writes the
+    // scramble into absolutely-positioned per-word overlays. Wrapping never
+    // changes mid-animation, so surrounding content doesn't shift.
     animationContent = (
       <>
         <span className="sr-only">{text}</span>
@@ -134,7 +172,27 @@ export default function CipherText({ children, block = false }: CipherTextProps)
           aria-hidden="true"
           className="cipher-text-scramble"
         >
-          {text}
+          {segmentWords(targetChars).map((segment) =>
+            segment.scramble ? (
+              <span
+                key={segment.start}
+                className="cipher-word-slot"
+                style={CHAR_SLOT_STYLE}
+              >
+                <span className="cipher-char-layout">{segment.text}</span>
+                <span
+                  className="cipher-word"
+                  data-start={segment.start}
+                  data-end={segment.end}
+                  style={CHAR_STYLE}
+                >
+                  {segment.text}
+                </span>
+              </span>
+            ) : (
+              segment.text
+            )
+          )}
         </span>
       </>
     );
@@ -170,11 +228,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   }
 
   if (block) {
-    return wrapObserver(
-      <span ref={ref} style={style}>
-        {animationContent}
-      </span>
-    );
+    return wrapObserver(<span style={BLOCK_STYLE}>{animationContent}</span>);
   }
 
   return wrapObserver(animationContent);

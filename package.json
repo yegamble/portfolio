@@ -18,7 +18,6 @@
     "preview": "pnpm run build:worker && opennextjs-cloudflare preview"
   },
   "dependencies": {
-    "@chenglou/pretext": "^0.0.4",
     "i18next": "^25.8.7",
     "next": "16.1.6",
     "openpgp": "^6.3.0",

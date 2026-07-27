@@ -179,6 +179,44 @@ test.describe('language toggle layout stability', () => {
     expectWithinEnvelope(samples, startRects, endRects, 8);
   });
 
+  test('text blocks hold a steady height while the scramble runs', async ({
+    page,
+  }) => {
+    test.slow();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await waitForPortfolioReady(page);
+
+    await page.getByRole('button', { name: /select language/i }).click();
+    await page.getByRole('link', { name: 'עברית' }).click();
+
+    // Skip the initial reflow window (React commit + RTL flip), then watch the
+    // long-copy containers for the rest of the scramble. Their height may move
+    // once (the eased settle) but must not oscillate with the glyph cycling.
+    await page.waitForTimeout(250);
+    const samples = await sampleRects(page, 1600, 80);
+
+    const textBlocks = ['aboutCopy', 'experienceList', 'projectGrid'] as const;
+
+    for (const key of textBlocks) {
+      const heights = samples.map((sample) => sample[key].height);
+      let reversals = 0;
+      let direction = 0;
+
+      for (let index = 1; index < heights.length; index++) {
+        const delta = heights[index] - heights[index - 1];
+        if (Math.abs(delta) <= 1) continue;
+        const sign = Math.sign(delta);
+        if (direction !== 0 && sign !== direction) reversals++;
+        direction = sign;
+      }
+
+      expect(
+        reversals,
+        `${key} height oscillated during the cipher animation (heights: ${heights.join(', ')})`
+      ).toBeLessThanOrEqual(1);
+    }
+  });
+
   test('reduced motion stays inside the same envelope without scramble overshoot', async ({
     page,
   }) => {

@@ -300,6 +300,42 @@ describe('useCipherTransition', () => {
       expect(element.textContent).toHaveLength(nextText.length);
       expect(element.textContent).not.toBe(nextText);
     });
+
+    it('should write scramble frames into word-slot overlays without touching the ghost layout', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const element = document.createElement('span');
+      element.innerHTML =
+        '<span class="cipher-word-slot"><span class="cipher-char-layout">HELLO</span><span class="cipher-word" data-start="0" data-end="5">HELLO</span></span>' +
+        ' ' +
+        '<span class="cipher-word-slot"><span class="cipher-char-layout">WORLD</span><span class="cipher-word" data-start="6" data-end="11">WORLD</span></span>';
+      const elementRef = { current: element as HTMLSpanElement | null };
+
+      const { rerender } = renderHook(
+        ({ text }) => useCipherTransition(text, { elementRef }),
+        { initialProps: { text: 'AAAAA AAAAA' } }
+      );
+
+      rerender({ text: 'HELLO WORLD' });
+      act(() => rafCallbacks.shift()?.(100));
+
+      // Frame writes land in the overlays, sliced by the data indices
+      const overlays = element.querySelectorAll('.cipher-word');
+      expect(overlays[0].textContent).toHaveLength(5);
+      expect(overlays[1].textContent).toHaveLength(5);
+
+      // The ghost layout layer and slot structure stay untouched (no reflow)
+      const ghosts = element.querySelectorAll('.cipher-char-layout');
+      expect(ghosts[0].textContent).toBe('HELLO');
+      expect(ghosts[1].textContent).toBe('WORLD');
+      expect(element.querySelectorAll('.cipher-word-slot')).toHaveLength(2);
+    });
   });
 
   // Regression guard for the "animation is too fast — you don't see the letters

@@ -170,7 +170,19 @@ function useCipherLoop(
         return;
       }
       const el = elementRef?.current;
-      if (el) el.textContent = chars.join('');
+      if (!el) return;
+      // Word-slot mode: hidden ghost words own the layout; only the overlay
+      // text changes per frame, so the frame write can never cause reflow.
+      const overlays = el.querySelectorAll<HTMLElement>('.cipher-word');
+      if (overlays.length === 0) {
+        el.textContent = chars.join('');
+        return;
+      }
+      overlays.forEach((overlay) => {
+        const start = Number(overlay.dataset.start);
+        const end = Number(overlay.dataset.end);
+        overlay.textContent = chars.slice(start, end).join('');
+      });
     };
     const commitFinal = (value: string) => {
       if (setChars) {
