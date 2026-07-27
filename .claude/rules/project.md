@@ -1,58 +1,68 @@
-## Project: Portfolio — yosefgamble.com
+# Project: Portfolio — yosefgamble.com
 
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-07-27
 
-### Overview
+## Overview
 
-Personal portfolio for Yosef Gamble — NYC-based Senior Full-Stack Engineer. Single-page site with sticky scroll header, hero, about, experience, projects, and footer sections. Bilingual (English/Hebrew) with RTL support.
+Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland). Single-page site with sticky scroll header, hero, about, experience, projects, and footer sections. Multilingual (English/Hebrew/Russian/Estonian) with RTL support and locale-aware routing (`/en`, `/he`, `/ru`, `/et`). Deployed to Cloudflare via OpenNext.
 
-### Technology Stack
+## Technology Stack
 
-- **Framework:** Next.js 16.1.6 (App Router, React 19, Turbopack)
+- **Framework:** Next.js 16.x (App Router, React 19, Turbopack) with `middleware.ts` for locale routing
 - **Language:** TypeScript (strict mode)
 - **Styling:** Tailwind CSS v4 with `@theme` custom variables
-- **i18n:** i18next + react-i18next (bundled JSON, no backend)
-- **Testing:** Vitest + Testing Library (unit), Cypress 15 (E2E)
+- **i18n:** i18next + react-i18next (bundled JSON, no backend) — see `i18n.md`
+- **Testing:** Vitest + Testing Library (unit), Cypress (E2E), Playwright (animation/layout-stability specs)
 - **Linting:** ESLint (next config + prettier), Prettier
-- **CI:** GitHub Actions (Node 22) — lint → typecheck → test → build → E2E
+- **Deploy:** Cloudflare Workers via `@opennextjs/cloudflare` (`wrangler.jsonc`, `open-next.config.ts`)
+- **CI:** GitHub Actions (Node 22, pnpm via Corepack)
 
-### Directory Structure
+## Directory Structure
 
 ```
-app/              # Next.js App Router (layout, page, globals.css)
-components/       # React components (one per file, default exports)
-  icons/          # SVG icon components (barrel export)
-lib/              # Utilities (i18n config)
-public/locales/   # Translation JSON files (en/, he/)
-__tests__/        # Vitest unit tests (mirrors components/)
-cypress/e2e/      # Cypress E2E specs
-.github/workflows # CI pipeline
+src/app/            # App Router: layout, [locale]/ segment, error/not-found,
+                    # sitemap.ts, robots.ts, json-ld.tsx
+src/components/     # React components (one per file, default exports)
+  icons/            # SVG icon + flag components (barrel export)
+src/lib/            # i18n config, cipher character sets, contact helpers
+src/hooks/          # useCipherTransition, usePretextHeight
+src/data/           # Non-translatable content metadata (experience, projects)
+middleware.ts       # Locale redirect + cookie + x-locale header
+public/locales/     # Translation JSON (en/, he/, ru/, et/)
+__tests__/          # Vitest unit tests (mirrors src/) + fixtures/translations/
+cypress/e2e/        # Cypress E2E specs
+playwright/         # Playwright perf/layout-stability specs
+scripts/            # Asset tooling (process-images.mjs)
+.github/workflows   # CI pipeline (ci.yml)
 ```
 
-### Commands
+## Commands (pnpm)
 
 | Command | Purpose |
 |---------|---------|
-| `npm run dev` | Dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run start` | Serve production build |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run test` | Vitest (single run) |
-| `npm run test:watch` | Vitest (watch mode) |
-| `npm run test:e2e` | Cypress headless |
-| `npm run test:e2e:open` | Cypress interactive |
+| `pnpm dev` | Dev server (Turbopack) |
+| `pnpm build` | Production build |
+| `pnpm start` | Serve production build |
+| `pnpm lint` | ESLint |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm test` | Vitest (single run) |
+| `pnpm test:watch` | Vitest (watch) |
+| `pnpm test:e2e` | Cypress headless (needs a running server) |
+| `pnpm test:e2e:open` | Cypress interactive |
+| `pnpm test:playwright` | Playwright specs |
+| `pnpm build:worker` | OpenNext Cloudflare build |
+| `pnpm deploy` / `pnpm preview` | Cloudflare deploy / local preview |
 
-### Path Aliases
+## Path Aliases
 
-`@/*` maps to project root. Use for all imports:
+`@/*` maps to `src/*`:
 
 ```tsx
 import SectionHeader from '@/components/SectionHeader';
 import i18n from '@/lib/i18n';
 ```
 
-### Design Tokens (globals.css)
+## Design Tokens (globals.css)
 
 Dark theme with teal accent. All colors defined via Tailwind `@theme`:
 
@@ -65,11 +75,11 @@ Dark theme with teal accent. All colors defined via Tailwind `@theme`:
 | `bg-dark` | `#0f172a` | Page background |
 | `bg-card` / `bg-card-hover` | `rgba(30,41,59,0.3/0.5)` | Project cards |
 
-### CI Pipeline (GitHub Actions)
+## CI Pipeline (.github/workflows/ci.yml)
 
 ```
 lint-and-typecheck ──┐
-unit-tests ──────────┤──► build ──► e2e-tests
+unit-tests ──────────┤──► build ──► e2e-tests ──► deploy
 ```
 
-All jobs run on `ubuntu-latest` with Node 22.
+All jobs on `ubuntu-latest`, Node 22, pnpm via Corepack. The build job copies `.env.example` to `.env`.

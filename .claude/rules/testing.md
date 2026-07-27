@@ -7,11 +7,12 @@
 | Unit | Vitest + Testing Library | Component rendering, props, user interactions |
 | Integration | Vitest + i18n tests | Language switching, component composition |
 | E2E | Cypress | Full page flows, scroll behavior, responsive layout |
+| Browser perf | Playwright (`playwright/`) | Cipher animation cost, layout stability during language switches |
 
 ### Unit Tests (Vitest + Testing Library)
 
-**Location:** `__tests__/components/<ComponentName>.test.tsx`
-**Setup:** `__tests__/setup.ts` — imports `jest-dom/vitest` matchers, i18n config, and runs `cleanup()` after each test.
+**Location:** `__tests__/components/<ComponentName>.test.tsx` (also `__tests__/app/`, `__tests__/lib/`, `__tests__/hooks/`, `__tests__/data/`)
+**Setup:** `__tests__/setup.ts` — imports `jest-dom/vitest` matchers, registers the **fixture translations** from `__tests__/fixtures/translations/{lng}.json` over the production bundles (so production résumé edits never break tests — assert against fixture text, not production text), sets test env vars, and runs `cleanup()` after each test.
 
 **Every component has a corresponding test file.** Maintain 1:1 mapping.
 
@@ -57,10 +58,11 @@ container.querySelector('.heading'); // brittle
 ```tsx
 import userEvent from '@testing-library/user-event';
 
-it('should toggle language', async () => {
+it('should switch language', async () => {
   const user = userEvent.setup();
-  render(<LanguageToggle />);
-  await user.click(screen.getByRole('button'));
+  render(<LanguageSelector />);
+  await user.click(screen.getByRole('button', { name: /select language/i }));
+  await user.click(screen.getByRole('link', { name: /eesti/i }));
   // assert language changed
 });
 ```
@@ -84,7 +86,7 @@ it('works')
 
 ### i18n Integration Tests
 
-`__tests__/components/i18n-integration.test.tsx` — tests language switching across all components. When adding a new translatable component, add assertions here.
+`__tests__/components/i18n-integration.test.tsx` — tests language switching across all components, with one describe block per language plus selector-flow and structural-integrity blocks. When adding a new translatable component, add assertions here. When adding a new language, follow the checklist in `i18n.md`.
 
 ### E2E Tests (Cypress)
 
@@ -92,9 +94,11 @@ it('works')
 **Config:** `cypress.config.ts` (baseUrl: `http://localhost:3000`, viewport: 1280x720)
 
 **Running E2E locally:**
-1. Build: `npm run build`
-2. Start: `npm run start`
-3. Run: `npm run test:e2e` (headless) or `npm run test:e2e:open` (interactive)
+1. Build: `pnpm build`
+2. Start: `pnpm start`
+3. Run: `pnpm test:e2e` (headless) or `pnpm test:e2e:open` (interactive)
+
+Note: the middleware redirects `/` to the locale route (`/en` by default), so specs land on localized URLs.
 
 **E2E covers:**
 - Page load, navigation, anchor links

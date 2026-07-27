@@ -2,10 +2,11 @@
 
 ### File Structure
 
-- One component per file in `components/`
+- One component per file in `src/components/`
 - Default exports only
 - Props interface defined above the component in the same file
-- Icons barrel-exported from `components/icons/index.tsx`
+- Icons and flag icons barrel-exported from `src/components/icons/index.tsx`
+- Reusable logic in `src/hooks/`; non-translatable content metadata in `src/data/`
 
 ### Client vs Server Components
 
