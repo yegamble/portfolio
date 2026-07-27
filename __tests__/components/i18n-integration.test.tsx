@@ -226,12 +226,12 @@ describe('i18n Integration - Hebrew Mode', () => {
   it('should render Experience dates in Hebrew', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-    expect(section).toHaveTextContent(/2042 — הווה/);
+    expect(section).toHaveTextContent(/2042 — היום/);
   });
 
   it('should render resume link in Hebrew', () => {
     render(<Experience />);
-    expect(screen.getByText(/צפה בקורות חיים מלאים/)).toBeInTheDocument();
+    expect(screen.getByText(/לצפייה בקורות החיים המלאים/)).toBeInTheDocument();
   });
 
   it('should render Projects section heading in Hebrew', () => {
@@ -248,7 +248,7 @@ describe('i18n Integration - Hebrew Mode', () => {
 
   it('should render footer attribution in Hebrew', () => {
     render(<Footer />);
-    expect(screen.getByText(/נכתב ב/)).toBeInTheDocument();
+    expect(screen.getByText(/נכתב באמצעות/)).toBeInTheDocument();
     expect(screen.getByText(/נבנה עם/)).toBeInTheDocument();
   });
 });
@@ -539,7 +539,7 @@ describe('i18n Integration - Language Selector Flow', () => {
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
 
-    await user.click(screen.getByRole('button', { name: /בחר שפה/i }));
+    await user.click(screen.getByRole('button', { name: /בחירת שפה/i }));
     await user.click(screen.getByRole('link', { name: /English/i }));
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
@@ -586,7 +586,7 @@ describe('i18n Regression - Structural integrity across languages', () => {
   it('should preserve resume link href in Hebrew Experience', async () => {
     await i18n.changeLanguage('he');
     render(<Experience />);
-    const resumeLink = screen.getByRole('link', { name: /צפה בקורות חיים מלאים/ });
+    const resumeLink = screen.getByRole('link', { name: /לצפייה בקורות החיים המלאים/ });
     expect(resumeLink).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
   });
 

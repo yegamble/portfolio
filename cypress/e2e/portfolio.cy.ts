@@ -278,3 +278,21 @@ describe('Estonian locale', () => {
     cy.get('nav[aria-label="Peanavigatsioon"]').should('exist');
   });
 });
+
+describe('Hebrew locale', () => {
+  it('should serve /he in RTL with Tel Aviv in the hero location', () => {
+    cy.visit('/he');
+    cy.get('html').should('have.attr', 'lang', 'he').and('have.attr', 'dir', 'rtl');
+    cy.get('section').first().within(() => {
+      cy.contains('ניו יורק | תל אביב | אוקלנד').should('exist');
+    });
+  });
+
+  it('should keep the English hero location without Tel Aviv', () => {
+    cy.visit('/en');
+    cy.get('section').first().within(() => {
+      cy.contains('NYC | Auckland').should('exist');
+    });
+    cy.get('section').first().should('not.contain.text', 'Tel Aviv');
+  });
+});

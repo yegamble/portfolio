@@ -43,7 +43,15 @@ export default function Footer() {
         >
           <CipherText>Inter</CipherText>
         </a>
-        {' '}<CipherText>{t('footer.font')}</CipherText>.
+        {/* Locales where the word "font" precedes the name (e.g. Hebrew "ועם הפונט
+            Inter") carry it in footer.and and leave footer.font empty. */}
+        {t('footer.font') !== '' && (
+          <>
+            {' '}
+            <CipherText>{t('footer.font')}</CipherText>
+          </>
+        )}
+        .
       </p>
     </footer>
   );

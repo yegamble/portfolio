@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import i18n from '@/lib/i18n';
 import Footer from '@/components/Footer';
 
 describe('Footer', () => {
@@ -79,6 +80,30 @@ describe('Footer', () => {
     it('should mention "Built with"', () => {
       render(<Footer />);
       expect(screen.getByText(/built with/i)).toBeInTheDocument();
+    });
+
+    it('should render the trailing font word in English', () => {
+      const { container } = render(<Footer />);
+      const attribution = container.querySelector('p');
+      expect(attribution?.textContent).toMatch(/Inter font\.$/);
+    });
+  });
+
+  describe('Attribution text in Hebrew (empty footer.font)', () => {
+    beforeEach(async () => {
+      await i18n.changeLanguage('he');
+    });
+
+    afterEach(async () => {
+      await i18n.changeLanguage('en');
+    });
+
+    it('should place the word "font" before the name and omit the trailing font word', () => {
+      const { container } = render(<Footer />);
+      const attribution = container.querySelector('p');
+      expect(attribution?.textContent).toContain('נכתב באמצעות');
+      expect(attribution?.textContent).toContain('ועם הפונט');
+      expect(attribution?.textContent).toMatch(/Inter\.$/);
     });
   });
 

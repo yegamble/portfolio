@@ -8,46 +8,46 @@
   "hero": {
     "name": "יוסף גמבל",
     "title": "מהנדס תוכנה בכיר",
-    "tagline": "מהנדס Go ו-TypeScript בכיר. הזרמת וידאו, פלטפורמות נדל\"ן ותשתיות ענן.",
-    "location": "ניו יורק | אוקלנד",
+    "tagline": "מהנדס Go ו-TypeScript בכיר. סטרימינג וידאו, פורטלי נדל\"ן ותשתיות ענן.",
+    "location": "ניו יורק | תל אביב | אוקלנד",
     "profileAlt": "תמונת פרופיל של יוסף גמבל"
   },
   "about": {
     "heading": "אודות",
     "ariaLabel": "אודותיי",
-    "p1": "התחלתי לתכנת ב-Central Washington University ב-2013, שם כיהנתי כיו\"ר מועצת הסטודנטים וזכיתי במלגת Boeing. משם עברתי לניו זילנד — קודם לתואר ב-University of Auckland, ואז לתעשיית ההייטק כמהנדס תוכנה שבנה מערכות שהגיעו למיליוני משתמשים.",
+    "p1": "התחלתי לתכנת ב-Central Washington University ב-2013, שם כיהנתי כיו\"ר אגודת הסטודנטים וזכיתי במלגת Boeing. הדרך שלי חצתה את האוקיינוס השקט לניו זילנד — תחילה לתואר ב-University of Auckland, ולאחר מכן לתעשיית ההייטק, כמהנדס תוכנה שבנה מערכות שהגיעו למיליוני משתמשים.",
     "p2_before": "ב-",
     "p2_link": "realestate.co.nz",
-    "p2_after": ", הפכתי למהנדס מוביל בפורטל הנדל\"ן הוותיק בניו זילנד. פיתחתי יכולות ראשונות בתעשייה — התראות מיידיות על שינויי מחירים והיסטוריית מחירים שקופה — שמתחרים העתיקו חודשים אחר כך. תכננתי ובניתי מערכת התראות serverless על AWS Lambda עם אינטגרציה ל-Braze, שסיפקה התראות על נכסים לכל משתמשי הפלטפורמה. הובלתי סדנאות בכל החברה על ארכיטקטורת serverless ו-observability.",
-    "p3": "כיום אני בונה את Vidra — פלטפורמת הזרמת וידאו בקוד פתוח ב-Go, תואמת PeerTube — המפוצלת ל-vidra-core (הזרמה, transcoding והפצת P2P) ול-vidra-user (זהות ו-federation). הפלטפורמה מתחברת ל-PeerTube ול-Mastodon דרך ActivityPub ול-Bluesky דרך ATProto, כך שיוצרי תוכן מגיעים לקהלים חוצי רשתות ללא תלות בספק יחיד. עלויות bandwidth על אינסטנס קטן עד בינוני יכולות לנוע בין מאות לעשרות אלפי דולרים בחודש; הורדתי אותן לכמעט $0 באמצעות Backblaze B2 וה-Bandwidth Alliance של Cloudflare. מתמקד במערכות scalable, אוטומציית תשתיות והאינטרנט הפתוח."
+    "p2_after": " הפכתי למהנדס מפתח בפורטל הנדל\"ן הוותיק והמוביל בניו זילנד. שחררתי פיצ'רים ראשונים מסוגם בתעשייה — התראות מיידיות על שינויי מחיר והיסטוריית מחירים שקופה — שמתחרים העתיקו רק חודשים לאחר מכן. תכננתי ובניתי מערכת התראות serverless על AWS Lambda עם אינטגרציה ל-Braze, שהעבירה התראות על נכסים לכל משתמשי הפלטפורמה, והובלתי סדנאות חוצות-חברה על ארכיטקטורת serverless ועל observability.",
+    "p3": "כיום אני בונה את Vidra — פלטפורמת סטרימינג וידאו בקוד פתוח ב-Go, תואמת PeerTube — שמפוצלת ל-vidra-core (סטרימינג, transcoding והפצת P2P) ול-vidra-user (זהויות ופדרציה). הפלטפורמה מתחברת ל-PeerTube ול-Mastodon דרך ActivityPub, ול-Bluesky דרך ATProto, כך שיוצרי תוכן מגיעים לקהלים בכל הרשתות ללא תלות בספק יחיד. עלויות ה-bandwidth של אינסטנס קטן עד בינוני יכולות לנוע בין מאות לעשרות אלפי דולרים בחודש; הורדתי אותן כמעט לאפס באמצעות Backblaze B2 וה-Bandwidth Alliance של Cloudflare. אכפת לי ממערכות scalable, מאוטומציית תשתיות ומהאינטרנט הפתוח."
   },
   "experience": {
     "heading": "ניסיון",
     "ariaLabel": "ניסיון תעסוקתי",
     "techAriaLabel": "טכנולוגיות בשימוש",
-    "viewResume": "צפייה בקורות חיים מלאים",
+    "viewResume": "לצפייה בקורות החיים המלאים",
     "opensInNewTab": "(נפתח בלשונית חדשה)",
     "jobs": [
       {
         "id": "independent",
-        "dates": "2024 — הווה",
+        "dates": "2024 — היום",
         "title": "מהנדס Full Stack",
         "company": "עצמאי",
-        "description": "מתכנן ובונה את Vidra — פלטפורמת הזרמת וידאו בקוד פתוח ב-Go, תואמת PeerTube — כמערכת production בשני שירותים: vidra-core אחראי על הזרמה, transcoding והפצת P2P; vidra-user אחראי על זהות, federation והגרף החברתי. המערכת מתחברת ל-PeerTube ול-Mastodon דרך ActivityPub ול-Bluesky דרך ATProto, ומספקת הגעה חוצת פלטפורמות ללא תלות בספק יחיד. עלויות bandwidth על אינסטנס קטן עד בינוני נעות בדרך כלל בין מאות לעשרות אלפי דולרים בחודש; הורדתי אותן לכמעט $0 על ידי ניתוב אחסון ה-origin דרך Backblaze B2 ומסירה דרך Cloudflare במסגרת ה-Bandwidth Alliance. Production stack: Docker, GitHub Actions CI/CD, PostgreSQL, Redis ל-caching ו-rate limiting, ותוכנן ל-horizontal scale מאחורי load balancer."
+        "description": "מתכנן ובונה את Vidra — פלטפורמת סטרימינג וידאו בקוד פתוח ב-Go, תואמת PeerTube — כמערכת production בשני שירותים: vidra-core אחראי על סטרימינג, transcoding והפצת P2P; vidra-user אחראי על זהויות, פדרציה והגרף החברתי. המערכת מתחברת ל-PeerTube ול-Mastodon דרך ActivityPub, ול-Bluesky דרך ATProto, ומספקת נוכחות חוצת פלטפורמות ללא תלות בספק יחיד. עלויות ה-bandwidth של אינסטנס קטן עד בינוני נעות בדרך כלל בין מאות לעשרות אלפי דולרים בחודש; הורדתי אותן כמעט לאפס על ידי ניתוב אחסון ה-origin דרך Backblaze B2 והגשת התוכן דרך Cloudflare במסגרת ה-Bandwidth Alliance. Production stack: Docker, GitHub Actions CI/CD, PostgreSQL, Redis ל-caching ול-rate limiting, ומתוכנן ל-horizontal scaling מאחורי load balancer."
       },
       {
         "id": "realestate",
         "dates": "2021 — 2024",
         "title": "מהנדס Full Stack",
         "company": "realestate.co.nz",
-        "description": "פיתחתי יכולות ראשונות בתעשייה עבור פורטל הנדל\"ן הוותיק בניו זילנד — התראות מיידיות על שינויי מחירים והיסטוריית מחירים שקופה, שמתחרים העתיקו חודשים אחר כך. תכננתי ובניתי מערכת התראות serverless על AWS Lambda עם אינטגרציה ל-Braze, שסיפקה התראות יומיות ושבועיות על נכסים לכלל הפלטפורמה. הובלתי סדנאות בכל החברה על ארכיטקטורת serverless ועל observability ב-New Relic. לקחתי חלק מרכזי בבנייה מחדש של ה-frontend ב-EmberJS, שקיבל פידבק חיובי מסוכני נדל\"ן ומשתמשים ברחבי הארץ."
+        "description": "שחררתי פיצ'רים ראשונים מסוגם בתעשייה עבור פורטל הנדל\"ן הוותיק והמוביל בניו זילנד — התראות מיידיות על שינויי מחיר והיסטוריית מחירים שקופה, שמתחרים העתיקו רק חודשים לאחר מכן. תכננתי ובניתי מערכת התראות serverless על AWS Lambda עם אינטגרציה ל-Braze, שהעבירה התראות יומיות ושבועיות על נכסים בכל הפלטפורמה. הובלתי סדנאות חוצות-חברה על ארכיטקטורת serverless ועל observability עם New Relic. מילאתי תפקיד מרכזי בבנייה מחדש של ה-frontend ב-EmberJS, שזכה לפידבק חיובי מסוכני נדל\"ן וממשתמשים ברחבי ניו זילנד."
       },
       {
         "id": "prostock",
         "dates": "2019 — 2024",
         "title": "מפתח תוכנה",
         "company": "ProStock",
-        "description": "בניתי את הפלטפורמה המרכזית של מערכת ניהול מחסנים שחסכה למפעילים מעל $250K בשנה. פיתחתי APIs לתמיכה במילוי הזמנות בינלאומי עבור Zoono בניו זילנד, אוסטרליה ואסיה. פרסתי אפליקציית סורקים ל-Android לעובדי מחסן — קבלה, העברה ומשלוח מוצרים גלובלי. בניתי פורטל AngularJS ללקוחות למעקב אחר סטטוס מוצרים והזמנות בזמן אמת. העברתי תשתיות ל-Digital Ocean ושיפרתי uptime בסביבות production."
+        "description": "בניתי את פלטפורמת הליבה של מערכת לניהול מחסנים, שחוסכת למפעילים יותר מ-250 אלף דולר בשנה. פיתחתי APIs שתומכים במילוי הזמנות בינלאומי עבור Zoono בניו זילנד, באוסטרליה ובאסיה. פרסתי אפליקציית סריקה ל-Android לעובדי המחסן — קליטת סחורה, העברות ושילוח מוצרים לכל העולם. בניתי פורטל AngularJS שבו לקוחות עוקבים בזמן אמת אחרי סטטוס מוצרים והזמנות. העברתי את התשתיות ל-Digital Ocean ושיפרתי את ה-uptime בסביבות ה-production."
       }
     ]
   },
@@ -55,38 +55,38 @@
     "heading": "פרויקטים",
     "ariaLabel": "פרויקטים נבחרים",
     "techAriaLabel": "טכנולוגיות בשימוש",
-    "viewOnGitHub": "צפה ב-{{name}} ב-GitHub",
-    "viewRepos": "צפה במאגרים",
+    "viewOnGitHub": "לצפייה ב-{{name}} ב-GitHub",
+    "viewRepos": "לצפייה במאגרי הקוד",
     "items": [
       {
         "id": "vidra",
         "title": "Vidra",
-        "description": "פלטפורמת הזרמת וידאו בקוד פתוח ב-Go, תואמת PeerTube — ארכיטקטורה דו-שירותית (vidra-core ו-vidra-user) עם שידור חי, הפצת P2P ופדרציה רב-פרוטוקולית דרך ActivityPub (PeerTube, Mastodon) ו-ATProto (Bluesky). בנויה ל-egress כמעט אפסי בסקייל production."
+        "description": "פלטפורמת סטרימינג וידאו בקוד פתוח ב-Go, תואמת PeerTube — ארכיטקטורה של שני שירותים (vidra-core ו-vidra-user) עם שידור חי, הפצת P2P ופדרציה מרובת פרוטוקולים דרך ActivityPub (PeerTube, Mastodon) ו-ATProto (Bluesky). מהונדסת ל-egress כמעט אפסי בסקייל production."
       },
       {
         "id": "aurialis",
         "title": "Aurialis",
-        "description": "אפליקציית mastering אודיו מבוססת דפדפן עם פריסטים לפי ז'אנר, EQ פרמטרי, קומפרסור, לימיטר ומדידת LUFS בזמן אמת — הכל רץ ב-AudioWorklets."
+        "description": "אפליקציית mastering אודיו מבוססת דפדפן עם פריסטים לפי ז'אנר, EQ פרמטרי, קומפרסור, לימיטר ומדידת LUFS בזמן אמת — הכול רץ ב-AudioWorklets."
       },
       {
         "id": "goimg",
         "title": "GoImg",
-        "description": "פלטפורמת גלריית תמונות full-stack עם שרת Go וצד לקוח Next.js. העלאת תמונות, ניהול אלבומים, הגדרות שיתוף ואחסון תואם S3."
+        "description": "פלטפורמת גלריית תמונות full-stack עם backend ב-Go ו-frontend ב-Next.js. העלאת תמונות, ניהול אלבומים, הרשאות שיתוף ואחסון תואם S3."
       },
       {
         "id": "iota-token-creator",
         "title": "IOTA Token Creator",
-        "description": "פלטפורמה ליצירת טוקנים על ה-ledger המבוזר IOTA עם צד לקוח Next.js ו-API backend בשפת Go."
+        "description": "פלטפורמה ליצירת טוקנים על גבי ה-ledger המבוזר של IOTA, עם frontend ב-Next.js ו-API backend ב-Go."
       }
     ]
   },
   "footer": {
-    "codedIn": "נכתב ב",
+    "codedIn": "נכתב באמצעות",
     "vscode": "Visual Studio Code",
     "builtWith": "נבנה עם",
     "tailwind": "Tailwind CSS",
-    "and": "ו",
-    "font": "פונט"
+    "and": "ועם הפונט",
+    "font": ""
   },
   "social": {
     "github": "GitHub",
@@ -107,20 +107,20 @@
     "close": "סגור",
     "loading": "טוען פרטי מפתח...",
     "error": "לא ניתן לנתח פרטי מפתח",
-    "verifyNotice": "אמת את טביעת האצבע דרך ערוץ מהימן לפני שימוש."
+    "verifyNotice": "יש לאמת את טביעת האצבע דרך ערוץ מהימן לפני השימוש."
   },
   "language": {
-    "selectLabel": "בחר שפה",
-    "current": "שפה נוכחית"
+    "selectLabel": "בחירת שפה",
+    "current": "השפה הנוכחית"
   },
   "meta": {
     "title": "יוסף גמבל | מהנדס תוכנה בכיר — Go, TypeScript, AWS",
-    "description": "יוסף גמבל — מהנדס תוכנה בכיר בניו יורק ובאוקלנד. מומחה ל-Go (Golang), ל-TypeScript ול-AWS. פלטפורמות נדל\"ן, מערכות הזרמת וידאו ומערכות ענן מדרגיות.",
-    "ogDescription": "מהנדס תוכנה בכיר בניו יורק ובאוקלנד. Go, TypeScript, AWS. פלטפורמות נדל\"ן, הזרמת וידאו ומערכות ענן."
+    "description": "יוסף גמבל — מהנדס תוכנה בכיר בניו יורק, בתל אביב ובאוקלנד. מומחה ל-Go (Golang), ל-TypeScript ול-AWS. פורטלי נדל\"ן, פלטפורמות סטרימינג וידאו ומערכות ענן מדרגיות.",
+    "ogDescription": "מהנדס תוכנה בכיר בניו יורק, בתל אביב ובאוקלנד. Go, TypeScript, AWS. פורטלי נדל\"ן, סטרימינג וידאו ומערכות ענן."
   },
   "notFound": {
     "title": "הדף לא נמצא",
-    "description": "הדף שחיפשת אינו קיים.",
+    "description": "הדף שחיפשתם אינו קיים.",
     "backHome": "חזרה לדף הבית"
   },
   "error": {
