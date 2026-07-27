@@ -150,16 +150,15 @@ export function USFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
 }
 
 export function IsraelFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
+  // Geometry scaled from the official 1100×800 flag: stripes at 75–200 and
+  // 600–725, Star of David triangles ±126.18 wide around center, stroke 27.5.
   return (
     <BaseFlagIcon className={className}>
       <rect width="36" height="24" fill="#fff" />
-      {/* Top blue stripe */}
-      <rect y="3" width="36" height="3.5" fill="#0038b8" />
-      {/* Bottom blue stripe */}
-      <rect y="17.5" width="36" height="3.5" fill="#0038b8" />
-      {/* Star of David */}
-      <polygon points="18,7 20.5,11.5 15.5,11.5" fill="none" stroke="#0038b8" strokeWidth="0.8" />
-      <polygon points="18,17 15.5,12.5 20.5,12.5" fill="none" stroke="#0038b8" strokeWidth="0.8" />
+      <rect y="2.25" width="36" height="3.75" fill="#0038b8" />
+      <rect y="18" width="36" height="3.75" fill="#0038b8" />
+      <polygon points="13.87,14.19 22.13,14.19 18,7.63" fill="none" stroke="#0038b8" strokeWidth="0.85" />
+      <polygon points="18,16.37 22.13,9.81 13.87,9.81" fill="none" stroke="#0038b8" strokeWidth="0.85" />
     </BaseFlagIcon>
   );
 }

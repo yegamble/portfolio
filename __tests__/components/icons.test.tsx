@@ -165,6 +165,21 @@ describe('Icon components', () => {
       });
     });
 
+    it('IsraelFlagIcon should draw two stripes on a white field with a two-triangle star', () => {
+      const { container } = render(<IsraelFlagIcon />);
+      const rects = container.querySelectorAll('rect');
+      expect(rects.length).toBe(3);
+      expect(rects[0]).toHaveAttribute('fill', '#fff');
+      expect(rects[1]).toHaveAttribute('fill', '#0038b8');
+      expect(rects[2]).toHaveAttribute('fill', '#0038b8');
+      const triangles = container.querySelectorAll('polygon');
+      expect(triangles.length).toBe(2);
+      triangles.forEach((triangle) => {
+        expect(triangle).toHaveAttribute('fill', 'none');
+        expect(triangle).toHaveAttribute('stroke', '#0038b8');
+      });
+    });
+
     it('RussiaFlagIcon should contain 3 rect elements for stripes', () => {
       const { container } = render(<RussiaFlagIcon />);
       const rects = container.querySelectorAll('rect');
