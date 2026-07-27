@@ -58,6 +58,19 @@ describe('I18nProvider', () => {
     });
   });
 
+  it('applies html lang and dir for Estonian', async () => {
+    render(
+      <I18nProvider locale="et">
+        <div />
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(document.documentElement.lang).toBe('et');
+      expect(document.documentElement.dir).toBe('ltr');
+    });
+  });
+
   it('persists the locale in a cookie', async () => {
     render(
       <I18nProvider locale="he">

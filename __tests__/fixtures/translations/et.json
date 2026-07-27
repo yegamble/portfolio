@@ -1,0 +1,116 @@
+{
+  "nav": {
+    "ariaLabel": "Main navigation",
+    "about": "Minust",
+    "experience": "Kogemus",
+    "projects": "Projektid"
+  },
+  "hero": {
+    "name": "Test User-O'Neil",
+    "title": "Vanem juhtivinsener ja arhitekt",
+    "tagline": "Vanem C++, Rusti ja Go insener. Unicode'i töötlus, erijuhtumid ja testimine. Tokyo | São Paulo | Zürich.",
+    "location": "Tokyo | São Paulo",
+    "profileAlt": "Test User-O'Neili profiilifoto"
+  },
+  "about": {
+    "heading": "Minust",
+    "ariaLabel": "Minu kohta",
+    "p1": "Alustasin programmeerimist 2042. aastal Eikusagi ülikoolis, kus 100% „tudengitest“ õppis HTML-i ja CSS-i, sealhulgas erimärke: ülakomad, „jutumärgid“ ja mõttekriips. Pälvisin 1 000 000 $ suuruse Lorem Ipsumi stipendiumi erijuhtumiks olemise eest.",
+    "p2_before": "Ettevõttes ",
+    "p2_link": "test-company.example.com",
+    "p2_after": " sai minust juhtivinsener platvormil, millel on üle 10 miljoni kasutaja 42 riigis. Ehitasin serverless-vidina, mis on integreeritud kolmandate osapoolte API-dega ja edastab teavitusi 100%-le kasutajatest, säästes 999 $.",
+    "p3": "Praegu ehitan avatud lähtekoodiga Unicode'i toega tekstitöötlurit C++ keeles (mitte C), mis käsitleb kahesuunalist teksti (RTL/LTR), nullilaiusega ühendajaid ja diakriitikuid. Hoolin i18n-ist, l10n-ist ja avatud veebist."
+  },
+  "experience": {
+    "heading": "Kogemus",
+    "ariaLabel": "Töökogemus",
+    "techAriaLabel": "Kasutatud tehnoloogiad",
+    "viewResume": "Vaata täielikku CV-d",
+    "opensInNewTab": "(avaneb uuel vahelehel)",
+    "jobs": [
+      {
+        "id": "edge-corp",
+        "dates": "2042 — praeguseni",
+        "title": "Peainsener ja arhitekt",
+        "company": "Edge Corp",
+        "description": "Ehitasin hajussüsteemi, mis töötleb miljardit päringut sekundis 99,999% käideldavusega. Kasutasin C++, Rusti ja Go'd koos PostgreSQL-i jsonb-veergude ja Redise pub/sub-iga. Integreerisin Naive Bayesi klassifikaatori reaalajas pettuste tuvastamiseks enam kui 42 mikroteenuses."
+      },
+      {
+        "id": "cafe-societe",
+        "dates": "2038 — 2042",
+        "title": "Full-stack arendaja",
+        "company": "Cafe Societe S.A.R.L.",
+        "description": "Juurutasin N-kihilise arhitektuuri kohvikuketis, mis ulatub São Paulost Zürichi ja Tokyoni. Projekteerisin müügisüsteemi (POS), mis töötleb mitut valuutat korraga alla 0,01% konverteerimisveaga. Juhtisin töötube semikoolonitest ja erijuhtumite kunstist."
+      },
+      {
+        "id": "open-src",
+        "dates": "2035 — 2038",
+        "title": "Praktikandist keskastme insenerini",
+        "company": "Open-Source Foundation",
+        "description": "Panustasin OSS-projektidesse, mida kasutab üle 10 miljoni arendaja, sealhulgas kuulsasse Unicode Sanitizerisse. Parandasin vea #1337: ülakomad kasutajanimedes põhjustasid 500-vigu. Avaldasin Androidi/iOS-i rakendused enam kui 100 riigis, sealhulgas Elevandiluurannikul ja Curaçaol."
+      }
+    ]
+  },
+  "projects": {
+    "heading": "Projektid",
+    "ariaLabel": "Valitud projektid",
+    "techAriaLabel": "Kasutatud tehnoloogiad",
+    "viewOnGitHub": "Ava {{name}} GitHubis",
+    "viewRepos": "Vaata koodihoidlaid",
+    "items": [
+      {
+        "id": "vidra",
+        "title": "Vidra",
+        "description": "PeerTube'iga ühilduv videovoogedastuse taustsüsteem Go keeles, P2P-jaotuse ja föderatsiooniga ActivityPubi ja ATProto kaudu."
+      },
+      {
+        "id": "aurialis",
+        "title": "Aurialis",
+        "description": "Brauseripõhine helimasterdamise rakendus eelseadistuste, parameetrilise ekvalaiseri ja reaalajas LUFS-mõõtmisega AudioWorkletites."
+      },
+      {
+        "id": "goimg",
+        "title": "GoImg",
+        "description": "Full-stack fotogalerii Go taustsüsteemi ja Next.js-i kasutajaliidesega. Fotode üleslaadimine, albumid ja S3-salvestus."
+      },
+      {
+        "id": "iota-token-creator",
+        "title": "IOTA Token Creator",
+        "description": "Tokenite loomise platvorm IOTA hajusraamatule Next.js-i kasutajaliidese ja Go taustsüsteemiga."
+      }
+    ]
+  },
+  "footer": {
+    "codedIn": "Kirjutatud redaktoris",
+    "vscode": "Visual Studio Code",
+    "builtWith": "Loodud",
+    "tailwind": "Tailwind CSS-i",
+    "and": "ja",
+    "font": "fondiga"
+  },
+  "social": {
+    "github": "GitHub",
+    "linkedin": "LinkedIn",
+    "email": "E-post",
+    "secureEmail": "Turvaline e-post",
+    "pgpKey": "PGP-võti"
+  },
+  "pgp": {
+    "title": "Avalik PGP-võti",
+    "fingerprint": "Sõrmejälg",
+    "userId": "Kasutajatunnus",
+    "algorithm": "Algoritm",
+    "created": "Loodud",
+    "keyId": "Võtme ID",
+    "copyKey": "Kopeeri võti",
+    "copied": "Kopeeritud!",
+    "close": "Sulge",
+    "loading": "Võtme andmete laadimine...",
+    "error": "Võtme andmeid ei õnnestunud lugeda",
+    "verifyNotice": "Enne kasutamist kontrolli sõrmejälge usaldusväärse kanali kaudu."
+  },
+  "language": {
+    "selectLabel": "Vali keel",
+    "current": "Praegune keel"
+  }
+}

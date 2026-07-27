@@ -12,6 +12,7 @@ import Footer from '@/components/Footer';
 import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
 import testRu from '../fixtures/translations/ru.json';
+import testEt from '../fixtures/translations/et.json';
 
 vi.mock('openpgp', () => ({
   readKey: vi.fn(() =>
@@ -368,6 +369,123 @@ describe('i18n Integration - Russian Mode', () => {
   });
 });
 
+describe('i18n Integration - Estonian Mode', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('et');
+  });
+
+  it('should render nav items in Estonian', () => {
+    render(<ScrollHeader />);
+    const nav = screen.getByRole('navigation', { name: /main navigation/i });
+    expect(within(nav).getByText('Minust')).toBeInTheDocument();
+    expect(within(nav).getByText('Kogemus')).toBeInTheDocument();
+    expect(within(nav).getByText('Projektid')).toBeInTheDocument();
+  });
+
+  it('should render hero name in Estonian', () => {
+    render(<ScrollHeader />);
+    expect(screen.getByText(testEt.hero.name, { selector: 'section p' })).toBeInTheDocument();
+  });
+
+  it('should render hero title in Estonian', () => {
+    render(<ScrollHeader />);
+    expect(screen.getByText(testEt.hero.title, { selector: 'section p' })).toBeInTheDocument();
+  });
+
+  it('should render hero tagline in Estonian', () => {
+    render(<ScrollHeader />);
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1).toHaveTextContent(/Vanem C\+\+/);
+    expect(h1).toHaveTextContent(/Rusti/);
+  });
+
+  it('should render About section heading in Estonian', () => {
+    render(<About />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent('Minust');
+  });
+
+  it('should render About section with Estonian aria-label', () => {
+    render(<About />);
+    expect(screen.getByRole('region', { name: 'Minu kohta' })).toBeInTheDocument();
+  });
+
+  it('should render Experience section heading in Estonian', () => {
+    render(<Experience />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent('Kogemus');
+  });
+
+  it('should render Experience job titles in Estonian', () => {
+    render(<Experience />);
+    const section = screen.getByRole('region', { name: /Töökogemus/ });
+    expect(section).toHaveTextContent(/Peainsener ja arhitekt/);
+    expect(section).toHaveTextContent(/Praktikandist keskastme insenerini/);
+  });
+
+  it('should render resume link in Estonian', () => {
+    render(<Experience />);
+    expect(screen.getByText(/Vaata täielikku CV-d/)).toBeInTheDocument();
+  });
+
+  it('should render Projects section heading in Estonian', () => {
+    render(<Projects />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent('Projektid');
+  });
+
+  it('should render footer attribution in Estonian', () => {
+    render(<Footer />);
+    expect(screen.getByText(/Kirjutatud redaktoris/)).toBeInTheDocument();
+    expect(screen.getByText(/Loodud/)).toBeInTheDocument();
+  });
+
+  it('should preserve company link to test-company in Estonian About', () => {
+    render(<About />);
+    const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  it('should preserve company URLs in Estonian Experience', () => {
+    render(<Experience />);
+    const links = screen.getAllByRole('link').filter(
+      (l) => l.getAttribute('target') === '_blank'
+    );
+    const hrefs = links.map((l) => l.getAttribute('href'));
+    expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
+    expect(hrefs).toContain('https://cafe-societe.example.com/');
+  });
+
+  it('should preserve technology tags in Estonian Experience (not translated)', () => {
+    render(<Experience />);
+    const techLists = screen.getAllByRole('list', { name: /Kasutatud tehnoloogiad/ });
+    expect(techLists).toHaveLength(3);
+    expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
+    expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
+  });
+
+  it('should render three experience entries in Estonian', () => {
+    render(<Experience />);
+    const section = screen.getByRole('region', { name: /Töökogemus/ });
+    const ol = section.querySelector('ol');
+    const items = ol!.querySelectorAll(':scope > li');
+    expect(items).toHaveLength(3);
+  });
+
+  it('should render four project cards in Estonian', () => {
+    render(<Projects />);
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings).toHaveLength(4);
+  });
+
+  it('should render three about paragraphs in Estonian', () => {
+    render(<About />);
+    const section = screen.getByRole('region', { name: 'Minu kohta' });
+    const paragraphs = section.querySelectorAll('p');
+    expect(paragraphs).toHaveLength(3);
+  });
+});
+
 describe('i18n Integration - Language Selector Flow', () => {
   it('should switch all content when selecting Hebrew via dropdown', async () => {
     const user = userEvent.setup();
@@ -398,6 +516,21 @@ describe('i18n Integration - Language Selector Flow', () => {
       expect(within(nav).getByText('Обо мне')).toBeInTheDocument();
       expect(within(nav).getByText('Опыт')).toBeInTheDocument();
       expect(within(nav).getByText('Проекты')).toBeInTheDocument();
+    });
+  });
+
+  it('should switch to Estonian via dropdown', async () => {
+    const user = userEvent.setup();
+    render(<ScrollHeader />);
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    await user.click(screen.getByRole('link', { name: /eesti/i }));
+
+    const nav = screen.getByRole('navigation', { name: /main navigation/i });
+    await waitFor(() => {
+      expect(within(nav).getByText('Minust')).toBeInTheDocument();
+      expect(within(nav).getByText('Kogemus')).toBeInTheDocument();
+      expect(within(nav).getByText('Projektid')).toBeInTheDocument();
     });
   });
 
@@ -566,6 +699,13 @@ describe('i18n Integration - PGP Key Icon Labels', () => {
     render(<ScrollHeader />);
     const heroSection = screen.getByText(testRu.hero.name, { selector: 'section p' }).closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'Ключ PGP' })).toBeInTheDocument();
+  });
+
+  it('should render PGP key button with Estonian label', async () => {
+    await i18n.changeLanguage('et');
+    render(<ScrollHeader />);
+    const heroSection = screen.getByText(testEt.hero.name, { selector: 'section p' }).closest('section');
+    expect(within(heroSection!).getByRole('button', { name: 'PGP-võti' })).toBeInTheDocument();
   });
 
   it('should render email icon label in Hebrew', async () => {

@@ -1,0 +1,131 @@
+{
+  "nav": {
+    "ariaLabel": "Peanavigatsioon",
+    "about": "Minust",
+    "experience": "Kogemus",
+    "projects": "Projektid"
+  },
+  "hero": {
+    "name": "Yosef Gamble",
+    "title": "Vanemtarkvaraarendaja",
+    "tagline": "Kogenud Go ja TypeScripti insener. Videovoogedastus, kinnisvaraportaalid ja pilvetaristu.",
+    "location": "New York | Auckland",
+    "profileAlt": "Yosef Gamble'i profiilifoto"
+  },
+  "about": {
+    "heading": "Minust",
+    "ariaLabel": "Minu kohta",
+    "p1": "Alustasin programmeerimist 2013. aastal Central Washingtoni ülikoolis, kus olin üliõpilasesinduse esimees ja pälvisin Boeingu stipendiumi. Minu tee viis üle Vaikse ookeani Uus-Meremaale — esmalt omandasin kraadi Aucklandi ülikoolis ja seejärel asusin tööle tarkvarainsenerina, ehitades süsteeme, mis jõuavad miljonite kasutajateni.",
+    "p2_before": "Ettevõttes ",
+    "p2_link": "realestate.co.nz",
+    "p2_after": " kandsin võtmerolli Uus-Meremaa vanima ja tuntuima kinnisvaraportaali arenduses. Tõin turule valdkonna esimesed funktsioonid — kohesed hinnamuutuste teavitused ja läbipaistva hinnaajaloo —, mida konkurendid kopeerisid alles kuude pärast. Projekteerisin AWS Lambda põhise serverless-teavitussüsteemi, mis oli integreeritud Braze'iga ja edastas kuulutuste teavitusi kõigile platvormi kasutajatele, ning juhtisin üleettevõttelisi töötube serverless-arhitektuuri ja observability teemadel.",
+    "p3": "Ehitan Vidrat — avatud lähtekoodiga, PeerTube'iga ühilduvat videovoogedastusplatvormi Go keeles —, mis jaguneb kaheks teenuseks: vidra-core (voogedastus, transkodeerimine, P2P-edastus) ja vidra-user (identiteet ja föderatsioon). Platvorm suhtleb PeerTube'i ja Mastodoniga ActivityPubi kaudu ning Blueskyga ATProto kaudu, nii et sisuloojad jõuavad vaatajateni üle eri võrgustike, ilma end ühe teenusepakkuja külge sidumata. Väikese kuni keskmise suurusega instantsi ribalaiuse egress-kulud võivad ulatuda sadadest kuni kümnete tuhandete dollariteni kuus; olen viinud need Backblaze B2 ja Cloudflare'i Bandwidth Alliance'i abil peaaegu nulli. Mulle lähevad korda skaleeruvad süsteemid, taristu automatiseerimine ja avatud veeb."
+  },
+  "experience": {
+    "heading": "Kogemus",
+    "ariaLabel": "Töökogemus",
+    "techAriaLabel": "Kasutatud tehnoloogiad",
+    "viewResume": "Vaata täielikku CV-d",
+    "opensInNewTab": "(avaneb uuel vahelehel)",
+    "jobs": [
+      {
+        "id": "independent",
+        "dates": "2024 — praeguseni",
+        "title": "Full-stack arendaja",
+        "company": "Iseseisev projekt",
+        "description": "Projekteerin ja ehitan Vidrat — avatud lähtekoodiga, PeerTube'iga ühilduvat videovoogedastusplatvormi Go keeles — kahe teenusega toodangusüsteemina: vidra-core vastutab voogedastuse, transkodeerimise ja P2P-edastuse eest; vidra-user identiteedi, föderatsiooni ja sotsiaalgraafi eest. Platvorm suhtleb PeerTube'i ja Mastodoniga ActivityPubi kaudu ning Blueskyga ATProto kaudu, pakkudes platvormideülest haaret ilma end ühe teenusepakkuja külge sidumata. Väikese kuni keskmise suurusega instantsi ribalaiuse egress-kulud ulatuvad tavaliselt sadadest kuni kümnete tuhandete dollariteni kuus; viisin need peaaegu nulli, suunates origin-salvestuse Backblaze B2-sse ja edastuse läbi Cloudflare'i Bandwidth Alliance'i raames. Toodangus kasutusel: Docker, GitHub Actions CI/CD, PostgreSQL, Redis vahemälu ja päringute piiramise jaoks — projekteeritud horisontaalseks skaleerimiseks koormusjaoturi taga."
+      },
+      {
+        "id": "realestate",
+        "dates": "2021 — 2024",
+        "title": "Full-stack arendaja",
+        "company": "realestate.co.nz",
+        "description": "Tõin Uus-Meremaa vanima ja tuntuima kinnisvaraportaali jaoks turule valdkonna esimesed funktsioonid — kohesed hinnamuutuste teavitused ja läbipaistva hinnaajaloo, mida konkurendid kopeerisid alles kuude pärast. Projekteerisin ja ehitasin AWS Lambda põhise serverless-teavitussüsteemi, mis oli integreeritud Braze'iga ja edastas igapäevaseid ning iganädalasi kuulutuste teavitusi üle kogu platvormi. Juhtisin üleettevõttelisi töötube serverless-arhitektuuri ja New Relicu observability teemadel. Osalesin võtmerollis EmberJS-i kasutajaliidese uuendamises, mis pälvis maakleritelt ja kasutajatelt üle riigi positiivset tagasisidet."
+      },
+      {
+        "id": "prostock",
+        "dates": "2019 — 2024",
+        "title": "Tarkvaraarendaja",
+        "company": "ProStock",
+        "description": "Ehitasin laohaldussüsteemi põhiplatvormi, mis säästab operaatoritele aastas üle 250 000 dollari. Arendasin API-sid, mis toetavad Zoono rahvusvaheliste tellimuste täitmist Uus-Meremaal, Austraalias ja Aasias. Juurutasin Androidi skannerirakenduse, millega laotöötajad võtavad kaupu vastu, liigutavad ja lähetavad neid üle maailma. Lõin AngularJS-i portaali, kus kliendid näevad toodete ja tellimuste staatust reaalajas. Viisin taristu üle Digital Oceanisse, parandades toodangukeskkondade käideldavust."
+      }
+    ]
+  },
+  "projects": {
+    "heading": "Projektid",
+    "ariaLabel": "Valitud projektid",
+    "techAriaLabel": "Kasutatud tehnoloogiad",
+    "viewOnGitHub": "Ava {{name}} GitHubis",
+    "viewRepos": "Vaata koodihoidlaid",
+    "items": [
+      {
+        "id": "vidra",
+        "title": "Vidra",
+        "description": "Avatud lähtekoodiga, PeerTube'iga ühilduv videovoogedastusplatvorm Go keeles — kahe teenusega arhitektuur (vidra-core ja vidra-user), otseülekanded, P2P-jaotus ja mitmeprotokolliline föderatsioon ActivityPubi (PeerTube, Mastodon) ja ATProto (Bluesky) kaudu. Projekteeritud peaaegu olematute egress-kuludega toodangumastaabis."
+      },
+      {
+        "id": "aurialis",
+        "title": "Aurialis",
+        "description": "Brauseripõhine helimasterdamise rakendus žanripõhiste eelseadistuste, parameetrilise ekvalaiseri, kompressori, limiteri ja reaalajas LUFS-mõõtmisega — kõik töötab AudioWorkletites."
+      },
+      {
+        "id": "goimg",
+        "title": "GoImg",
+        "description": "Full-stack pildigaleriiplatvorm Go taustsüsteemi ja Next.js-i kasutajaliidesega. Fotode üleslaadimine, albumihaldus, jagamisseaded ja S3-ga ühilduv salvestus."
+      },
+      {
+        "id": "iota-token-creator",
+        "title": "IOTA Token Creator",
+        "description": "Tokenite loomise platvorm IOTA hajusraamatule — Next.js-i kasutajaliidese ja Go API taustsüsteemiga."
+      }
+    ]
+  },
+  "footer": {
+    "codedIn": "Kirjutatud redaktoris",
+    "vscode": "Visual Studio Code",
+    "builtWith": "Loodud",
+    "tailwind": "Tailwind CSS-i",
+    "and": "ja",
+    "font": "fondiga"
+  },
+  "social": {
+    "github": "GitHub",
+    "linkedin": "LinkedIn",
+    "email": "E-post",
+    "secureEmail": "Turvaline e-post",
+    "pgpKey": "PGP-võti"
+  },
+  "pgp": {
+    "title": "Avalik PGP-võti",
+    "fingerprint": "Sõrmejälg",
+    "userId": "Kasutajatunnus",
+    "algorithm": "Algoritm",
+    "created": "Loodud",
+    "keyId": "Võtme ID",
+    "copyKey": "Kopeeri võti",
+    "copied": "Kopeeritud!",
+    "close": "Sulge",
+    "loading": "Võtme andmete laadimine...",
+    "error": "Võtme andmeid ei õnnestunud lugeda",
+    "verifyNotice": "Enne kasutamist kontrolli sõrmejälge usaldusväärse kanali kaudu."
+  },
+  "language": {
+    "selectLabel": "Vali keel",
+    "current": "Praegune keel"
+  },
+  "meta": {
+    "title": "Yosef Gamble | Vanemtarkvaraarendaja — Go, TypeScript, AWS",
+    "description": "Yosef Gamble — vanemtarkvaraarendaja New Yorgis ja Aucklandis. Go (Golang), TypeScripti ja AWS-i spetsialist. Kinnisvaraportaalid, videovoogedastusplatvormid ja skaleeruvad pilvesüsteemid.",
+    "ogDescription": "Vanemtarkvaraarendaja New Yorgis ja Aucklandis. Go, TypeScript, AWS. Kinnisvaraportaalid, videovoogedastus ja skaleeruvad pilvesüsteemid."
+  },
+  "notFound": {
+    "title": "Lehte ei leitud",
+    "description": "Otsitud lehte ei ole olemas.",
+    "backHome": "Tagasi avalehele"
+  },
+  "error": {
+    "title": "Midagi läks valesti",
+    "description": "Ilmnes ootamatu viga. Palun proovi uuesti.",
+    "retry": "Proovi uuesti"
+  }
+}

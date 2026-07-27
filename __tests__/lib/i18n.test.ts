@@ -24,10 +24,11 @@ describe('i18n initialization', () => {
     expect(fallbackLng).toBe('en');
   });
 
-  it('registers English, Hebrew, and Russian translation resources', () => {
+  it('registers English, Hebrew, Russian, and Estonian translation resources', () => {
     expect(i18n.hasResourceBundle('en', 'translation')).toBe(true);
     expect(i18n.hasResourceBundle('he', 'translation')).toBe(true);
     expect(i18n.hasResourceBundle('ru', 'translation')).toBe(true);
+    expect(i18n.hasResourceBundle('et', 'translation')).toBe(true);
   });
 
   it('leaves interpolation unescaped so React can handle escaping at render time', () => {

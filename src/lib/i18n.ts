@@ -4,8 +4,9 @@ import { initReactI18next } from 'react-i18next';
 import en from '../../public/locales/en/translation.json';
 import he from '../../public/locales/he/translation.json';
 import ru from '../../public/locales/ru/translation.json';
+import et from '../../public/locales/et/translation.json';
 
-export const LOCALES = ['en', 'he', 'ru'] as const;
+export const LOCALES = ['en', 'he', 'ru', 'et'] as const;
 export type AppLocale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: AppLocale = 'en';
@@ -18,6 +19,7 @@ export const localeResources = {
   en: { translation: en },
   he: { translation: he },
   ru: { translation: ru },
+  et: { translation: et },
 } as const satisfies Resource;
 
 function initI18nInstance(instance: I18nInstance, locale: AppLocale) {

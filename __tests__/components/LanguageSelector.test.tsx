@@ -40,7 +40,7 @@ describe('LanguageSelector', () => {
 
     expect(menu).toBeInTheDocument();
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
-    expect(links).toHaveLength(3);
+    expect(links).toHaveLength(4);
   });
 
   it('marks the active locale link with aria-current', async () => {
@@ -63,6 +63,7 @@ describe('LanguageSelector', () => {
     expect(within(menu).getByRole('link', { name: /english/i })).toHaveAttribute('href', '/en/projects?tab=featured');
     expect(within(menu).getByRole('link', { name: /עברית/i })).toHaveAttribute('href', '/he/projects?tab=featured');
     expect(within(menu).getByRole('link', { name: /русский/i })).toHaveAttribute('href', '/ru/projects?tab=featured');
+    expect(within(menu).getByRole('link', { name: /eesti/i })).toHaveAttribute('href', '/et/projects?tab=featured');
   });
 
   it('closes on Escape', async () => {

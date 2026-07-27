@@ -8,7 +8,7 @@ This repository is intentionally small in surface area and high in signal. It is
 
 - Clear product positioning for an engineer working in Go, TypeScript, cloud infrastructure, video streaming, and real estate technology
 - Production-grade frontend architecture using Next.js App Router, React 19, and Tailwind CSS v4
-- Multilingual UX with English, Hebrew, and Russian, including RTL support and locale-aware routing
+- Multilingual UX with English, Hebrew, Russian, and Estonian, including RTL support and locale-aware routing
 - Motion design with performance guardrails, reduced-motion support, and layout-stability testing
 - Security-conscious defaults including CSP, HSTS, X-Frame-Options, and related response headers
 - SEO work that goes beyond metadata: canonical URLs, alternate language links, sitemap, robots, Open Graph, Twitter cards, and JSON-LD
@@ -28,7 +28,7 @@ The site is designed around a few principles:
 - Sticky responsive header that condenses into a compact identity bar after scroll
 - Animated cipher-style text transitions during language changes
 - Locale persistence via cookie-based middleware redirects
-- English, Hebrew, and Russian translations backed by `i18next`
+- English, Hebrew, Russian, and Estonian translations backed by `i18next`
 - RTL-aware layout handling for Hebrew
 - About, Experience, and Projects sections driven by structured content
 - Contact surface with GitHub, LinkedIn, email, secure email, and optional PGP public key modal
@@ -61,7 +61,7 @@ src/
   hooks/            Custom animation and layout hooks
   lib/              i18n, cipher character sets, shared helpers
 
-public/locales/     Translation files for en / he / ru
+public/locales/     Translation files for en / he / ru / et
 __tests__/          Unit and integration coverage
 cypress/            Browser-level user journeys
 playwright/         Performance and layout-stability checks
@@ -74,7 +74,7 @@ open-next.config.ts OpenNext Cloudflare adapter configuration
 
 ### Internationalization that affects routing, metadata, and layout
 
-Locales are part of the URL structure (`/en`, `/he`, `/ru`), not just client-side state. Middleware redirects the root path to the preferred locale, persists the choice in a cookie, and injects locale context into the request pipeline. The document direction also switches correctly for Hebrew.
+Locales are part of the URL structure (`/en`, `/he`, `/ru`, `/et`), not just client-side state. Middleware redirects the root path to the preferred locale, persists the choice in a cookie, and injects locale context into the request pipeline. The document direction also switches correctly for Hebrew.
 
 ### Motion that is designed, measured, and constrained
 

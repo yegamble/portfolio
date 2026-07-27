@@ -174,6 +174,16 @@ export function RussiaFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
   );
 }
 
+export function EstoniaFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
+  return (
+    <BaseFlagIcon className={className}>
+      <rect width="36" height="8" fill="#0072CE" />
+      <rect y="8" width="36" height="8" fill="#000" />
+      <rect y="16" width="36" height="8" fill="#fff" />
+    </BaseFlagIcon>
+  );
+}
+
 export function LayersIcon({ className = 'h-9 w-9 text-primary/90' }: IconProps) {
   return (
     <BaseIcon viewBox="0 0 24 24" className={className}>

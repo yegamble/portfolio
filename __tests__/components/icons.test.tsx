@@ -13,6 +13,7 @@ import {
   USFlagIcon,
   IsraelFlagIcon,
   RussiaFlagIcon,
+  EstoniaFlagIcon,
 } from '@/components/icons';
 
 const ICONS_CONFIG = [
@@ -136,6 +137,7 @@ describe('Icon components', () => {
       { name: 'USFlagIcon', Component: USFlagIcon },
       { name: 'IsraelFlagIcon', Component: IsraelFlagIcon },
       { name: 'RussiaFlagIcon', Component: RussiaFlagIcon },
+      { name: 'EstoniaFlagIcon', Component: EstoniaFlagIcon },
     ] as const;
 
     FLAG_ICONS.forEach(({ name, Component }) => {
@@ -165,6 +167,12 @@ describe('Icon components', () => {
 
     it('RussiaFlagIcon should contain 3 rect elements for stripes', () => {
       const { container } = render(<RussiaFlagIcon />);
+      const rects = container.querySelectorAll('rect');
+      expect(rects.length).toBe(3);
+    });
+
+    it('EstoniaFlagIcon should contain 3 rect elements for stripes', () => {
+      const { container } = render(<EstoniaFlagIcon />);
       const rects = container.querySelectorAll('rect');
       expect(rects.length).toBe(3);
     });

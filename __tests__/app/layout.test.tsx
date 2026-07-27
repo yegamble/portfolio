@@ -69,7 +69,12 @@ describe('LocaleLayout', () => {
   });
 
   it('provides static params for each supported locale', () => {
-    expect(generateStaticParams()).toEqual([{ locale: 'en' }, { locale: 'he' }, { locale: 'ru' }]);
+    expect(generateStaticParams()).toEqual([
+      { locale: 'en' },
+      { locale: 'he' },
+      { locale: 'ru' },
+      { locale: 'et' },
+    ]);
   });
 
   it('returns locale-specific metadata with canonical URLs', async () => {
@@ -80,6 +85,16 @@ describe('LocaleLayout', () => {
     expect(metadata.alternates?.canonical).toBe('https://yosefgamble.com/he');
     expect(metadata.openGraph?.url).toBe('https://yosefgamble.com/he');
     expect(metadata.openGraph?.locale).toBe('he_IL');
+  });
+
+  it('returns Estonian metadata with the et_EE Open Graph locale', async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'et' }),
+    });
+
+    expect(metadata.alternates?.canonical).toBe('https://yosefgamble.com/et');
+    expect(metadata.openGraph?.url).toBe('https://yosefgamble.com/et');
+    expect(metadata.openGraph?.locale).toBe('et_EE');
   });
 
   it('calls notFound for invalid locales', async () => {

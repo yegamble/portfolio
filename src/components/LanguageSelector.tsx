@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { USFlagIcon, IsraelFlagIcon, RussiaFlagIcon } from '@/components/icons';
+import { USFlagIcon, IsraelFlagIcon, RussiaFlagIcon, EstoniaFlagIcon } from '@/components/icons';
 import { getDirection, getLocalizedPathname, type AppLocale } from '@/lib/i18n';
 
 interface LanguageOption {
@@ -17,6 +17,7 @@ const LANGUAGES: LanguageOption[] = [
   { code: 'en', label: 'English', initials: 'EN', Flag: USFlagIcon },
   { code: 'he', label: 'עברית', initials: 'עב', Flag: IsraelFlagIcon },
   { code: 'ru', label: 'Русский', initials: 'RU', Flag: RussiaFlagIcon },
+  { code: 'et', label: 'Eesti', initials: 'ET', Flag: EstoniaFlagIcon },
 ];
 
 function buildLanguageHref(

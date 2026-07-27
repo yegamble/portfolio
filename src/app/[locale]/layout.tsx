@@ -12,6 +12,15 @@ import {
 
 const SITE_URL = 'https://yosefgamble.com';
 
+// Record<AppLocale, ...> keeps this exhaustive: adding a locale without an
+// Open Graph mapping fails typecheck.
+const OG_LOCALES: Record<AppLocale, string> = {
+  en: 'en_US',
+  he: 'he_IL',
+  ru: 'ru_RU',
+  et: 'et_EE',
+};
+
 function getMetadataForLocale(locale: AppLocale): Metadata {
   const href = `${SITE_URL}${getLocaleHref(locale)}`;
   const meta = getLocaleMessages(locale).meta;
@@ -51,7 +60,7 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
       description: meta.ogDescription,
       url: href,
       siteName: 'Yosef Gamble',
-      locale: locale === 'he' ? 'he_IL' : locale === 'ru' ? 'ru_RU' : 'en_US',
+      locale: OG_LOCALES[locale],
       type: 'website',
       images: [
         {

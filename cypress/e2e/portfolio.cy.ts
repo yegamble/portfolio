@@ -252,3 +252,29 @@ describe('Hero Contact Icons & PGP Modal', () => {
     cy.get('[role="dialog"]').should('not.exist');
   });
 });
+
+describe('Estonian locale', () => {
+  it('should serve /et with Estonian document attributes and navigation', () => {
+    cy.visit('/et');
+    cy.get('html').should('have.attr', 'lang', 'et').and('have.attr', 'dir', 'ltr');
+    cy.get('nav[aria-label="Peanavigatsioon"]').within(() => {
+      cy.contains('Minust').should('have.attr', 'href', '#about');
+      cy.contains('Kogemus').should('have.attr', 'href', '#experience');
+      cy.contains('Projektid').should('have.attr', 'href', '#projects');
+    });
+    cy.get('section').first().within(() => {
+      cy.contains('Yosef Gamble').should('be.visible');
+      cy.contains('Vanemtarkvaraarendaja').should('be.visible');
+    });
+    cy.get('button[aria-label="Vali keel"]').should('contain.text', 'ET');
+  });
+
+  it('should switch from English to Estonian via the language selector', () => {
+    cy.visit('/en');
+    cy.get('button[aria-label="Select language"]').click();
+    cy.contains('a', 'Eesti').click();
+    cy.get('html').should('have.attr', 'lang', 'et');
+    cy.location('pathname').should('eq', '/et');
+    cy.get('nav[aria-label="Peanavigatsioon"]').should('exist');
+  });
+});
