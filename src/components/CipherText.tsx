@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
 
 interface CipherTextProps {
@@ -32,6 +32,24 @@ const CHAR_SLOT_STYLE = {
 // Word slots reuse CHAR_SLOT_STYLE. Notably they must NOT set overflow:hidden —
 // a non-visible overflow moves an inline-block's baseline to its bottom edge,
 // which inflates every line box and shifts the page during the animation.
+
+const RTL_CHAR_REGEX = /[\u0590-\u07BF\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
+const LETTER_REGEX = /\p{L}/u;
+
+// Inline-block slots are direction-neutral objects for the bidi algorithm, so
+// runs of them get ordered by paragraph direction — mirroring "Go" into "oG"
+// inside RTL text mid-animation. Zero-width strong marks (LRM/RLM) on BOTH
+// sides of each slot rebuild the plain text's bidi run structure without
+// affecting layout. Both sides matter: with a leading mark only, the last
+// slot of a run sits between its own mark and the next run's opposite mark,
+// resolves to the paragraph direction, and jumps across the run.
+function directionMark(text: string): string {
+  for (const char of text) {
+    if (RTL_CHAR_REGEX.test(char)) return '\u200F';
+    if (LETTER_REGEX.test(char)) return '\u200E';
+  }
+  return '';
+}
 
 interface WordSegment {
   text: string;
@@ -174,21 +192,21 @@ export default function CipherText({ children, block = false }: CipherTextProps)
         >
           {segmentWords(targetChars).map((segment) =>
             segment.scramble ? (
-              <span
-                key={segment.start}
-                className="cipher-word-slot"
-                style={CHAR_SLOT_STYLE}
-              >
-                <span className="cipher-char-layout">{segment.text}</span>
-                <span
-                  className="cipher-word"
-                  data-start={segment.start}
-                  data-end={segment.end}
-                  style={CHAR_STYLE}
-                >
-                  {segment.text}
+              <Fragment key={segment.start}>
+                {directionMark(segment.text)}
+                <span className="cipher-word-slot" style={CHAR_SLOT_STYLE}>
+                  <span className="cipher-char-layout">{segment.text}</span>
+                  <span
+                    className="cipher-word"
+                    data-start={segment.start}
+                    data-end={segment.end}
+                    style={CHAR_STYLE}
+                  >
+                    {segment.text}
+                  </span>
                 </span>
-              </span>
+                {directionMark(segment.text)}
+              </Fragment>
             ) : (
               segment.text
             )
@@ -207,19 +225,19 @@ export default function CipherText({ children, block = false }: CipherTextProps)
             const isResolved = char === targetChar;
 
             return (
-              <span
-                key={index}
-                className="cipher-char-slot"
-                style={CHAR_SLOT_STYLE}
-              >
-                <span className="cipher-char-layout">{targetChar}</span>
-                <span
-                  className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
-                  style={CHAR_STYLE}
-                >
-                  {char || targetChar}
+              <Fragment key={index}>
+                {directionMark(targetChar)}
+                <span className="cipher-char-slot" style={CHAR_SLOT_STYLE}>
+                  <span className="cipher-char-layout">{targetChar}</span>
+                  <span
+                    className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
+                    style={CHAR_STYLE}
+                  >
+                    {char || targetChar}
+                  </span>
                 </span>
-              </span>
+                {directionMark(targetChar)}
+              </Fragment>
             );
           })}
         </span>

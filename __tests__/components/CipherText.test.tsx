@@ -360,6 +360,29 @@ describe('CipherText', () => {
       expect(container.querySelectorAll('.cipher-char-slot').length).toBe(0);
     });
 
+    it('should emit zero-width direction marks so slot runs keep bidi order', () => {
+      const longText = `${'מערכת התראות serverless על AWS Lambda '.repeat(3)}סוף`;
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      const animationLayer = container.querySelector('[aria-hidden="true"]');
+      // RLM before Hebrew words, LRM before Latin words
+      expect(animationLayer?.textContent).toContain('‏');
+      expect(animationLayer?.textContent).toContain('‎');
+
+      const slots = Array.from(container.querySelectorAll('.cipher-word-slot'));
+      const latinSlot = slots.find((slot) =>
+        slot.querySelector('.cipher-char-layout')?.textContent === 'AWS'
+      );
+      expect(latinSlot?.previousSibling?.textContent).toBe('‎');
+      const hebrewSlot = slots.find((slot) =>
+        slot.querySelector('.cipher-char-layout')?.textContent === 'מערכת'
+      );
+      expect(hebrewSlot?.previousSibling?.textContent).toBe('‏');
+    });
+
     it('should render ghost word slots that pin layout to the target text during animation', () => {
       const longText = 'alpha beta gamma '.repeat(10).trim();
       mockResult.displayChars = Array.from(longText);
@@ -404,6 +427,31 @@ describe('CipherText', () => {
 
       // Short text keeps per-char span animation
       expect(container.querySelectorAll('.cipher-char-slot').length).toBe(5);
+    });
+
+    it('should emit per-char direction marks in short mode for mixed-direction text', () => {
+      const text = 'שלום Go';
+      mockResult.displayChars = Array.from(text);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const slots = Array.from(container.querySelectorAll('.cipher-char-slot'));
+      const latinSlot = slots.find(
+        (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'G'
+      );
+      expect(latinSlot?.previousSibling?.textContent).toBe('‎');
+      const hebrewSlot = slots.find(
+        (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'ש'
+      );
+      expect(hebrewSlot?.previousSibling?.textContent).toBe('‏');
+
+      // The run-final slot needs a trailing mark too, or it resolves to the
+      // paragraph direction and jumps across its run
+      const lastLatinSlot = slots.find(
+        (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'o'
+      );
+      expect(lastLatinSlot?.nextSibling?.textContent).toBe('‎');
     });
   });
 });
