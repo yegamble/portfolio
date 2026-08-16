@@ -6,18 +6,9 @@ import {
   DEFAULT_LOCALE,
   getDirection,
   getLocaleMessages,
-  getPreferredLocale,
-  LOCALE_COOKIE_NAME,
+  readCookieLocale,
   type AppLocale,
 } from '@/lib/i18n';
-
-function readCookieLocale(): AppLocale {
-  if (typeof document === 'undefined') return DEFAULT_LOCALE;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${LOCALE_COOKIE_NAME}=([^;]*)`)
-  );
-  return getPreferredLocale(match ? decodeURIComponent(match[1]) : undefined);
-}
 
 export default function NotFound() {
   // Start at the default locale so the first render matches the server output,

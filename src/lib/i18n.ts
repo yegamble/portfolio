@@ -78,6 +78,14 @@ export function getPreferredLocale(cookieLocale?: string | null): AppLocale {
   return isAppLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
 }
 
+export function readCookieLocale(): AppLocale {
+  if (typeof document === 'undefined') return DEFAULT_LOCALE;
+  const match = document.cookie.match(
+    new RegExp(`(?:^|; )${LOCALE_COOKIE_NAME}=([^;]*)`)
+  );
+  return getPreferredLocale(match ? decodeURIComponent(match[1]) : undefined);
+}
+
 export function getLocaleMessages(locale: AppLocale) {
   return localeResources[locale].translation;
 }
