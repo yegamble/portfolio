@@ -48,9 +48,9 @@ describe('environment variables resolution', () => {
     expect(contact.pgpPublicKey).toBe('ssh-rsa AAAAB3NzaC1yc...');
   });
 
-  it('resolves constants to null when env vars are empty, undefined, or invalid', async () => {
-    process.env.NEXT_PUBLIC_CONTACT_EMAIL = '  ';
-    process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = 'invalid-email';
+  it('resolves constants to null when env vars are missing (undefined)', async () => {
+    delete process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+    delete process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL;
     delete process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY;
 
     const contact = await import('@/lib/contact');
@@ -58,5 +58,39 @@ describe('environment variables resolution', () => {
     expect(contact.primaryEmailHref).toBeNull();
     expect(contact.secureEmailHref).toBeNull();
     expect(contact.pgpPublicKey).toBeNull();
+  });
+
+  it('resolves constants to null when env vars are empty strings', async () => {
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL = '';
+    process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = '';
+    process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY = '';
+
+    const contact = await import('@/lib/contact');
+
+    expect(contact.primaryEmailHref).toBeNull();
+    expect(contact.secureEmailHref).toBeNull();
+    expect(contact.pgpPublicKey).toBeNull();
+  });
+
+  it('resolves constants to null when env vars contain only whitespace', async () => {
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL = '   ';
+    process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = '  \n  ';
+    process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY = ' \t ';
+
+    const contact = await import('@/lib/contact');
+
+    expect(contact.primaryEmailHref).toBeNull();
+    expect(contact.secureEmailHref).toBeNull();
+    expect(contact.pgpPublicKey).toBeNull();
+  });
+
+  it('resolves constants to null when env vars contain invalid emails', async () => {
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL = 'invalid-email';
+    process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL = 'missing@domain';
+
+    const contact = await import('@/lib/contact');
+
+    expect(contact.primaryEmailHref).toBeNull();
+    expect(contact.secureEmailHref).toBeNull();
   });
 });
