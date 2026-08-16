@@ -110,6 +110,8 @@ export default function Experience() {
         <a
           className="group inline-flex items-center gap-2 font-semibold text-text-primary"
           href="https://www.linkedin.com/in/yosefgamble/"
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label={t('experience.viewResume')}
         >
           <span className="border-b border-transparent pb-px transition-all group-hover:border-primary">
