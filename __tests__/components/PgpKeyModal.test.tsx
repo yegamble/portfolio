@@ -32,7 +32,13 @@ beforeEach(() => {
   });
 });
 
+import { keyInfoCache } from '@/components/PgpKeyModal';
+
 describe('PgpKeyModal', () => {
+  beforeEach(() => {
+    keyInfoCache.clear();
+  });
+
   it('should not render when isOpen is false', () => {
     render(
       <PgpKeyModal isOpen={false} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />

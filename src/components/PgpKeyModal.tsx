@@ -32,6 +32,8 @@ function decodeArmoredKey(raw: string): string {
   }
 }
 
+export const keyInfoCache = new Map<string, PgpKeyInfo>();
+
 export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModalProps) {
   const { t } = useTranslation();
   const [keyInfo, setKeyInfo] = useState<PgpKeyInfo | null>(null);
@@ -56,29 +58,38 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     previousFocusRef.current = document.activeElement as HTMLElement;
 
     let cancelled = false;
-    setLoading(true);
-    setError(false);
 
-    (async () => {
-      try {
-        const { readKey } = await import('openpgp');
-        const key = await readKey({ armoredKey: decodedKey });
-        if (cancelled) return;
+    if (keyInfoCache.has(decodedKey)) {
+      setKeyInfo(keyInfoCache.get(decodedKey)!);
+      setLoading(false);
+      setError(false);
+    } else {
+      setLoading(true);
+      setError(false);
 
-        const algoInfo = key.getAlgorithmInfo();
-        setKeyInfo({
-          fingerprint: formatFingerprint(key.getFingerprint()),
-          userIds: key.getUserIDs(),
-          algorithm: `${algoInfo.algorithm}${algoInfo.bits ? ` (${algoInfo.bits}-bit)` : ''}`,
-          created: key.getCreationTime().toISOString().split('T')[0],
-          keyId: key.getKeyID().toHex(),
-        });
-      } catch {
-        if (!cancelled) setError(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+      (async () => {
+        try {
+          const { readKey } = await import('openpgp');
+          const key = await readKey({ armoredKey: decodedKey });
+          if (cancelled) return;
+
+          const algoInfo = key.getAlgorithmInfo();
+          const info = {
+            fingerprint: formatFingerprint(key.getFingerprint()),
+            userIds: key.getUserIDs(),
+            algorithm: `${algoInfo.algorithm}${algoInfo.bits ? ` (${algoInfo.bits}-bit)` : ''}`,
+            created: key.getCreationTime().toISOString().split('T')[0],
+            keyId: key.getKeyID().toHex(),
+          };
+          keyInfoCache.set(decodedKey, info);
+          setKeyInfo(info);
+        } catch {
+          if (!cancelled) setError(true);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
+    }
 
     return () => {
       cancelled = true;
