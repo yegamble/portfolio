@@ -215,11 +215,13 @@ describe('Experience', () => {
   });
 
   describe('Resume link', () => {
-    it('should render the resume link with correct href', () => {
+    it('should render the resume link with correct href and security attributes', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
       const link = within(section).getByRole('link', { name: /view full/i });
       expect(link).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
 
     it('should have descriptive aria-label on resume link', () => {
