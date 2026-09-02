@@ -247,27 +247,20 @@ describe('Projects', () => {
       expect(within(group).getAllByRole('button')).toHaveLength(4);
     });
 
-    it('should give each dot a 24px target around the 8px dot', () => {
+    // The 24px target itself is measured from a real box in
+    // cypress/e2e/portfolio.cy.ts, and the dot's contrast is Lighthouse's job.
+    it('should keep the dot itself out of the accessible name', () => {
       render(<Projects />);
       const button = dot(/project alpha/i);
-      expect(button).toHaveClass('h-6', 'w-6', 'flex', 'items-center', 'justify-center');
 
-      const inner = button.querySelector('span');
-      expect(inner).toHaveClass('h-2', 'w-2');
-      expect(inner).toHaveAttribute('aria-hidden', 'true');
+      expect(button.querySelector('span')).toHaveAttribute('aria-hidden', 'true');
+      expect(button).toHaveAccessibleName('Project Alpha');
     });
 
     it('should mark the visible card with aria-current', () => {
       render(<Projects />);
       expect(dot(/project alpha/i)).toHaveAttribute('aria-current', 'true');
       expect(dot(/project beta/i)).not.toHaveAttribute('aria-current');
-    });
-
-    it('should hold inactive dots at a contrast-passing slate', () => {
-      render(<Projects />);
-      // bg-slate-500 clears 3:1 against the page background; bg-slate-600 did not.
-      expect(dot(/project beta/i).querySelector('span')).toHaveClass('bg-slate-500');
-      expect(dot(/project alpha/i).querySelector('span')).toHaveClass('bg-primary');
     });
 
     it('should scroll the chosen card into view smoothly by default', async () => {

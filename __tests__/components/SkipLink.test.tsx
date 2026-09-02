@@ -20,23 +20,15 @@ describe('SkipLink', () => {
     expect(link).toHaveAttribute('href', '#main');
   });
 
-  it('should stay out of the way until it is focused', async () => {
+  // What it looks like once focused — that it leaves the 1px sr-only box and
+  // lands above the sticky header — is asserted from real computed styles in
+  // cypress/e2e/portfolio.cy.ts. Here we only care that it is reachable.
+  it('should be the first thing a Tab press reaches', async () => {
     const user = userEvent.setup();
     render(<SkipLink />);
-    const link = screen.getByRole('link', { name: testEn.nav.skipToContent });
-
-    expect(link).toHaveClass('sr-only');
-    expect(link.className).toContain('focus:not-sr-only');
 
     await user.tab();
-    expect(link).toHaveFocus();
-  });
-
-  it('should pin itself to the start edge so it follows text direction', () => {
-    render(<SkipLink />);
-    const link = screen.getByRole('link', { name: testEn.nav.skipToContent });
-    expect(link.className).toContain('focus:start-4');
-    expect(link.className).toContain('focus:top-4');
+    expect(screen.getByRole('link', { name: testEn.nav.skipToContent })).toHaveFocus();
   });
 
   it.each([
