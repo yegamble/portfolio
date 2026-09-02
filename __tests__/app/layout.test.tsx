@@ -33,6 +33,8 @@ import LocaleLayout, {
   viewport,
 } from '@/app/[locale]/layout';
 
+import { LOCALES, type AppLocale } from '@/lib/i18n';
+
 import en from '../../public/locales/en/translation.json';
 import he from '../../public/locales/he/translation.json';
 import ru from '../../public/locales/ru/translation.json';
@@ -41,7 +43,15 @@ import et from '../../public/locales/et/translation.json';
 // The production bundles, not the test fixtures in __tests__/setup.ts: page
 // metadata is one of the two things that read them directly (the fallback pages
 // are the other), and the fixtures deliberately carry no `meta` section.
-const MESSAGES = { en, he, ru, et } as const;
+//
+// Record<AppLocale, …> and a LOCALES loop rather than a literal list, so a
+// fifth locale fails typecheck here instead of silently going unasserted.
+const MESSAGES: Record<AppLocale, typeof en | typeof he | typeof ru | typeof et> = {
+  en,
+  he,
+  ru,
+  et,
+};
 
 describe('LocaleLayout', () => {
   beforeEach(() => {
@@ -133,7 +143,7 @@ describe('LocaleLayout', () => {
   });
 
   it('takes the title and both descriptions from the locale being rendered', async () => {
-    for (const locale of ['en', 'he', 'ru', 'et'] as const) {
+    for (const locale of LOCALES) {
       const metadata = await generateMetadata({
         params: Promise.resolve({ locale }),
       });
@@ -154,13 +164,11 @@ describe('LocaleLayout', () => {
   // it reads the expectation from the same place the code does.
   it('gives each locale a title and description of its own', async () => {
     const metadata = await Promise.all(
-      (['en', 'he', 'ru', 'et'] as const).map((locale) =>
-        generateMetadata({ params: Promise.resolve({ locale }) })
-      )
+      LOCALES.map((locale) => generateMetadata({ params: Promise.resolve({ locale }) }))
     );
 
-    expect(new Set(metadata.map((entry) => entry.title)).size).toBe(4);
-    expect(new Set(metadata.map((entry) => entry.description)).size).toBe(4);
+    expect(new Set(metadata.map((entry) => entry.title)).size).toBe(LOCALES.length);
+    expect(new Set(metadata.map((entry) => entry.description)).size).toBe(LOCALES.length);
   });
 
   it('lists every locale plus x-default in the hreflang alternates', async () => {

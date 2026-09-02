@@ -8,10 +8,11 @@
 | Integration | Vitest + i18n tests | Language switching, component composition |
 | E2E | Cypress | Full page flows, scroll behavior, responsive layout |
 | Browser perf | Playwright (`playwright/`) | Cipher animation cost, layout stability during language switches |
+| Accessibility | Playwright + `@axe-core/playwright` (`playwright/a11y.spec.ts`) | Zero WCAG 2.0/2.1/2.2 A and AA violations on `/en` and `/he` at 1280×900 and 390×844 |
 
 ### Unit Tests (Vitest + Testing Library)
 
-**Location:** `__tests__/components/<ComponentName>.test.tsx` (also `__tests__/app/`, `__tests__/lib/`, `__tests__/hooks/`, `__tests__/data/`)
+**Location:** `__tests__/components/<ComponentName>.test.tsx` (also `__tests__/app/`, `__tests__/lib/`, `__tests__/hooks/`, `__tests__/data/`, `__tests__/config/`, and `__tests__/locales/` — which asserts the **production** translation files and the fixtures' parity with them, and is the one place that must import `public/locales/*.json` directly: `setup.ts` registers the fixtures over the shared bundles, so `getLocaleMessages()` returns fixture content inside Vitest)
 **Setup:** `__tests__/setup.ts` — imports `jest-dom/vitest` matchers, registers the **fixture translations** from `__tests__/fixtures/translations/{lng}.json` over the production bundles (so production résumé edits never break tests — assert against fixture text, not production text), sets test env vars, and runs `cleanup()` after each test.
 
 **Every component has a corresponding test file.** Maintain 1:1 mapping.

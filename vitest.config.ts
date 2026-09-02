@@ -15,11 +15,16 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**'],
       reporter: ['text-summary', 'json-summary'],
+      // Ratcheted to just under the measured numbers (97.5 statements, 92.5
+      // branches, 98.5 functions, 98.1 lines), close enough that deleting a
+      // suite fails the build and far enough that one refactor does not.
+      // Raise these when the real numbers move up; never lower them to make a
+      // change fit.
       thresholds: {
-        lines: 88,
-        branches: 80,
-        functions: 90,
-        statements: 88,
+        lines: 97,
+        branches: 90,
+        functions: 97,
+        statements: 96,
       },
     },
   },
