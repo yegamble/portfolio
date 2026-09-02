@@ -111,8 +111,13 @@ describe('Skip link', () => {
   it('should reveal itself on focus and hand focus to the content', () => {
     cy.get('a[href="#main"]').focus().should('be.focused');
 
-    // sr-only clips it to a 1px box; focus has to take it out of that.
+    // sr-only clips it to a 1px box; focus has to take it out of that and put
+    // it above the sticky header rather than behind it.
     cy.get('a[href="#main"]').then(($link) => {
+      const style = getComputedStyle($link[0]);
+      expect(style.position).to.eq('fixed');
+      expect(style.zIndex).to.eq('60');
+
       const rect = $link[0].getBoundingClientRect();
       expect(rect.width).to.be.greaterThan(1);
       expect(rect.height).to.be.greaterThan(1);
@@ -122,6 +127,31 @@ describe('Skip link', () => {
     cy.location('hash').should('eq', '#main');
     cy.get('main').should('have.attr', 'tabindex', '-1');
     cy.focused().should('have.attr', 'id', 'main');
+  });
+
+  it('should draw a themed outline where the jump lands', () => {
+    cy.get('a[href="#main"]').focus().click();
+
+    cy.get('main').then(($main) => {
+      const style = getComputedStyle($main[0]);
+      expect(style.outlineStyle).to.eq('solid');
+      expect(style.outlineColor).to.eq('rgb(94, 234, 212)');
+    });
+  });
+});
+
+describe('Project carousel dots', () => {
+  it('should give every dot a target big enough to hit on a phone', () => {
+    cy.viewport(375, 812);
+    cy.visit('/en');
+
+    cy.get('#projects [role="group"] button')
+      .should('have.length', 4)
+      .each(($dot) => {
+        const rect = $dot[0].getBoundingClientRect();
+        expect(rect.width).to.be.at.least(24);
+        expect(rect.height).to.be.at.least(24);
+      });
   });
 });
 

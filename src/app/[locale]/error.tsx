@@ -20,7 +20,14 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   }, [error]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 px-6">
+    // This boundary replaces the page inside the locale layout, and that layout
+    // still renders the skip link — without the target here the link would
+    // point at nothing.
+    <main
+      id="main"
+      tabIndex={-1}
+      className="flex min-h-screen flex-col items-center justify-center bg-slate-900 px-6 focus-visible:outline-2 focus-visible:outline-primary"
+    >
       <div className="max-w-md text-center" role="alert">
         <h1 className="mb-4 text-4xl font-bold text-text-primary">{t('error.title')}</h1>
         <p className="mb-8 text-lg text-text-secondary">{t('error.description')}</p>

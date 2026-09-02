@@ -39,6 +39,14 @@ describe('ErrorPage', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
+  it('should carry the skip link target so the link is never a dead anchor', () => {
+    render(<ErrorPage error={new Error('Test error')} reset={vi.fn()} />);
+    const main = screen.getByRole('main');
+    // The locale layout still renders the skip link above this boundary.
+    expect(main).toHaveAttribute('id', 'main');
+    expect(main).toHaveAttribute('tabindex', '-1');
+  });
+
   it('should use main landmark element', () => {
     render(<ErrorPage error={new Error('Test error')} reset={vi.fn()} />);
 

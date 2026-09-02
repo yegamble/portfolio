@@ -25,8 +25,14 @@ export default async function LocalizedHomePage({
           exposes them as the banner and contentinfo landmarks. */}
       <ScrollHeader />
       {/* tabIndex -1 so following the skip link moves focus here, not just the
-          viewport — otherwise the next Tab press returns to the header. */}
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl px-6 pb-24 lg:px-8">
+          viewport — otherwise the next Tab press returns to the header. The
+          outline is what tells a keyboard user the jump landed; focus-visible
+          keeps it off a mouse click into the same region. */}
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl px-6 pb-24 focus-visible:outline-2 focus-visible:outline-primary lg:px-8"
+      >
         <About />
         <Experience />
         <Projects />
