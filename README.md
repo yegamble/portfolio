@@ -48,7 +48,7 @@ The site is designed around a few principles:
 | Deployment | Wrangler |
 | Unit tests | Vitest + Testing Library + JSDOM |
 | End-to-end tests | Cypress |
-| Layout and animation verification | Playwright |
+| Accessibility, layout, and animation verification | Playwright + axe-core |
 | Language | TypeScript |
 | Package manager | pnpm 10 |
 
@@ -67,7 +67,7 @@ src/
 public/locales/     Translation files for en / he / ru / et
 __tests__/          Unit and integration coverage
 cypress/            Browser-level user journeys
-playwright/         Performance and layout-stability checks
+playwright/         Accessibility, performance, and layout-stability checks
 .github/workflows/  CI pipeline and deploy workflow
 wrangler.jsonc      Cloudflare Workers configuration
 open-next.config.ts OpenNext Cloudflare adapter configuration
@@ -174,7 +174,7 @@ If you later add route mappings or custom domains to the Worker configuration, a
 | `pnpm typecheck` | Runs TypeScript without emitting output |
 | `pnpm test` | Runs the Vitest suite |
 | `pnpm test:e2e` | Runs Cypress end-to-end tests |
-| `pnpm test:playwright` | Runs Playwright layout and performance checks |
+| `pnpm test:playwright` | Runs Playwright accessibility, layout, and performance checks |
 | `pnpm build:worker` | Generates the Cloudflare Worker build with OpenNext |
 | `pnpm preview` | Builds and previews the Cloudflare Worker locally |
 | `pnpm deploy` | Builds and deploys the Worker to Cloudflare |
@@ -187,6 +187,7 @@ This repository is tested at multiple levels:
 - Unit and integration tests validate components, hooks, data modules, metadata generation, and i18n behavior
 - Cypress covers major user-facing flows such as navigation, hero rendering, responsiveness, and the PGP modal
 - Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics
+- axe-core runs over `/en` and `/he` at desktop and phone widths, asserting zero WCAG 2.0/2.1/2.2 A and AA violations
 
 ## Continuous integration
 

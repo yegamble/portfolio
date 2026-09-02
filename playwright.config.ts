@@ -17,11 +17,11 @@ export default defineConfig({
   },
   projects: [
     {
-      // Deliberately no retries. These assert geometry, which is deterministic;
-      // a retry would let a real layout regression that only reproduces
-      // sometimes pass as "flaky".
+      // Geometry and accessibility: both are deterministic given a rendered
+      // page, so deliberately no retries — a retry would let a real regression
+      // that only reproduces sometimes pass as "flaky".
       name: 'layout',
-      testMatch: /layout-stability\.spec\.ts/,
+      testMatch: /(layout-stability|a11y)\.spec\.ts/,
       retries: 0,
     },
     {
