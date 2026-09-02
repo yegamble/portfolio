@@ -199,7 +199,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     animationContent = (
       <>
         <span className="sr-only">{text}</span>
-        <span ref={longTextRef} aria-hidden="true" className="cipher-text-scramble">
+        <span ref={longTextRef} aria-hidden="true" data-cipher-text={text}>
           {segmentWords(targetChars).map((segment) =>
             // A segment with no letters (a bare year, an em dash) stays plain
             // text so it keeps its neutral bidi class and its digits are not

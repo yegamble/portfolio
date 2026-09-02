@@ -354,6 +354,53 @@ describe('useCipherTransition', () => {
       expect(overlays[1]).toHaveClass('cipher-resolved');
     });
 
+    it('should not wipe overlays the incoming render owns when text changes mid-animation', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const slotsFor = (first: string, second: string) =>
+        `<span class="cipher-word-slot"><span class="cipher-char-layout">${first}</span>` +
+        `<span class="cipher-word" data-start="0" data-end="${first.length}">${first}</span></span> ` +
+        `<span class="cipher-word-slot"><span class="cipher-char-layout">${second}</span>` +
+        `<span class="cipher-word" data-start="${first.length + 1}" ` +
+        `data-end="${first.length + 1 + second.length}">${second}</span></span>`;
+
+      const element = document.createElement('span');
+      element.dataset.cipherText = 'AAAAA AAAAA';
+      element.innerHTML = slotsFor('AAAAA', 'AAAAA');
+      const elementRef = { current: element as HTMLSpanElement | null };
+
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text, { elementRef }), {
+        initialProps: { text: 'AAAAA AAAAA' },
+      });
+
+      rerender({ text: 'HELLO WORLD' });
+      act(() => rafCallbacks.shift()?.(100));
+
+      // React commits the incoming render BEFORE running the outgoing effect's
+      // cleanup, and it reuses this same span: new stamp, new overlays. The
+      // cleanup must not blank DOM that the new render owns.
+      element.dataset.cipherText = 'BONJOUR MONDE';
+      element.innerHTML = slotsFor('BONJOUR', 'MONDE');
+
+      rerender({ text: 'BONJOUR MONDE' });
+
+      const overlays = element.querySelectorAll('.cipher-word');
+      expect(overlays).toHaveLength(2);
+
+      // ...and the new animation writes into them, rather than falling back to
+      // the un-pinned textContent path for the rest of its run.
+      act(() => rafCallbacks.shift()?.(200));
+      expect(overlays[0].textContent).toHaveLength(7);
+      expect(overlays[1].textContent).toHaveLength(5);
+      expect(element.querySelectorAll('.cipher-char-layout')).toHaveLength(2);
+    });
+
     it('should write scramble frames into word-slot overlays without touching the ghost layout', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
 

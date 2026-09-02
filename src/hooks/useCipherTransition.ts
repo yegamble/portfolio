@@ -169,7 +169,19 @@ function useCipherLoop(
         return;
       }
       const el = elementRef?.current;
-      if (el) el.textContent = value;
+      if (!el) return;
+      // A teardown caused by a text change runs AFTER React has committed the
+      // incoming render, which reuses this same span for the new text's word
+      // slots. Blanking it here would destroy DOM the new render owns, and the
+      // next animation would find no overlays and fall back to writing
+      // textContent — unpinned, so every frame reflows the page. The stamp
+      // CipherText puts on the span tells the two apart: it still reads this
+      // effect's text only when nothing newer has rendered into it, i.e. a real
+      // unmount or a disable. (Bare spans with no stamp keep the old
+      // behaviour.)
+      const stamp = el.dataset.cipherText;
+      if (stamp !== undefined && stamp !== value) return;
+      el.textContent = value;
     };
     // Char mode defers the reduced-motion settle one RAF so React commits the
     // resolved text once; ref mode writes the DOM synchronously.
