@@ -1,18 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-const { redirectMock, cookiesMock, notFoundMock } = vi.hoisted(() => ({
-  redirectMock: vi.fn(),
-  cookiesMock: vi.fn(),
+const { notFoundMock } = vi.hoisted(() => ({
   notFoundMock: vi.fn(),
 }));
 
-vi.mock('next/headers', () => ({
-  cookies: cookiesMock,
-}));
-
 vi.mock('next/navigation', () => ({
-  redirect: redirectMock,
   notFound: notFoundMock,
 }));
 
@@ -36,38 +29,13 @@ vi.mock('@/components/Footer', () => ({
   default: () => <div data-testid="footer">Mock Footer</div>,
 }));
 
-import IndexPage from '@/app/page';
 import LocalizedHomePage from '@/app/[locale]/page';
 
-describe('Index Page', () => {
+describe('Localized Home Page', () => {
   beforeEach(() => {
-    redirectMock.mockReset();
-    cookiesMock.mockReset();
     notFoundMock.mockReset();
   });
 
-  it('redirects to the default locale when no locale cookie is set', async () => {
-    cookiesMock.mockResolvedValue({
-      get: vi.fn().mockReturnValue(undefined),
-    });
-
-    await IndexPage();
-
-    expect(redirectMock).toHaveBeenCalledWith('/en');
-  });
-
-  it('redirects to the cookie locale when it is valid', async () => {
-    cookiesMock.mockResolvedValue({
-      get: vi.fn().mockReturnValue({ value: 'he' }),
-    });
-
-    await IndexPage();
-
-    expect(redirectMock).toHaveBeenCalledWith('/he');
-  });
-});
-
-describe('Localized Home Page', () => {
   it('renders all sections successfully for a valid locale', async () => {
     const markup = renderToStaticMarkup(
       await LocalizedHomePage({ params: Promise.resolve({ locale: 'en' }) })

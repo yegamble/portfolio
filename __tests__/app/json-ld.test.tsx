@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import JsonLd from '@/app/json-ld';
+import type { AppLocale } from '@/lib/i18n';
 
 describe('JsonLd', () => {
-  function getSchemas(): unknown[] {
-    const markup = renderToStaticMarkup(<JsonLd />);
+  function getSchemas(locale: AppLocale = 'en'): unknown[] {
+    const markup = renderToStaticMarkup(<JsonLd locale={locale} />);
     const matches = [
       ...markup.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/g),
     ];
@@ -27,6 +28,18 @@ describe('JsonLd', () => {
     expect(person.jobTitle.length).toBeGreaterThan(0);
     expect(typeof person.url).toBe('string');
     expect(typeof person.image).toBe('string');
+  });
+
+  it('points Person.image at the portrait rather than the Open Graph banner', () => {
+    const schemas = getSchemas();
+    const person = schemas.find((s: any) => s['@type'] === 'Person') as any;
+    expect(person.image).toBe('https://yosefgamble.com/images/profile.jpg');
+    expect(person.image).not.toContain('og-image');
+  });
+
+  it('points Person.mainEntityOfPage at the localized route', () => {
+    const person = getSchemas('he').find((s: any) => s['@type'] === 'Person') as any;
+    expect(person.mainEntityOfPage).toBe('https://yosefgamble.com/he');
   });
 
   it('includes sameAs with social profile URLs', () => {
@@ -82,5 +95,11 @@ describe('JsonLd', () => {
     expect(website.name.length).toBeGreaterThan(0);
     expect(typeof website.url).toBe('string');
     expect(website.url).toMatch(/^https:\/\//);
+  });
+
+  it('declares every supported language on the WebSite schema', () => {
+    const schemas = getSchemas();
+    const website = schemas.find((s: any) => s['@type'] === 'WebSite') as any;
+    expect(website.inLanguage).toEqual(['en', 'he', 'ru', 'et']);
   });
 });

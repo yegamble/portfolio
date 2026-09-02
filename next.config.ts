@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['react-i18next', 'i18next'],
+    // Serves `app/global-not-found.tsx` for unmatched paths, which renders its
+    // own <html lang/dir> and <title> instead of Next's __next_error__ shell.
+    globalNotFound: true,
   },
   async headers() {
     return [

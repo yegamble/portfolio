@@ -1,16 +1,42 @@
 import type { Metadata } from 'next';
+import { Inter, Heebo } from 'next/font/google';
 import { notFound } from 'next/navigation';
+import JsonLd from '@/app/json-ld';
 import I18nProvider from '@/components/I18nProvider';
 import {
   DEFAULT_LOCALE,
+  getDirection,
   getLocaleHref,
   getLocaleMessages,
   isAppLocale,
   LOCALES,
   type AppLocale,
 } from '@/lib/i18n';
+import '../globals.css';
 
 const SITE_URL = 'https://yosefgamble.com';
+
+// This is the application's root layout: it owns <html>/<body>. Everything the
+// document needs comes from the `locale` route param, so the four locale routes
+// prerender at build time instead of being forced dynamic by a per-request
+// header read.
+
+// Latin covers the UI and the Latin cipher glyph pool; Cyrillic is needed for
+// /ru and for the Cyrillic glyphs the cipher scrambles through. latin-ext buys
+// nothing here and cost a fifth preloaded font file on every locale.
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+// Heebo is only ever used for Hebrew text (globals.css puts it first for
+// `html:lang(he)`), so its Latin subset is dead weight.
+const heebo = Heebo({
+  subsets: ['hebrew'],
+  display: 'swap',
+  variable: '--font-heebo',
+});
 
 // Record<AppLocale, ...> keeps this exhaustive: adding a locale without an
 // Open Graph mapping fails typecheck.
@@ -118,5 +144,21 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  return <I18nProvider locale={locale}>{children}</I18nProvider>;
+  return (
+    <html
+      lang={locale}
+      dir={getDirection(locale)}
+      className={`${inter.variable} ${heebo.variable}`}
+    >
+      <body className="min-h-screen font-[family-name:var(--font-inter),var(--font-heebo)] antialiased leading-relaxed">
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-slate-900" />
+          <div className="absolute -right-[10%] -top-[10%] h-[40rem] w-[40rem] rounded-full bg-[#1e293b] opacity-30 blur-[100px]" />
+          <div className="absolute -bottom-[10%] -left-[10%] h-[30rem] w-[30rem] rounded-full bg-[#1e293b] opacity-30 blur-[80px]" />
+        </div>
+        <JsonLd locale={locale} />
+        <I18nProvider locale={locale}>{children}</I18nProvider>
+      </body>
+    </html>
+  );
 }

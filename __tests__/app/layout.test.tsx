@@ -2,13 +2,8 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-const { headersMock, notFoundMock } = vi.hoisted(() => ({
-  headersMock: vi.fn(),
+const { notFoundMock } = vi.hoisted(() => ({
   notFoundMock: vi.fn(),
-}));
-
-vi.mock('next/headers', () => ({
-  headers: headersMock,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -28,33 +23,14 @@ vi.mock('@/components/I18nProvider', () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-import RootLayout from '@/app/layout';
 import LocaleLayout, { generateMetadata, generateStaticParams } from '@/app/[locale]/layout';
 
-describe('RootLayout', () => {
+describe('LocaleLayout', () => {
   beforeEach(() => {
-    headersMock.mockReset();
     notFoundMock.mockReset();
   });
 
-  it('renders children inside the layout shell with server locale attributes', async () => {
-    headersMock.mockResolvedValue(new Headers([['x-locale', 'he']]));
-
-    const markup = renderToStaticMarkup(
-      await RootLayout({
-        children: <div>Smoke Child</div>,
-      })
-    );
-
-    expect(markup).toContain('Smoke Child');
-    expect(markup).toContain('lang="he"');
-    expect(markup).toContain('dir="rtl"');
-    expect(markup).toContain('pointer-events-none');
-  });
-});
-
-describe('LocaleLayout', () => {
-  it('renders children inside the locale provider wrapper', async () => {
+  it('renders the document shell with the locale from the route params', async () => {
     const markup = renderToStaticMarkup(
       await LocaleLayout({
         children: <div>Locale Child</div>,
@@ -63,6 +39,35 @@ describe('LocaleLayout', () => {
     );
 
     expect(markup).toContain('Locale Child');
+    expect(markup).toContain('lang="en"');
+    expect(markup).toContain('dir="ltr"');
+    expect(markup).toContain('pointer-events-none');
+    expect(markup).toContain('--font-inter');
+    expect(markup).toContain('--font-heebo');
+  });
+
+  it('renders Hebrew right-to-left without reading a request header', async () => {
+    const markup = renderToStaticMarkup(
+      await LocaleLayout({
+        children: <div>Locale Child</div>,
+        params: Promise.resolve({ locale: 'he' }),
+      })
+    );
+
+    expect(markup).toContain('lang="he"');
+    expect(markup).toContain('dir="rtl"');
+  });
+
+  it('embeds the JSON-LD structured data for the active locale', async () => {
+    const markup = renderToStaticMarkup(
+      await LocaleLayout({
+        children: <div>Locale Child</div>,
+        params: Promise.resolve({ locale: 'ru' }),
+      })
+    );
+
+    expect(markup).toContain('application/ld+json');
+    expect(markup).toContain('https://yosefgamble.com/ru');
   });
 
   it('provides static params for each supported locale', () => {
@@ -94,11 +99,31 @@ describe('LocaleLayout', () => {
     expect(metadata.openGraph?.locale).toBe('et_EE');
   });
 
+  it('lists every locale plus x-default in the hreflang alternates', async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'en' }),
+    });
+
+    expect(metadata.alternates?.languages).toEqual({
+      en: 'https://yosefgamble.com/en',
+      he: 'https://yosefgamble.com/he',
+      ru: 'https://yosefgamble.com/ru',
+      et: 'https://yosefgamble.com/et',
+      'x-default': 'https://yosefgamble.com/en',
+    });
+  });
+
   it('calls notFound for invalid locales', async () => {
     await LocaleLayout({
       children: <div>Ignored</div>,
       params: Promise.resolve({ locale: 'de' }),
     });
+
+    expect(notFoundMock).toHaveBeenCalled();
+  });
+
+  it('calls notFound when building metadata for an invalid locale', async () => {
+    await generateMetadata({ params: Promise.resolve({ locale: 'de' }) }).catch(() => undefined);
 
     expect(notFoundMock).toHaveBeenCalled();
   });
