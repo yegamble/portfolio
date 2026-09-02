@@ -33,6 +33,16 @@ body {
   color: var(--color-text-secondary);
 }
 
+/* next/font emits "Inter Fallback" as local(Arial) with no unicode-range, so in
+   the body's default stack every Hebrew glyph resolves in Arial before Heebo is
+   ever consulted and Heebo stays unloaded despite being preloaded. Putting Heebo
+   first for the Hebrew locale fixes that; `html:lang(he) body` outweighs the
+   body's Tailwind font utility and reacts to the synchronous documentElement.lang
+   flip the language selector performs. */
+html:lang(he) body {
+  font-family: var(--font-heebo), var(--font-inter);
+}
+
 ::selection {
   background-color: var(--color-primary-900);
   color: var(--color-primary);
@@ -55,17 +65,42 @@ body {
   background: #475569;
 }
 
-/* Cipher text animation — long text scramble (ref-based, no per-char spans) */
-.cipher-text-scramble {
-  opacity: 0.75;
+/* Cipher text animation — scramble overlays are absolutely positioned inside a
+   slot sized to the FINAL glyph, so a wider cipher glyph (CJK, kana, Devanagari,
+   uppercase Cyrillic — 1.2-1.8x a Latin lowercase advance) spills out of it. On a
+   390px viewport that widened documentElement.scrollWidth to 500-570px on every
+   frame and made the browser rescale the mobile layout viewport for a full
+   second. `clip` — not `hidden` — because clip creates no scroll container: a
+   scroll container moves an inline-block's baseline to its bottom edge and would
+   inflate every line box. Clipping one axis also keeps overflow-y visible. */
+.cipher-word-slot,
+.cipher-char-slot {
+  overflow-x: clip;
+}
+
+/* Second line of defence for the same problem: nothing inside the landmarks may
+   widen the document while the scramble runs. overflow-x: clip leaves
+   overflow-y visible, so the language dropdown still escapes the header. */
+header,
+header + section,
+main,
+footer {
+  overflow-x: clip;
+}
+
+/* Cipher text animation — long text scramble (ref-based, per-word overlays).
+   Each word dims while it cycles and brightens the moment it lands on its
+   target, so the decrypt reads word by word instead of as one flat layer. */
+.cipher-word {
+  opacity: 0.7;
+  transition: opacity 300ms ease-out;
+}
+
+.cipher-word.cipher-resolved {
+  opacity: 1;
 }
 
 /* Cipher text animation — per-char effect (short text only) */
-.cipher-char-slot {
-  font-kerning: none;
-  font-variant-ligatures: none;
-}
-
 .cipher-char-layout {
   visibility: hidden;
   white-space: pre;
@@ -99,6 +134,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cipher-word {
+    transition: none;
+    opacity: 1;
+  }
   .cipher-char {
     transition: none;
     opacity: 1;
