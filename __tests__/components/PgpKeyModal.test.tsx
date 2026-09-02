@@ -15,6 +15,9 @@ const REUSE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'ReuseKeyData'
 const UNPARSEABLE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'BrokenKeyData');
 const OTHER_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'OtherKeyData');
 const LOADING_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'LoadingKeyData');
+const PHASE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'PhaseKeyData');
+const SILENCE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'SilenceKeyData');
+const CACHED_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'CachedKeyData');
 const ALERT_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'AlertKeyData');
 
 const mockKeyData = {
@@ -45,14 +48,6 @@ beforeEach(() => {
     configurable: true,
   });
 });
-
-// While the key is still parsing the modal carries a second status region (the
-// loading notice), so the copy feedback is addressed through the row it shares
-// with the button it belongs to.
-function copyStatus(): HTMLElement {
-  const row = screen.getByRole('button', { name: 'Copy Key' }).parentElement;
-  return within(row as HTMLElement).getByRole('status');
-}
 
 describe('PgpKeyModal', () => {
   it('should not render when isOpen is false', () => {
@@ -140,7 +135,7 @@ describe('PgpKeyModal', () => {
     const copyButton = screen.getByRole('button', { name: /copy key/i });
     await user.click(copyButton);
     await waitFor(() => {
-      expect(copyStatus()).toHaveTextContent('Copied!');
+      expect(screen.getByRole('status')).toHaveTextContent('Copied!');
     });
   });
 
@@ -148,14 +143,14 @@ describe('PgpKeyModal', () => {
     const user = userEvent.setup({ writeToClipboard: false });
     render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
 
-    // The live region exists up front; a region mounted alongside its first
-    // message is not announced.
-    expect(copyStatus()).toHaveTextContent('');
+    // The live region is mounted from the first render; a region that appears
+    // together with its first message is not announced.
+    expect(screen.getByRole('status')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Copy Key' }));
 
     await waitFor(() => {
-      expect(copyStatus()).toHaveTextContent('Copied!');
+      expect(screen.getByRole('status')).toHaveTextContent('Copied!');
     });
     expect(screen.getByRole('button', { name: 'Copy Key' })).toBeInTheDocument();
   });
@@ -217,9 +212,9 @@ describe('PgpKeyModal', () => {
       screen.getByRole('button', { name: 'Copy Key' }).click();
 
       await waitFor(() => {
-        expect(copyStatus()).toHaveTextContent('Copy failed');
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
       });
-      expect(copyStatus()).not.toHaveTextContent('Copied!');
+      expect(screen.getByRole('status')).not.toHaveTextContent('Copied!');
     });
 
     it('should tell the user when the browser exposes no Clipboard API at all', async () => {
@@ -232,7 +227,7 @@ describe('PgpKeyModal', () => {
       screen.getByRole('button', { name: 'Copy Key' }).click();
 
       await waitFor(() => {
-        expect(copyStatus()).toHaveTextContent('Copy failed');
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
       });
     });
 
@@ -240,12 +235,12 @@ describe('PgpKeyModal', () => {
       mockWriteText.mockRejectedValueOnce(new Error('Document is not focused'));
       render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
 
-      expect(copyStatus()).toHaveAttribute('aria-live', 'polite');
+      expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite');
 
       screen.getByRole('button', { name: 'Copy Key' }).click();
 
       await waitFor(() => {
-        expect(copyStatus()).toHaveTextContent('Copy failed');
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
       });
       expect(screen.getByRole('button', { name: 'Copy Key' })).toBeInTheDocument();
     });
@@ -259,12 +254,12 @@ describe('PgpKeyModal', () => {
         await act(async () => {
           screen.getByRole('button', { name: 'Copy Key' }).click();
         });
-        expect(copyStatus()).toHaveTextContent('Copy failed');
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
 
         await act(async () => {
           vi.advanceTimersByTime(2000);
         });
-        expect(copyStatus()).toHaveTextContent('');
+        expect(screen.getByRole('status')).toHaveTextContent('');
       } finally {
         vi.useRealTimers();
       }
@@ -292,10 +287,48 @@ describe('PgpKeyModal', () => {
     });
   });
 
-  it('should announce that the key details are still loading', () => {
-    render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={LOADING_ARMORED_KEY} />);
-    const loading = screen.getByText('Loading key details...');
-    expect(loading).toHaveAttribute('role', 'status');
+  describe('the status region', () => {
+    it('should be the only one, so nothing competes to be announced', async () => {
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={LOADING_ARMORED_KEY} />);
+      expect(screen.getAllByRole('status')).toHaveLength(1);
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent('Key details loaded');
+      });
+      expect(screen.getAllByRole('status')).toHaveLength(1);
+    });
+
+    it('should announce that the key details are still loading', () => {
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={PHASE_ARMORED_KEY} />);
+      expect(screen.getByRole('status')).toHaveTextContent('Loading key details...');
+    });
+
+    it('should announce the parse finishing, then fall silent', async () => {
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={SILENCE_ARMORED_KEY} />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent('Key details loaded');
+      });
+
+      // The announcement is an event, not a label — it goes back to empty so
+      // the next thing the region says is heard as new.
+      await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(''), {
+        timeout: 4000,
+      });
+    });
+
+    it('should say nothing on reopen, when the details are already there', async () => {
+      const { unmount } = render(
+        <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={CACHED_ARMORED_KEY} />
+      );
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent('Key details loaded');
+      });
+      unmount();
+
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={CACHED_ARMORED_KEY} />);
+      expect(screen.getByRole('status')).toHaveTextContent('');
+      expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
+    });
   });
 
   it('should announce a parse failure assertively', async () => {

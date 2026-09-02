@@ -32,6 +32,9 @@ function decodeArmoredKey(raw: string): string {
   }
 }
 
+// How long an outcome stays in the status region before it goes back to empty.
+const STATUS_WINDOW_MS = 2000;
+
 // Single-entry memo: the modal renders one key at a time, so remembering the
 // most recently parsed key is enough to make reopening it instant.
 let cached: { key: string; info: PgpKeyInfo } | null = null;
@@ -43,6 +46,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
+  const [justLoaded, setJustLoaded] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const focusableElementsRef = useRef<HTMLElement[]>([]);
@@ -56,6 +60,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
       setError(false);
       setCopied(false);
       setCopyFailed(false);
+      setJustLoaded(false);
       previousFocusRef.current?.focus();
       return;
     }
@@ -88,6 +93,10 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           };
           cached = { key: decodedKey, info };
           setKeyInfo(info);
+          // A parse that finishes leaves no visible change a screen reader can
+          // notice on its own — the details it fills in are above the fold of
+          // the dialog's own scroll — so the status region says so.
+          setJustLoaded(true);
         } catch {
           if (!cancelled) setError(true);
         } finally {
@@ -146,6 +155,14 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // The "loaded" line is an announcement, not a permanent label: it clears on
+  // the same 2s window the copy outcome uses, leaving the region empty again.
+  useEffect(() => {
+    if (!justLoaded) return;
+    const timer = setTimeout(() => setJustLoaded(false), STATUS_WINDOW_MS);
+    return () => clearTimeout(timer);
+  }, [justLoaded]);
+
   // The reset timer outlives a click, so it has to be cancellable: reopening the
   // modal or unmounting mid-window would otherwise leave it running.
   useEffect(
@@ -180,7 +197,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     copyResetRef.current = setTimeout(() => {
       setCopied(false);
       setCopyFailed(false);
-    }, 2000);
+    }, STATUS_WINDOW_MS);
   }, [decodedKey]);
 
   const handleBackdropClick = useCallback(
@@ -193,6 +210,17 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
   );
 
   if (!isOpen) return null;
+
+  const statusMessage = copyFailed
+    ? t('pgp.copyFailed')
+    : copied
+      ? t('pgp.copied')
+      : loading
+        ? t('pgp.loading')
+        : justLoaded
+          ? t('pgp.loaded')
+          : '';
+  const statusTone = copyFailed ? 'text-red-400' : copied ? 'text-primary' : 'text-text-muted';
 
   return (
     <div
@@ -222,15 +250,8 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </button>
         </div>
 
-        {/* The parse runs after the dialog is already on screen, so its outcome
-            has to be announced rather than merely rendered: progress politely,
-            failure assertively. */}
-        {loading && (
-          <p role="status" className="mb-4 text-sm text-text-muted">
-            {t('pgp.loading')}
-          </p>
-        )}
-
+        {/* Failure is the one thing that interrupts: the rest of the dialog's
+            lifecycle goes through the single status region below. */}
         {error && (
           <p role="alert" className="mb-4 text-sm text-red-400">
             {t('pgp.error')}
@@ -293,15 +314,13 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
             {t('pgp.copyKey')}
           </button>
 
-          {/* Outside the button so the announcement never becomes part of its
-              accessible name. Rendered even when empty, or the live region
-              would not exist yet at the moment it has something to say. */}
-          <p
-            role="status"
-            aria-live="polite"
-            className={`text-sm ${copyFailed ? 'text-red-400' : 'text-primary'}`}
-          >
-            {copyFailed ? t('pgp.copyFailed') : copied ? t('pgp.copied') : ''}
+          {/* The dialog's one status region: it carries the key parse (loading
+              -> loaded -> empty) and then every copy outcome. Outside the button
+              so the announcement never becomes part of its accessible name, and
+              mounted even when empty — a live region that appears together with
+              its first message is not announced. */}
+          <p role="status" aria-live="polite" className={`text-sm ${statusTone}`}>
+            {statusMessage}
           </p>
         </div>
       </div>
