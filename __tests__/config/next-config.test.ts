@@ -50,10 +50,9 @@ describe('next.config security headers', () => {
     expect(await headerMap(nextConfig)).toEqual(EXPECTED_SECURITY_HEADERS);
   });
 
-  it('should register a single header rule covering all paths', async () => {
+  it('should apply the security set through one rule covering all paths', async () => {
     const routes = await nextConfig.headers!();
 
-    expect(routes).toHaveLength(1);
     expect(routes[0].source).toBe('/:path*');
   });
 
@@ -83,6 +82,28 @@ describe('next.config security headers', () => {
     const csp = (await headerMap(devConfig))['Content-Security-Policy'];
 
     expect(csp).toContain(`${PRODUCTION_SCRIPT_SRC} 'unsafe-eval'`);
+  });
+});
+
+describe('next.config cache headers', () => {
+  it('should cache the icon routes for a day', async () => {
+    const routes = await nextConfig.headers!();
+
+    ['/icon.svg', '/apple-icon.png'].forEach((source) => {
+      const route = routes.find((entry) => entry.source === source);
+
+      expect(route?.headers).toEqual([
+        { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+      ]);
+    });
+  });
+
+  // /favicon.ico is a Workers asset, not a route: the ASSETS binding answers it
+  // before the Worker runs, so its rule has to live in public/_headers.
+  it('should leave /favicon.ico to public/_headers', async () => {
+    const routes = await nextConfig.headers!();
+
+    expect(routes.find((entry) => entry.source === '/favicon.ico')).toBeUndefined();
   });
 });
 

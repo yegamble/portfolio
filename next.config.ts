@@ -2,6 +2,13 @@ import type { NextConfig } from 'next';
 // Relative, not `@/lib/...`: Next's config loader does not apply tsconfig paths.
 import { SECURITY_HEADERS } from './src/lib/security-headers';
 
+// Icons change only when `scripts/process-images.mjs` is re-run, and Next links
+// them with a content hash in the query, so a day of caching costs nothing and
+// saves a request on every repeat visit. `/favicon.ico` is a Workers asset
+// rather than a route, so its rule lives in `public/_headers`.
+const ICON_ROUTES = ['/icon.svg', '/apple-icon.png'];
+const ICON_CACHE_CONTROL = 'public, max-age=86400, stale-while-revalidate=604800';
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
   poweredByHeader: false,
@@ -38,6 +45,10 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: [...SECURITY_HEADERS],
       },
+      ...ICON_ROUTES.map((source) => ({
+        source,
+        headers: [{ key: 'Cache-Control', value: ICON_CACHE_CONTROL }],
+      })),
     ];
   },
 };
