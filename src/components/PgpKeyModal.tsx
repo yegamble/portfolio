@@ -32,7 +32,9 @@ function decodeArmoredKey(raw: string): string {
   }
 }
 
-export const keyInfoCache = new Map<string, PgpKeyInfo>();
+// Single-entry memo: the modal renders one key at a time, so remembering the
+// most recently parsed key is enough to make reopening it instant.
+let cached: { key: string; info: PgpKeyInfo } | null = null;
 
 export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModalProps) {
   const { t } = useTranslation();
@@ -59,8 +61,8 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
 
     let cancelled = false;
 
-    if (keyInfoCache.has(decodedKey)) {
-      setKeyInfo(keyInfoCache.get(decodedKey)!);
+    if (cached?.key === decodedKey) {
+      setKeyInfo(cached.info);
       setLoading(false);
       setError(false);
     } else {
@@ -81,7 +83,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
             created: key.getCreationTime().toISOString().split('T')[0],
             keyId: key.getKeyID().toHex(),
           };
-          keyInfoCache.set(decodedKey, info);
+          cached = { key: decodedKey, info };
           setKeyInfo(info);
         } catch {
           if (!cancelled) setError(true);

@@ -117,12 +117,14 @@ The middleware will redirect `/` to the active locale route, so expect local dev
 
 ### Application variables
 
-For local development, prefer `.env.local`.
+`.env.example` is the checked-in production build configuration: every value in it is public,
+and CI copies it to `.env` (`cp .env.example .env`) before building, so it has to stay in sync
+with what the app needs at build time. For local development, copy it to `.env.local` and
+override values there — `.env` and `.env*.local` are git-ignored.
 
 | Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_CIPHER_TRANSITION` | Enables the text scramble transition during language changes |
-| `NEXT_PUBLIC_I18N_ENABLED` | Controls whether the language selector is shown |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Public contact email used in social links |
 | `NEXT_PUBLIC_SECURE_CONTACT_EMAIL` | Secure contact email used in social links |
 | `NEXT_PUBLIC_PGP_PUBLIC_KEY` | Optional PGP public key shown in the modal |

@@ -50,3 +50,16 @@ next-env.d.ts
 .cursor/
 package-lock.json
 .worktrees/
+
+# local env (.env.example is tracked as the CI/production build config)
+.env
+
+# logs
+*.log
+
+# root-level screenshots / scratch captures
+/*.png
+
+# editor / tooling caches
+.idea/
+.codegraph/

@@ -8,6 +8,11 @@ Version: Test
 mQENBGRhAAAAAAEIATestKeyData
 -----END PGP PUBLIC KEY BLOCK-----`;
 
+// Distinct keys keep tests independent of the module-level single-entry memo,
+// which persists for the lifetime of the module.
+const REUSE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'ReuseKeyData');
+const UNPARSEABLE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'BrokenKeyData');
+
 const mockKeyData = {
   getFingerprint: () => 'abcd1234efgh5678ijkl9012mnop3456qrst7890',
   getUserIDs: () => ['Test User <test@example.com>'],
@@ -32,13 +37,7 @@ beforeEach(() => {
   });
 });
 
-import { keyInfoCache } from '@/components/PgpKeyModal';
-
 describe('PgpKeyModal', () => {
-  beforeEach(() => {
-    keyInfoCache.clear();
-  });
-
   it('should not render when isOpen is false', () => {
     render(
       <PgpKeyModal isOpen={false} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
@@ -165,11 +164,31 @@ describe('PgpKeyModal', () => {
     });
   });
 
+  it('should not parse the key again when the modal is reopened', async () => {
+    const { readKey } = await import('openpgp');
+    vi.mocked(readKey).mockClear();
+
+    const { unmount } = render(
+      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={REUSE_ARMORED_KEY} />
+    );
+    await waitFor(() => {
+      expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
+    });
+    expect(readKey).toHaveBeenCalledTimes(1);
+    unmount();
+
+    render(
+      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={REUSE_ARMORED_KEY} />
+    );
+    expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
+    expect(readKey).toHaveBeenCalledTimes(1);
+  });
+
   it('should display error message when key parsing fails', async () => {
     const openpgp = await import('openpgp');
     vi.mocked(openpgp.readKey).mockRejectedValueOnce(new Error('parse failure'));
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={UNPARSEABLE_ARMORED_KEY} />
     );
     await waitFor(() => {
       expect(screen.getByText('Could not parse key details')).toBeInTheDocument();

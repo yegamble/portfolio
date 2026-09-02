@@ -1,6 +1,6 @@
 # Project: Portfolio — yosefgamble.com
 
-**Last Updated:** 2026-07-27
+**Last Updated:** 2026-09-02
 
 ## Overview
 
@@ -25,7 +25,7 @@ src/app/            # App Router: layout, [locale]/ segment, error/not-found,
 src/components/     # React components (one per file, default exports)
   icons/            # SVG icon + flag components (barrel export)
 src/lib/            # i18n config, cipher character sets, contact helpers
-src/hooks/          # useCipherTransition, usePretextHeight
+src/hooks/          # useCipherTransition
 src/data/           # Non-translatable content metadata (experience, projects)
 middleware.ts       # Locale redirect + cookie + x-locale header
 public/locales/     # Translation JSON (en/, he/, ru/, et/)
@@ -71,7 +71,7 @@ Dark theme with teal accent. All colors defined via Tailwind `@theme`:
 | `primary` | `#5eead4` | Accent color, links, highlights |
 | `text-primary` | `#e2e8f0` | Headings, names |
 | `text-secondary` | `#94a3b8` | Body text |
-| `text-muted` | `#64748b` | Labels, dates |
+| `text-muted` | `#7d8ba1` | Labels, dates |
 | `bg-dark` | `#0f172a` | Page background |
 | `bg-card` / `bg-card-hover` | `rgba(30,41,59,0.3/0.5)` | Project cards |
 
