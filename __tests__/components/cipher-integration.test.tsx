@@ -208,14 +208,14 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
     it('should preserve three date headers in both languages', async () => {
       const { unmount } = render(<Experience />);
       let section = screen.getByRole('region', { name: /work experience/i });
-      let dateHeaders = section.querySelectorAll('header[aria-label]');
+      let dateHeaders = section.querySelectorAll('header');
       expect(dateHeaders).toHaveLength(3);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<Experience />);
       section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-      dateHeaders = section.querySelectorAll('header[aria-label]');
+      dateHeaders = section.querySelectorAll('header');
       expect(dateHeaders).toHaveLength(3);
     });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import SectionHeader from '@/components/SectionHeader';
 import TechTag from '@/components/TechTag';
@@ -33,6 +33,7 @@ function hasExternalCompanyUrl(companyUrl?: string | null): companyUrl is string
 
 export default function Experience() {
   const { t } = useTranslation();
+  const newTabNoticeId = useId();
 
   const jobs = t('experience.jobs', { returnObjects: true }) as ExperienceJob[];
 
@@ -57,10 +58,9 @@ export default function Experience() {
           return (
             <li key={job.id}>
               <div className="group relative grid grid-cols-1 gap-2 transition-all sm:grid-cols-12 sm:gap-6">
-                <header
-                  className="pt-1 text-xs font-semibold uppercase tracking-wide text-text-muted sm:col-span-3"
-                  aria-label={job.dates}
-                >
+                {/* No aria-label: the dates are the element's own visible text,
+                    and a label on a generic element is ignored anyway. */}
+                <header className="pt-1 text-xs font-semibold uppercase tracking-wide text-text-muted sm:col-span-3">
                   <CipherText>{job.dates}</CipherText>
                 </header>
                 <div className="sm:col-span-9">
@@ -68,19 +68,20 @@ export default function Experience() {
                     {hasExternalCompanyUrl(meta.companyUrl) ? (
                       // The visible title/company text is the accessible name
                       // (WCAG 2.5.3): an aria-label here would both replace it
-                      // and bake the English word "at" into every locale, and
-                      // it would rename the <h3> that wraps it too.
+                      // and bake the English word "at" into every locale. The
+                      // new-tab notice is a description rather than part of the
+                      // content, or it would land in the <h3>'s name too.
                       <a
                         className="group/link inline-flex items-baseline font-medium leading-tight text-text-primary transition-colors hover:text-primary"
                         href={meta.companyUrl}
                         target="_blank"
                         rel="noreferrer noopener"
+                        aria-describedby={newTabNoticeId}
                       >
                         <span>
                           <CipherText>{`${job.title} · ${job.company}`}</CipherText>
                         </span>
-                        <ArrowOutwardIcon className="ms-1 inline-block h-4 w-4 shrink-0 translate-y-px transition-transform group-hover/link:-translate-y-1 group-hover/link:translate-x-1 rtl:group-hover/link:-translate-x-1" />{' '}
-                        <span className="sr-only">{t('experience.opensInNewTab')}</span>
+                        <ArrowOutwardIcon className="ms-1 inline-block h-4 w-4 shrink-0 translate-y-px transition-transform group-hover/link:-translate-y-1 group-hover/link:translate-x-1 rtl:group-hover/link:-translate-x-1" />
                       </a>
                     ) : (
                       <span className="inline-flex items-baseline font-medium leading-tight text-text-primary">
@@ -113,14 +114,20 @@ export default function Experience() {
           href="https://www.linkedin.com/in/yosefgamble/"
           target="_blank"
           rel="noopener noreferrer"
+          aria-describedby={newTabNoticeId}
         >
           <span className="border-b border-transparent pb-px transition-all group-hover:border-primary">
             <CipherText>{t('experience.viewResume')}</CipherText>
           </span>
-          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />{' '}
-          <span className="sr-only">{t('experience.opensInNewTab')}</span>
+          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
         </a>
       </div>
+      {/* One description shared by every external link in the section. Keeping
+          it out of their content is what leaves each <h3> named by the job
+          title alone. */}
+      <span id={newTabNoticeId} className="sr-only">
+        {t('experience.opensInNewTab')}
+      </span>
     </section>
   );
 }

@@ -149,19 +149,30 @@ describe('Experience', () => {
       expect(link.textContent).not.toMatch(/ at /);
     });
 
-    it('should warn about the new tab in the link text rather than in English', () => {
+    it('should describe the new tab without putting it in the name', () => {
       render(<Experience />);
       const link = screen.getByRole('link', {
-        name: /principal engineer & architect · edge corp \(opens in a new tab\)/i,
+        name: 'Principal Engineer & Architect · Edge Corp',
       });
-      const notice = within(link).getByText(/\(opens in a new tab\)/i);
-      expect(notice).toHaveClass('sr-only');
+      // A description, not content: the link is the whole of its <h3>, so a
+      // notice in the content would rename the heading too.
+      expect(link).toHaveAccessibleDescription('(opens in a new tab)');
 
       expect(
         screen.queryByRole('link', {
           name: /intern to mid-level engineer · open-source foundation/i,
         })
       ).not.toBeInTheDocument();
+    });
+
+    it('should leave the job heading named by the job alone', () => {
+      render(<Experience />);
+      expect(
+        screen.getByRole('heading', {
+          level: 3,
+          name: 'Principal Engineer & Architect · Edge Corp',
+        })
+      ).toBeInTheDocument();
     });
   });
 
@@ -250,33 +261,35 @@ describe('Experience', () => {
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
 
-    it('should name the resume link from its visible text plus a new-tab notice', () => {
+    it('should name the resume link from its visible text and describe the new tab', () => {
       render(<Experience />);
-      const link = screen.getByRole('link', {
-        name: /view full resume \(opens in a new tab\)/i,
-      });
+      const link = screen.getByRole('link', { name: 'View Full Resume' });
       expect(link).not.toHaveAttribute('aria-label');
-      expect(within(link).getByText(/\(opens in a new tab\)/i)).toHaveClass('sr-only');
+      expect(link).toHaveAccessibleDescription('(opens in a new tab)');
     });
 
     it('should contain arrow right icon', () => {
       render(<Experience />);
-      const link = screen.getByRole('link', { name: /view full resume/i });
+      const link = screen.getByRole('link', { name: 'View Full Resume' });
       const svg = link.querySelector('svg');
       expect(svg).toBeInTheDocument();
       expect(svg).toHaveAttribute('aria-hidden', 'true');
     });
   });
 
-  describe('Date header accessibility', () => {
-    it('should render date headers with aria-label', () => {
+  describe('Date headers', () => {
+    it('should show the dates as text rather than label a generic element', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      const dateHeaders = section.querySelectorAll('header[aria-label]');
+      const dateHeaders = section.querySelectorAll('header');
+
       expect(dateHeaders).toHaveLength(3);
-      expect(dateHeaders[0]).toHaveAttribute('aria-label', '2042 - Present');
-      expect(dateHeaders[1]).toHaveAttribute('aria-label', '2038 - 2042');
-      expect(dateHeaders[2]).toHaveAttribute('aria-label', '2035 - 2038');
+      // A <header> scoped to a list item is generic, so an aria-label on it is
+      // ignored — the dates were already its visible text.
+      expect(dateHeaders[0]).not.toHaveAttribute('aria-label');
+      expect(dateHeaders[0]).toHaveTextContent('2042 - Present');
+      expect(dateHeaders[1]).toHaveTextContent('2038 - 2042');
+      expect(dateHeaders[2]).toHaveTextContent('2035 - 2038');
     });
   });
 
