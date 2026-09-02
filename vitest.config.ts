@@ -13,7 +13,7 @@ export default defineConfig({
     css: false,
     coverage: {
       provider: 'v8',
-      include: ['src/**', 'middleware.ts'],
+      include: ['src/**'],
       reporter: ['text-summary', 'json-summary'],
       thresholds: {
         lines: 88,

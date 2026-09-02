@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { middleware } from '../middleware';
+import { middleware } from '@/middleware';
 import { NextRequest } from 'next/server';
 
 describe('middleware', () => {
