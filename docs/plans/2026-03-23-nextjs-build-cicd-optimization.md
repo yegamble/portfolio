@@ -75,7 +75,7 @@ Type: Feature
 - Cloudflare API token and account ID will be added as GitHub repo secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) — Task 3 depends on this
 - The Cloudflare Pages auto-deploy (if configured) should be disabled after CI deploy is set up — user responsibility, not automated
 - The Hebrew alt text test failure is caused by ProfilePicture not translating its alt text — Task 4 depends on this being the root cause
-- `vite-tsconfig-paths` plugin works correctly at current versions; the deprecation warning is informational only (`resolve.tsconfigPaths` is a Vite 7 feature, not available in Vite 6/Vitest 4) — keeping the plugin as-is
+- `vite-tsconfig-paths` plugin works correctly at current versions; the deprecation warning is informational only (`resolve.tsconfigPaths` is a Vite 7 feature, not available in Vite 6/Vitest 4) — keeping the plugin as-is — **superseded 2026-09-02:** Vitest 4 is on Vite 7, so `vitest.config.ts` sets `resolve.tsconfigPaths: true` natively and the plugin was imported by nothing. It was removed from `devDependencies` in the audit fixes.
 
 ## Risks and Mitigations
 
