@@ -26,22 +26,17 @@ const EXPECTED_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'Content-Security-Policy': EXPECTED_CSP,
 };
 
-async function getRouteHeaders(source: string): Promise<Record<string, string>> {
-  expect(nextConfig.headers).toBeTypeOf('function');
-
-  const routes = await nextConfig.headers!();
-  const route = routes.find((entry) => entry.source === source);
-
-  expect(route).toBeDefined();
-
-  return Object.fromEntries(route!.headers.map((header) => [header.key, header.value]));
-}
-
 describe('next.config security headers', () => {
   it('should apply exactly the expected security headers to every route', async () => {
-    const headers = await getRouteHeaders('/:path*');
+    expect(nextConfig.headers).toBeTypeOf('function');
 
-    expect(headers).toEqual(EXPECTED_SECURITY_HEADERS);
+    const routes = await nextConfig.headers!();
+    const route = routes.find((entry) => entry.source === '/:path*');
+
+    expect(route).toBeDefined();
+    expect(Object.fromEntries(route!.headers.map((header) => [header.key, header.value]))).toEqual(
+      EXPECTED_SECURITY_HEADERS
+    );
   });
 
   it('should register a single header rule covering all paths', async () => {
@@ -50,13 +45,4 @@ describe('next.config security headers', () => {
     expect(routes).toHaveLength(1);
     expect(routes[0].source).toBe('/:path*');
   });
-
-  it.each(Object.entries(EXPECTED_SECURITY_HEADERS))(
-    'should send %s with its exact production value',
-    async (key, value) => {
-      const headers = await getRouteHeaders('/:path*');
-
-      expect(headers[key]).toBe(value);
-    }
-  );
 });

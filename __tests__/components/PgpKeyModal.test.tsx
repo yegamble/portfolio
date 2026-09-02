@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Key } from 'openpgp';
 import PgpKeyModal from '@/components/PgpKeyModal';
 
 const TEST_ARMORED_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -12,6 +13,7 @@ mQENBGRhAAAAAAEIATestKeyData
 // which persists for the lifetime of the module.
 const REUSE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'ReuseKeyData');
 const UNPARSEABLE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'BrokenKeyData');
+const OTHER_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'OtherKeyData');
 
 const mockKeyData = {
   getFingerprint: () => 'abcd1234efgh5678ijkl9012mnop3456qrst7890',
@@ -24,6 +26,11 @@ const mockKeyData = {
 vi.mock('openpgp', () => ({
   readKey: vi.fn(() => Promise.resolve(mockKeyData)),
 }));
+
+const otherKeyData = {
+  ...mockKeyData,
+  getUserIDs: () => ['Other User <other@example.com>'],
+};
 
 const mockOnClose = vi.fn();
 const mockWriteText = vi.fn(() => Promise.resolve());
@@ -150,6 +157,28 @@ describe('PgpKeyModal', () => {
     render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={REUSE_ARMORED_KEY} />);
     expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
     expect(readKey).toHaveBeenCalledTimes(1);
+  });
+
+  it('should parse the key again when a different key is passed', async () => {
+    const { readKey } = await import('openpgp');
+    vi.mocked(readKey).mockClear();
+
+    const { unmount } = render(
+      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+    );
+    await waitFor(() => {
+      expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
+    });
+    unmount();
+
+    vi.mocked(readKey).mockResolvedValueOnce(otherKeyData as unknown as Key);
+    render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={OTHER_ARMORED_KEY} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Other User <other@example.com>')).toBeInTheDocument();
+    });
+    expect(readKey).toHaveBeenCalledTimes(2);
+    expect(readKey).toHaveBeenLastCalledWith({ armoredKey: OTHER_ARMORED_KEY });
   });
 
   it('should display error message when key parsing fails', async () => {
