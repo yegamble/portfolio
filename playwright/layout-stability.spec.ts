@@ -282,13 +282,12 @@ test.describe('language toggle layout stability', () => {
   // after the lang flip (which reflows on its own via the html:lang(he) font
   // stack) left the section at 141 instead of 112.
   //
-  // NOTE: the config runs these against `next dev`, where React commits the i18n
-  // store synchronously inside the click handler, so the drift the pin sees here
-  // is far smaller than in production — which commits it in a microtask
-  // afterwards and needs a +117px correction at this scroll position. The
-  // assertion holds in both and was verified by hand against `next start`; once
-  // CI runs this suite against a production build it becomes a real guard rather
-  // than a smoke test.
+  // NOTE: CI measures a production build — `playwright.config.ts` starts
+  // `next start` when `CI` is set — so there this is a real guard. Locally the
+  // config keeps `next dev`, where React commits the i18n store synchronously
+  // inside the click handler, so the drift the pin sees is far smaller than in
+  // production, which commits it in a microtask afterwards and needs a +117px
+  // correction at this scroll position. The assertion holds in both.
   const EXPERIENCE_RESTING_TOP = 112;
 
   test('a scrolled reader keeps their place across a Hebrew to English switch', async ({

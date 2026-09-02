@@ -72,7 +72,13 @@ html:lang(he) body {
    frame and made the browser rescale the mobile layout viewport for a full
    second. `clip` — not `hidden` — because clip creates no scroll container: a
    scroll container moves an inline-block's baseline to its bottom edge and would
-   inflate every line box. Clipping one axis also keeps overflow-y visible. */
+   inflate every line box. Clipping one axis also keeps overflow-y visible.
+
+   `.cipher-char-slot` carried `font-kerning: none` and
+   `font-variant-ligatures: none` here until this rule replaced them, and their
+   removal was deliberate: every character sits in its own inline-block slot, so
+   shaping never crosses a slot boundary and there was no kerning pair or
+   ligature for either declaration to suppress. */
 .cipher-word-slot,
 .cipher-char-slot {
   overflow-x: clip;
