@@ -61,19 +61,24 @@ const websiteSchema = {
   inLanguage: [...LOCALES],
 };
 
+// `dangerouslySetInnerHTML` writes the payload into the document verbatim, and
+// the HTML parser ends a `<script>` block at the first `</script>` it sees —
+// inside a JSON string or not. Every value here is a literal today, so nothing
+// is broken; escaping `<` costs one pass and means the first translated string
+// anyone drops into a schema cannot break out of the block. `\u003c` still
+// parses as `<`, so the payload a crawler reads is unchanged.
+function serialize(schema: object): string {
+  return JSON.stringify(schema).replace(/</g, '\\u003c');
+}
+
 export default function JsonLd({ locale }: JsonLdProps): React.ReactElement {
   return (
     <>
       <script
         type={JSON_LD_TYPE}
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(buildPersonSchema(locale)),
-        }}
+        dangerouslySetInnerHTML={{ __html: serialize(buildPersonSchema(locale)) }}
       />
-      <script
-        type={JSON_LD_TYPE}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
+      <script type={JSON_LD_TYPE} dangerouslySetInnerHTML={{ __html: serialize(websiteSchema) }} />
     </>
   );
 }

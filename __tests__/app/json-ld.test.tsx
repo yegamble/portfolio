@@ -102,4 +102,25 @@ describe('JsonLd', () => {
     const website = schemas.find((s: any) => s['@type'] === 'WebSite') as any;
     expect(website.inLanguage).toEqual(['en', 'he', 'ru', 'et']);
   });
+
+  // Every value in the payload is a literal today, so the locale prop is the
+  // only way a `<` reaches it — and it stands in here for the first translated
+  // string anyone drops into a schema. Unescaped, the `</script>` inside it ends
+  // the block early and the rest of the payload is parsed as markup.
+  it('escapes < so no value can close the script block early', () => {
+    const hostile = '</script><script>alert(1)</script>' as AppLocale;
+    const markup = renderToStaticMarkup(<JsonLd locale={hostile} />);
+
+    expect(markup).not.toContain('<script>alert(1)');
+    expect(markup).toContain('\\u003c');
+    // The two blocks this component renders, and no third one opened by a value.
+    expect(markup.match(/<script/g)).toHaveLength(2);
+    expect(markup.match(/<\/script>/g)).toHaveLength(2);
+  });
+
+  it('escapes losslessly, so a crawler still reads the original value', () => {
+    const hostile = '</script>' as AppLocale;
+    const person = getSchemas(hostile).find((s: any) => s['@type'] === 'Person') as any;
+    expect(person.mainEntityOfPage).toBe('https://yosefgamble.com/</script>');
+  });
 });
