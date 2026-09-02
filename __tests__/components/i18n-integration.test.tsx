@@ -651,6 +651,17 @@ describe('i18n Regression - Structural integrity across languages', () => {
     expect(within(techLists[0]).getByText('C++')).toHaveAttribute('lang', 'en');
   });
 
+  it('should keep the English repo name at the head of the link name in Hebrew', async () => {
+    await i18n.changeLanguage('he');
+    render(<Projects />);
+    // The old aria-label made the whole name one Hebrew string, so the repo
+    // name lost its lang="en" and was announced with Hebrew phonetics.
+    const link = screen.getByRole('link', {
+      name: `vidra-core ${testHe.projects.onGitHub} ${testHe.projects.opensInNewTab}`,
+    });
+    expect(within(link).getByText('vidra-core')).toHaveAttribute('lang', 'en');
+  });
+
   it('should preserve project URLs in Hebrew Projects', async () => {
     await i18n.changeLanguage('he');
     render(<Projects />);

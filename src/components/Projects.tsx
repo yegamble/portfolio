@@ -115,22 +115,36 @@ export default function Projects() {
               className="mt-4 flex flex-wrap gap-x-4 gap-y-2"
               aria-label={t('projects.viewRepos')}
             >
-              {meta.repos.map((repo) => (
-                <li key={repo.name}>
-                  <a
-                    href={repo.url}
-                    target={repo.url !== '#' ? '_blank' : undefined}
-                    rel={repo.url !== '#' ? 'noreferrer noopener' : undefined}
-                    aria-label={t('projects.viewOnGitHub', { name: repo.name })}
-                    className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
-                  >
-                    <GitHubIcon className="h-3.5 w-3.5" />
-                    <span lang="en">
-                      <CipherText>{repo.name}</CipherText>
-                    </span>
-                  </a>
-                </li>
-              ))}
+              {meta.repos.map((repo) => {
+                const isExternal = repo.url !== '#';
+
+                return (
+                  <li key={repo.name}>
+                    {/* No aria-label: it would replace the visible repo name as
+                        the accessible name and, being one string, would drop the
+                        lang="en" the name is wrapped in — so the Hebrew page
+                        announced "לצפייה ב-vidra-core ב-GitHub" with the repo
+                        name read as Hebrew. The visible name leads; the rest is
+                        a translated suffix inside the link. */}
+                    <a
+                      href={repo.url}
+                      target={isExternal ? '_blank' : undefined}
+                      rel={isExternal ? 'noreferrer noopener' : undefined}
+                      className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
+                    >
+                      <GitHubIcon className="h-3.5 w-3.5" />
+                      <span lang="en">
+                        <CipherText>{repo.name}</CipherText>
+                      </span>{' '}
+                      <span className="sr-only">
+                        {isExternal
+                          ? `${t('projects.onGitHub')} ${t('projects.opensInNewTab')}`
+                          : t('projects.onGitHub')}
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}
@@ -142,7 +156,7 @@ export default function Projects() {
           from the card each one scrolls to rather than an ordinal. */}
       <div
         role="group"
-        aria-label={t('projects.ariaLabel')}
+        aria-label={t('projects.pagination')}
         className="mt-6 flex justify-center gap-2 md:hidden"
       >
         {itemsWithMetadata.map(({ project }, index) => (

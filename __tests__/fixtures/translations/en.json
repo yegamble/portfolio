@@ -56,7 +56,9 @@
     "heading": "Projects",
     "ariaLabel": "Selected projects",
     "techAriaLabel": "Technologies used",
-    "viewOnGitHub": "View {{name}} on GitHub",
+    "onGitHub": "on GitHub",
+    "opensInNewTab": "(opens in a new tab)",
+    "pagination": "Project pagination",
     "viewRepos": "View repositories",
     "items": [
       {
@@ -109,6 +111,7 @@
     "copyFailed": "Copy failed",
     "close": "Close",
     "loading": "Loading key details...",
+    "loaded": "Key details loaded",
     "error": "Could not parse key details",
     "verifyNotice": "Verify this fingerprint through a trusted channel before use."
   },

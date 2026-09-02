@@ -214,7 +214,7 @@ describe('Projects', () => {
 
     it('should render dot indicators for carousel', () => {
       render(<Projects />);
-      const dots = within(screen.getByRole('group', { name: /selected projects/i })).getAllByRole(
+      const dots = within(screen.getByRole('group', { name: /project pagination/i })).getAllByRole(
         'button'
       );
       expect(dots).toHaveLength(4);
@@ -240,9 +240,10 @@ describe('Projects', () => {
       expect(dot(/project delta/i)).toBeInTheDocument();
     });
 
-    it('should group the dots under the section name', () => {
+    it('should group the dots under a name of their own', () => {
       render(<Projects />);
-      const group = screen.getByRole('group', { name: /selected projects/i });
+      // Not the section's name — the group is the pagination, not the projects.
+      const group = screen.getByRole('group', { name: /project pagination/i });
       expect(within(group).getAllByRole('button')).toHaveLength(4);
     });
 
@@ -306,16 +307,14 @@ describe('Projects', () => {
     it('should render repo links for each project', () => {
       render(<Projects />);
       // proj-alpha has 2, proj-beta has 1, proj-gamma has 2, proj-delta has 2 = 7 total
-      const repoLinks = screen.getAllByRole('link', {
-        name: /view .+ on github/i,
-      });
+      const repoLinks = screen.getAllByRole('link', { name: /on github/i });
       expect(repoLinks.length).toBe(7);
     });
 
     it('should render public repo links that open in new tab', () => {
       render(<Projects />);
       const publicLinks = screen
-        .getAllByRole('link', { name: /view .+ on github/i })
+        .getAllByRole('link', { name: /on github/i })
         .filter((l) => l.getAttribute('href') !== '#');
       publicLinks.forEach((link) => {
         expect(link).toHaveAttribute('target', '_blank');
@@ -323,12 +322,22 @@ describe('Projects', () => {
       });
     });
 
-    it('should render the repo name as link text', () => {
+    it('should lead the accessible name with the visible repo name', () => {
       render(<Projects />);
-      expect(
-        screen.getByRole('link', { name: /view proj-alpha-core on github/i })
-      ).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /view proj-beta on github/i })).toBeInTheDocument();
+      // An aria-label would have replaced the visible name outright — and taken
+      // the lang="en" marking with it.
+      const link = screen.getByRole('link', {
+        name: 'proj-alpha-core on GitHub (opens in a new tab)',
+      });
+      expect(link).not.toHaveAttribute('aria-label');
+      expect(within(link).getByText('proj-alpha-core')).toHaveAttribute('lang', 'en');
+    });
+
+    it('should leave the new-tab notice off a link that stays in this tab', () => {
+      render(<Projects />);
+      const sameTab = screen.getByRole('link', { name: 'proj-alpha-ui on GitHub' });
+      expect(sameTab).toHaveAttribute('href', '#');
+      expect(sameTab).not.toHaveAttribute('target');
     });
   });
 
@@ -355,9 +364,7 @@ describe('Projects', () => {
 
     it('should mark the untranslated repo names as English', () => {
       render(<Projects />);
-      const repoLink = screen.getByRole('link', {
-        name: /view proj-alpha-core on github/i,
-      });
+      const repoLink = screen.getByRole('link', { name: /^proj-alpha-core on github/i });
       expect(within(repoLink).getByText('proj-alpha-core')).toHaveAttribute('lang', 'en');
     });
 

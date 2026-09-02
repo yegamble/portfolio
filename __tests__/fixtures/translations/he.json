@@ -56,7 +56,9 @@
     "heading": "פרויקטים",
     "ariaLabel": "פרויקטים נבחרים",
     "techAriaLabel": "טכנולוגיות בשימוש",
-    "viewOnGitHub": "צפה ב-{{name}} ב-GitHub",
+    "onGitHub": "ב-GitHub",
+    "opensInNewTab": "(נפתח בלשונית חדשה)",
+    "pagination": "ניווט בין פרויקטים",
     "viewRepos": "צפה במאגרים",
     "items": [
       {
@@ -109,6 +111,7 @@
     "copyFailed": "ההעתקה נכשלה",
     "close": "סגור",
     "loading": "טוען פרטי מפתח...",
+    "loaded": "פרטי המפתח נטענו",
     "error": "לא ניתן לנתח פרטי מפתח",
     "verifyNotice": "יש לאמת את טביעת האצבע דרך ערוץ מהימן לפני השימוש."
   },

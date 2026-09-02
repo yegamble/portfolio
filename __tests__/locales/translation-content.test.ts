@@ -51,9 +51,14 @@ describe('production translation files', () => {
     });
   });
 
-  it('keeps the {{name}} interpolation placeholder in every locale', () => {
+  // The repo link's accessible name is built as "<repo name> <onGitHub>
+  // <opensInNewTab>", so an empty suffix would leave a bare repo name with no
+  // hint of where the link goes.
+  it('translates both halves of the repo link suffix in every locale', () => {
     [en, he, ru, et].forEach((translation) => {
-      expect(translation.projects.viewOnGitHub).toContain('{{name}}');
+      expect(translation.projects.onGitHub.trim()).not.toBe('');
+      expect(translation.projects.opensInNewTab.trim()).not.toBe('');
+      expect(translation.projects.pagination.trim()).not.toBe('');
     });
   });
 
