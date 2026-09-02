@@ -21,10 +21,13 @@ const LANGUAGES: LanguageOption[] = [
   { code: 'et', label: 'Eesti', initials: 'ET', Flag: EstoniaFlagIcon },
 ];
 
-// The href is the localized pathname only. A query string would have to come
-// from useSearchParams, which opts the whole route out of static rendering
-// unless it sits under a Suspense boundary — and this site has no query-string
-// routes. A live query/hash is re-attached from window.location on selection.
+// The href is the localized pathname only: this site has no query-string routes,
+// so there is nothing for a query to carry. Reading one would mean
+// useSearchParams, which needs a Suspense boundary around this component once
+// the route is statically rendered — the root layout's headers() call keeps the
+// route dynamic today, so this is about not planting a blocker rather than
+// clearing one. A query or hash that is present on the client is re-attached
+// from window.location on selection.
 function buildLanguageHref(pathname: string | null, locale: AppLocale) {
   return getLocalizedPathname(pathname, locale);
 }
@@ -168,8 +171,19 @@ export default function LanguageSelector() {
     };
   }, [close, isOpen]);
 
+  // Tabbing out of the menu should close it, the same as clicking away does.
+  // focusout bubbles, so one handler on the container covers the trigger and
+  // every item; relatedTarget is the element receiving focus, and it is null
+  // when focus leaves the document entirely.
+  const handleFocusOut = (event: React.FocusEvent<HTMLDivElement>) => {
+    if (!isOpen) return;
+    const nextFocus = event.relatedTarget as Node | null;
+    if (nextFocus && event.currentTarget.contains(nextFocus)) return;
+    close();
+  };
+
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative" onBlur={handleFocusOut}>
       <button
         ref={triggerRef}
         type="button"
@@ -181,7 +195,9 @@ export default function LanguageSelector() {
         onKeyDown={handleTriggerKeyDown}
         className="flex items-center gap-1.5 rounded-md border border-slate-700 px-2 py-1 text-xs font-bold tracking-wide text-text-muted transition-colors hover:border-primary hover:text-primary"
         aria-expanded={isOpen}
-        aria-controls={menuId}
+        // The menu only exists while it is open, and aria-controls pointing at
+        // an absent id is a dangling reference.
+        aria-controls={isOpen ? menuId : undefined}
       >
         <currentLang.Flag className="h-3.5 w-5" />
         {/* WCAG 2.5.3: the accessible name has to contain the visible label, so

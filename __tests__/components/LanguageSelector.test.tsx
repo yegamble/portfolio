@@ -122,6 +122,50 @@ describe('LanguageSelector', () => {
     expect(screen.queryByRole('navigation', { name: /select language/i })).not.toBeInTheDocument();
   });
 
+  it('only advertises aria-controls while the menu it points at exists', async () => {
+    const user = userEvent.setup();
+    render(<LanguageSelector />);
+
+    const trigger = screen.getByRole('button', { name: /select language/i });
+    expect(trigger).not.toHaveAttribute('aria-controls');
+
+    await user.click(trigger);
+
+    const menu = screen.getByRole('navigation', { name: /select language/i }).parentElement;
+    expect(trigger).toHaveAttribute('aria-controls', menu?.id);
+  });
+
+  it('closes when focus leaves the selector entirely', async () => {
+    const user = userEvent.setup();
+    render(
+      <div>
+        <LanguageSelector />
+        <button type="button">After</button>
+      </div>
+    );
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    expect(screen.getByRole('navigation', { name: /select language/i })).toBeInTheDocument();
+
+    // Tabbing past the menu should close it, the same as clicking away does.
+    screen.getByRole('button', { name: 'After' }).focus();
+
+    await waitFor(() =>
+      expect(screen.queryByRole('navigation', { name: /select language/i })).not.toBeInTheDocument()
+    );
+  });
+
+  it('stays open while focus moves between its own items', async () => {
+    const user = userEvent.setup();
+    render(<LanguageSelector />);
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    screen.getByRole('link', { name: /eesti/i }).focus();
+    screen.getByRole('link', { name: /русский/i }).focus();
+
+    expect(screen.getByRole('navigation', { name: /select language/i })).toBeInTheDocument();
+  });
+
   it('closes when clicking outside', async () => {
     const user = userEvent.setup();
     render(
