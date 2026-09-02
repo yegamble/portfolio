@@ -1,3 +1,15 @@
+import { experienceEntries } from '../../src/data/experience';
+import { projectEntries } from '../../src/data/projects';
+
+// These specs deliberately assert structure — counts, hrefs, non-empty text —
+// rather than the words on the page. A résumé edit or a retranslation is a
+// content change, and it must not be able to fail the pipeline that ships it;
+// the words themselves are asserted against the translation files in
+// __tests__/locales/translation-content.test.ts, where changing them is cheap.
+const nonEmptyText = ($el: JQuery<HTMLElement>) => {
+  expect($el.text().trim(), $el.prop('tagName')).to.not.be.empty;
+};
+
 describe('Portfolio Site', () => {
   beforeEach(() => {
     cy.visit('/');
@@ -12,13 +24,9 @@ describe('Portfolio Site', () => {
     cy.get('nav[aria-label="Main navigation"]').should('exist');
   });
 
-  it('should display large name in the hero section', () => {
-    cy.get('section')
-      .first()
-      .within(() => {
-        cy.contains('Yosef Gamble').should('be.visible');
-        cy.contains('Senior Software Engineer').should('be.visible');
-      });
+  it('should display the hero identity block', () => {
+    // Name, title and location, each its own paragraph.
+    cy.get('header + section p').should('have.length.at.least', 3).each(nonEmptyText);
   });
 
   it('should show name in navbar after scrolling past hero', () => {
@@ -28,45 +36,71 @@ describe('Portfolio Site', () => {
     // Scroll well past the hero section to ensure it is fully out of viewport
     cy.get('#experience').scrollIntoView();
 
-    // After scrolling, the nav name should become visible
-    cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
-    cy.get('header').should('contain.text', 'Yosef Gamble');
+    // After scrolling, the brand link joins the accessibility tree carrying the
+    // same name the hero shows.
+    cy.get('header a[aria-hidden="false"]', { timeout: 6000 }).should('not.have.attr', 'inert');
+    cy.get('header + section p')
+      .first()
+      .invoke('text')
+      .then((heroName) => {
+        expect(heroName.trim()).to.not.be.empty;
+        // The collapsed brand carries the hero name (plus the job title, once
+        // the viewport is wide enough for it).
+        cy.get('header a[aria-hidden="false"]').invoke('text').should('contain', heroName.trim());
+      });
   });
 
   it('should have navigation links in the header', () => {
     cy.get('nav[aria-label="Main navigation"]').within(() => {
-      cy.get('a').should('have.length', 3);
-      cy.contains('About').should('have.attr', 'href', '#about');
-      cy.contains('Experience').should('have.attr', 'href', '#experience');
-      cy.contains('Projects').should('have.attr', 'href', '#projects');
+      cy.get('a').should('have.length', 3).each(nonEmptyText);
+      cy.get('a[href="#about"]').should('exist');
+      cy.get('a[href="#experience"]').should('exist');
+      cy.get('a[href="#projects"]').should('exist');
     });
   });
 
-  it('should display the hero section with large heading', () => {
-    cy.get('h1').should('contain.text', 'Senior Go & TypeScript engineer');
+  it('should carry exactly one non-empty h1', () => {
+    cy.get('h1').should('have.length', 1).each(nonEmptyText);
   });
 
-  it('should display the About section with content', () => {
+  it('should display the About section with three paragraphs and an employer link', () => {
     cy.get('#about').should('be.visible');
-    cy.get('#about').should('contain.text', 'Central Washington University');
-    cy.get('#about').should('contain.text', 'realestate.co.nz');
+    cy.get('#about p').should('have.length', 3).each(nonEmptyText);
+    cy.get('#about a[target="_blank"]')
+      .should('have.length', 1)
+      .and('have.attr', 'href')
+      .and('match', /^https:\/\//);
   });
 
-  it('should display the Experience section with all positions', () => {
-    cy.get('#experience').should('exist');
-    cy.get('#experience').should('contain.text', 'Independent');
-    cy.get('#experience').should('contain.text', 'realestate.co.nz');
-    cy.get('#experience').should('contain.text', 'ProStock');
+  it('should display one Experience entry per record in src/data', () => {
+    cy.get('#experience ol > li')
+      .should('have.length', experienceEntries.length)
+      .each(nonEmptyText);
+    cy.get('#experience h3').should('have.length', experienceEntries.length).each(nonEmptyText);
+
+    experienceEntries.forEach(({ companyUrl }) => {
+      if (companyUrl) {
+        cy.get(`#experience a[href="${companyUrl}"]`).should('exist');
+      }
+    });
   });
 
-  it('should display technology tags in experience entries', () => {
-    cy.get('#experience').find('[aria-label="Technologies used"]').should('have.length', 3);
+  it('should display a technology list per experience entry', () => {
+    cy.get('#experience ul[aria-label]')
+      .should('have.length', experienceEntries.length)
+      .each(($list, index) => {
+        expect($list.find('li')).to.have.length(experienceEntries[index].technologies.length);
+      });
   });
 
-  it('should display the Projects section with card layout', () => {
-    cy.get('#projects').should('exist');
-    cy.get('#projects').should('contain.text', 'Vidra');
-    cy.get('#projects').should('contain.text', 'Aurialis');
+  it('should display one Projects card per record in src/data', () => {
+    cy.get('#projects h3').should('have.length', projectEntries.length).each(nonEmptyText);
+
+    projectEntries.forEach(({ repos }) => {
+      repos.forEach(({ url }) => {
+        cy.get(`#projects a[href="${url}"]`).should('exist');
+      });
+    });
   });
 
   it('should have social links in the header', () => {
@@ -81,9 +115,12 @@ describe('Portfolio Site', () => {
   });
 
   it('should display the footer with social icons and attribution', () => {
-    cy.get('footer').should('contain.text', 'Coded in');
-    cy.get('footer').should('contain.text', 'Tailwind CSS');
-    cy.get('footer').find('a').should('have.length.at.least', 5);
+    cy.get('footer p').should('have.length', 1).each(nonEmptyText);
+    cy.get('footer a').should('have.length.at.least', 5);
+    // The tools the attribution links to, whatever the sentence around them says.
+    cy.get('footer a[href="https://code.visualstudio.com/"]').should('exist');
+    cy.get('footer a[href="https://tailwindcss.com/"]').should('exist');
+    cy.get('footer a[href="https://fonts.google.com/specimen/Inter"]').should('exist');
   });
 
   it('should navigate to sections via anchor links', () => {
@@ -331,52 +368,93 @@ describe('Hero Contact Icons & PGP Modal', () => {
 });
 
 describe('Estonian locale', () => {
-  it('should serve /et with Estonian document attributes and navigation', () => {
+  it('should serve /et with Estonian document attributes and translated chrome', () => {
+    // Plain variables, not aliases: an alias made from a query chain is
+    // re-executed against whatever page is loaded when it is read back, which
+    // would compare /et with itself.
+    let englishHeading = '';
+    let englishNavLabel: string | undefined = '';
+
+    cy.visit('/en');
+    cy.get('h1')
+      .invoke('text')
+      .then((text) => {
+        englishHeading = text;
+      });
+    cy.get('header nav')
+      .invoke('attr', 'aria-label')
+      .then((label) => {
+        englishNavLabel = label;
+      });
+
     cy.visit('/et');
     cy.get('html').should('have.attr', 'lang', 'et').and('have.attr', 'dir', 'ltr');
-    cy.get('nav[aria-label="Peanavigatsioon"]').within(() => {
-      cy.contains('Minust').should('have.attr', 'href', '#about');
-      cy.contains('Kogemus').should('have.attr', 'href', '#experience');
-      cy.contains('Projektid').should('have.attr', 'href', '#projects');
-    });
-    cy.get('section')
-      .first()
-      .within(() => {
-        cy.contains('Yosef Gamble').should('be.visible');
-        cy.contains('Vanemtarkvaraarendaja').should('be.visible');
-      });
     cy.get('header button[aria-expanded]').should('contain.text', 'ET');
+
+    // Same structure, different words: that is what "the locale routed" means
+    // without naming a single Estonian string.
+    cy.get('header nav a').should('have.length', 3).each(nonEmptyText);
+    cy.get('header nav a[href="#about"]').should('exist');
+    cy.get('header nav a[href="#experience"]').should('exist');
+    cy.get('header nav a[href="#projects"]').should('exist');
+
+    cy.get('h1')
+      .invoke('text')
+      .should((estonianHeading) => {
+        expect(estonianHeading.trim()).to.not.be.empty;
+        expect(estonianHeading).to.not.eq(englishHeading);
+      });
+    cy.get('header nav')
+      .invoke('attr', 'aria-label')
+      .should((estonianNavLabel) => {
+        expect(estonianNavLabel).to.not.be.undefined;
+        expect(estonianNavLabel).to.not.eq(englishNavLabel);
+      });
   });
 
   it('should switch from English to Estonian via the language selector', () => {
     cy.visit('/en');
     cy.get('header button[aria-expanded]').click();
-    cy.contains('a', 'Eesti').click();
+    cy.get('header a[hreflang="et"]').click();
     cy.get('html').should('have.attr', 'lang', 'et');
     cy.location('pathname').should('eq', '/et');
-    cy.get('nav[aria-label="Peanavigatsioon"]').should('exist');
+    cy.get('header button[aria-expanded]').should('contain.text', 'ET');
   });
 });
 
 describe('Hebrew locale', () => {
-  it('should serve /he in RTL with Tel Aviv in the hero location', () => {
+  // Which cities each locale lists is asserted against the translation files in
+  // __tests__/locales/translation-content.test.ts. What only a browser can
+  // answer is whether the page actually lays itself out right-to-left.
+  it('should serve /he in RTL with a translated hero', () => {
     cy.visit('/he');
     cy.get('html').should('have.attr', 'lang', 'he').and('have.attr', 'dir', 'rtl');
-    cy.get('section')
-      .first()
-      .within(() => {
-        cy.contains('ניו יורק | תל אביב | אוקלנד').should('exist');
-      });
+    cy.get('header + section p').should('have.length.at.least', 3).each(nonEmptyText);
   });
 
-  it('should keep the English hero location without Tel Aviv', () => {
+  it('should flip the header logical padding and border to the right in RTL', () => {
+    // The social block is separated by `border-s`/`ps-*`. Logical properties
+    // are the whole reason the RTL layout works without a mirrored stylesheet,
+    // and a physical `border-l` would look identical in English.
+    const socialBlock = () => cy.get('header a[href*="github.com"]').parent();
+
     cy.visit('/en');
-    cy.get('section')
-      .first()
-      .within(() => {
-        cy.contains('NYC | Auckland').should('exist');
-      });
-    cy.get('section').first().should('not.contain.text', 'Tel Aviv');
+    socialBlock().should(($el) => {
+      const style = getComputedStyle($el[0]);
+      expect(parseFloat(style.paddingLeft), 'ltr padding-left').to.be.greaterThan(0);
+      expect(parseFloat(style.paddingRight), 'ltr padding-right').to.eq(0);
+      expect(parseFloat(style.borderLeftWidth), 'ltr border-left').to.be.greaterThan(0);
+      expect(parseFloat(style.borderRightWidth), 'ltr border-right').to.eq(0);
+    });
+
+    cy.visit('/he');
+    socialBlock().should(($el) => {
+      const style = getComputedStyle($el[0]);
+      expect(parseFloat(style.paddingRight), 'rtl padding-right').to.be.greaterThan(0);
+      expect(parseFloat(style.paddingLeft), 'rtl padding-left').to.eq(0);
+      expect(parseFloat(style.borderRightWidth), 'rtl border-right').to.be.greaterThan(0);
+      expect(parseFloat(style.borderLeftWidth), 'rtl border-left').to.eq(0);
+    });
   });
 });
 
@@ -431,6 +509,26 @@ describe('Locale routing and 404s', () => {
     // CDN caching the prerendered page.
     cy.request('/en').then((response) => {
       expect(response.headers).to.not.have.property('set-cookie');
+    });
+  });
+
+  it('should answer /en from the prerender rather than rendering per request', () => {
+    // The locale layout takes its language from the route param instead of a
+    // request header precisely so the four locale routes can be built once. A
+    // header read creeping back in turns them dynamic, which is invisible in
+    // every other test here and expensive in production.
+    cy.request('/en').then((response) => {
+      const headerValue = (name: string) => {
+        const value = response.headers[name];
+        return Array.isArray(value) ? value[0] : value;
+      };
+      const prerender = headerValue('x-nextjs-prerender');
+      const cache = headerValue('x-nextjs-cache');
+
+      expect(
+        prerender === '1' || cache === 'HIT',
+        `x-nextjs-prerender=${prerender ?? 'absent'} x-nextjs-cache=${cache ?? 'absent'}`
+      ).to.eq(true);
     });
   });
 });
