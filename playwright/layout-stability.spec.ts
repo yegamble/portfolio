@@ -417,10 +417,16 @@ test.describe('language toggle layout stability', () => {
 });
 
 /**
- * Sample one element's height across a language switch, every animation frame,
- * starting from the click itself. The click is issued from page script for the
- * same reason switchLanguageInPage does it: locator.click() scrolls its target
- * into view, and the trigger lives in a sticky header.
+ * Sample one element's height across a language switch, every animation frame.
+ *
+ * The click is issued from inside the sampling loop, a couple of frames in, for
+ * two reasons. The obvious one is switchLanguageInPage's: locator.click()
+ * scrolls its target into view and the trigger lives in a sticky header. The
+ * subtle one is that reading a rect straight after a synchronous click() forces
+ * a layout the reader never sees — the selector flips documentElement.lang in
+ * the handler, so a read in that same task already reports the post-flip
+ * geometry even though the frame on screen still shows the old one. Sampling
+ * from rAF only ever reads state that was actually painted.
  */
 async function sampleHeightThroughSwitch(
   page: Page,
@@ -441,16 +447,20 @@ async function sampleHeightThroughSwitch(
       const readings: { elapsed: number; height: number }[] = [];
       const startedAt = performance.now();
       let running = true;
+      let frame = 0;
       const sample = () => {
         readings.push({
           elapsed: performance.now() - startedAt,
           height: element.getBoundingClientRect().height,
         });
+        frame++;
+        if (frame === 2) {
+          document.querySelector<HTMLAnchorElement>(`header a[hreflang="${code}"]`)?.click();
+        }
         if (running) requestAnimationFrame(sample);
       };
 
-      document.querySelector<HTMLAnchorElement>(`header a[hreflang="${code}"]`)?.click();
-      sample();
+      requestAnimationFrame(sample);
       await new Promise((resolve) => window.setTimeout(resolve, duration));
       running = false;
       return readings;
@@ -468,10 +478,11 @@ async function sampleHeightThroughSwitch(
  *
  * The ease begins at the height the reader was looking at when the new text was
  * committed, which is the sample furthest from where the height settles — not
- * necessarily the first one. Switching to Hebrew reflows twice: the selector
- * flips documentElement.lang synchronously, which re-wraps the still-English
- * text in Heebo's metrics (180 -> 240 here), and only then does the translation
- * commit and the ease carry that height down to the Hebrew one.
+ * necessarily the first one, since the switch can reflow more than once. On
+ * en->he the selector's synchronous documentElement.lang flip re-wraps the
+ * still-English text in Heebo's metrics, which already lands on the Hebrew
+ * height; the ease then carries the box down from the English one the reader
+ * had on screen.
  */
 function expectEasedHeightChange(
   readings: { elapsed: number; height: number }[],
