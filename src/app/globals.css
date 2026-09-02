@@ -80,8 +80,11 @@ html:lang(he) body {
 
 /* Second line of defence for the same problem: nothing inside the landmarks may
    widen the document while the scramble runs. overflow-x: clip leaves
-   overflow-y visible, so the language dropdown still escapes the header. */
-header,
+   overflow-y visible, so the language dropdown still escapes the header.
+   Scoped to `body > header` on purpose — a bare `header` would also catch the
+   per-job <header> elements inside Experience, whose grid items rely on
+   min-width: auto and would start truncating a long localized date. */
+body > header,
 header + section,
 main,
 footer {
