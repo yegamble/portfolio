@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
+import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 interface CipherTextProps {
   children?: string;
@@ -29,9 +30,12 @@ const CHAR_SLOT_STYLE = {
   verticalAlign: 'baseline',
 } as const;
 
-// Word slots reuse CHAR_SLOT_STYLE. Notably they must NOT set overflow:hidden —
-// a non-visible overflow moves an inline-block's baseline to its bottom edge,
-// which inflates every line box and shifts the page during the animation.
+// Word slots reuse CHAR_SLOT_STYLE. A slot is sized to the FINAL glyph, so a
+// wider scramble glyph spills out of it; globals.css clips that with
+// `overflow-x: clip` on the slot classes. It must stay `clip` and stay on one
+// axis: `hidden` (or clipping both axes) makes the slot a scroll container,
+// which moves an inline-block's baseline to its bottom edge and inflates every
+// line box for the length of the animation.
 
 const RTL_CHAR_REGEX = /[\u0590-\u07BF\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 const LETTER_REGEX = /\p{L}/u;
@@ -43,12 +47,12 @@ const LETTER_REGEX = /\p{L}/u;
 // affecting layout. Both sides matter: with a leading mark only, the last
 // slot of a run sits between its own mark and the next run's opposite mark,
 // resolves to the paragraph direction, and jumps across the run.
+//
+// Only letter-bearing text ever gets a slot (digits and punctuation stay plain
+// text, so they keep their neutral bidi class and are not mirrored), so a mark
+// is always emitted here.
 function directionMark(text: string): string {
-  for (const char of text) {
-    if (RTL_CHAR_REGEX.test(char)) return '\u200F';
-    if (LETTER_REGEX.test(char)) return '\u200E';
-  }
-  return '';
+  return RTL_CHAR_REGEX.test(text) ? '\u200F' : '\u200E';
 }
 
 interface WordSegment {
@@ -132,6 +136,17 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   const longTextRef = useRef<HTMLSpanElement>(null);
   const targetChars = useMemo(() => Array.from(text), [text]);
 
+  // Overlays must never mount showing the final word: they appear on the render
+  // that flips isAnimating, one or two painted frames before the first scramble
+  // write lands, and a readable translation in that window reads as a flash of
+  // the answer. Seeding them with cipher glyphs closes the gap. Recomputed per
+  // text; SSR and hydration are unaffected because the animating structure only
+  // mounts after a client-side text change.
+  const scrambleSeed = useMemo(
+    () => targetChars.map((char) => (isScramblable(char) ? getRandomCipherChar(char) : char)),
+    [targetChars]
+  );
+
   // Resolve the long-text threshold on the client (and on viewport changes) instead
   // of calling matchMedia in the render body — which would run on every animation
   // frame for every instance. Starts at the desktop value so SSR and the first
@@ -186,7 +201,10 @@ export default function CipherText({ children, block = false }: CipherTextProps)
         <span className="sr-only">{text}</span>
         <span ref={longTextRef} aria-hidden="true" className="cipher-text-scramble">
           {segmentWords(targetChars).map((segment) =>
-            segment.scramble ? (
+            // A segment with no letters (a bare year, an em dash) stays plain
+            // text so it keeps its neutral bidi class and its digits are not
+            // reordered by an RTL paragraph.
+            segment.scramble && LETTER_REGEX.test(segment.text) ? (
               <Fragment key={segment.start}>
                 {directionMark(segment.text)}
                 <span className="cipher-word-slot" style={CHAR_SLOT_STYLE}>
@@ -197,7 +215,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
                     data-end={segment.end}
                     style={CHAR_STYLE}
                   >
-                    {segment.text}
+                    {scrambleSeed.slice(segment.start, segment.end).join('')}
                   </span>
                 </span>
                 {directionMark(segment.text)}
@@ -217,6 +235,15 @@ export default function CipherText({ children, block = false }: CipherTextProps)
         <span aria-hidden="true">
           {displayChars.map((char, index) => {
             const targetChar = targetChars[index] ?? '';
+
+            // Digits, punctuation, dashes and spaces render as plain text
+            // nodes: an inline-block slot is bidi-neutral, so a digit run made
+            // of slots is laid out by paragraph direction and "2024" shows up
+            // as "4202" inside Hebrew copy.
+            if (!isScramblable(targetChar)) {
+              return <Fragment key={index}>{targetChar}</Fragment>;
+            }
+
             const isResolved = char === targetChar;
 
             return (
@@ -228,7 +255,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
                     className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
                     style={CHAR_STYLE}
                   >
-                    {char || targetChar}
+                    {char || scrambleSeed[index]}
                   </span>
                 </span>
                 {directionMark(targetChar)}

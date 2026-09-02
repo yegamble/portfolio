@@ -199,7 +199,7 @@ describe('CipherText', () => {
       });
     });
 
-    it('should reserve layout with one hidden target span per character', () => {
+    it('should reserve layout with one hidden target span per scramblable character', () => {
       const text = 'Hello World';
       mockResult.displayChars = Array.from(text).map(() => 'X');
       mockResult.isAnimating = true;
@@ -209,9 +209,17 @@ describe('CipherText', () => {
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       const layoutSpans = ariaHidden!.querySelectorAll('.cipher-char-layout');
 
-      expect(layoutSpans).toHaveLength(Array.from(text).length);
+      // The space is a plain text node, not a slot — inline-block slots are
+      // bidi-neutral, so only letters may become one.
+      expect(layoutSpans).toHaveLength(10);
       expect(layoutSpans[0]).toHaveTextContent('H');
-      expect(layoutSpans[5]?.textContent).toBe(' ');
+      expect(layoutSpans[5]?.textContent).toBe('W');
+
+      // The space survives as a direct text node between the two word runs.
+      const plainTextNodes = Array.from(ariaHidden!.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent);
+      expect(plainTextNodes).toContain(' ');
     });
 
     it('should absolutely position visual characters over the reserved layout', () => {
@@ -230,7 +238,7 @@ describe('CipherText', () => {
       });
     });
 
-    it('should render one span per character matching text length', () => {
+    it('should render one slot per scramblable character, skipping whitespace', () => {
       const text = 'Hello World';
       mockResult.displayChars = Array.from(text).map(() => 'X');
       mockResult.isAnimating = true;
@@ -239,7 +247,7 @@ describe('CipherText', () => {
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
-      expect(charSpans).toHaveLength(Array.from(text).length);
+      expect(charSpans).toHaveLength(10);
     });
 
     it('should not render wrapper spans when not animating', () => {
@@ -427,6 +435,68 @@ describe('CipherText', () => {
 
       // Short text keeps per-char span animation
       expect(container.querySelectorAll('.cipher-char-slot').length).toBe(5);
+    });
+
+    it('should leave digits, dashes and spaces outside the bidi-neutral slots', () => {
+      const text = '2024 — היום';
+      mockResult.displayChars = Array.from(text);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      // A run of inline-block slots is laid out by paragraph direction, so a
+      // digit inside one is mirrored ("2024" renders as "4202") in Hebrew.
+      const layouts = Array.from(container.querySelectorAll('.cipher-char-layout'));
+      expect(layouts.every((span) => !/[0-9]/.test(span.textContent ?? ''))).toBe(true);
+
+      // Only the four Hebrew letters get a slot; the rest is plain text.
+      expect(container.querySelectorAll('.cipher-char-slot')).toHaveLength(4);
+      expect(container.querySelector('[aria-hidden="true"]')).toHaveTextContent('2024');
+    });
+
+    it('should emit long-text word slots only for segments that contain letters', () => {
+      const longText = `${'\u05d4\u05e7\u05de\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05ea\u05e8\u05d0\u05d5\u05ea '.repeat(6)}2024 \u2014 \u05d4\u05d9\u05d5\u05dd`;
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      const layouts = Array.from(container.querySelectorAll('.cipher-char-layout'));
+      expect(layouts.length).toBeGreaterThan(0);
+      expect(layouts.every((span) => !/[0-9]/.test(span.textContent ?? ''))).toBe(true);
+      expect(layouts.some((span) => span.textContent === '\u2014')).toBe(false);
+      expect(container.querySelector('[aria-hidden="true"]')).toHaveTextContent('2024');
+    });
+
+    it('should mount long-text overlays already scrambled so the answer never flashes', () => {
+      const longText = 'systeme alertes serverless sur AWS Lambda et DynamoDB '.repeat(3).trim();
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      const slots = Array.from(container.querySelectorAll('.cipher-word-slot'));
+      expect(slots.length).toBeGreaterThan(10);
+
+      const flashing = slots.filter((slot) => {
+        const overlay = slot.querySelector('.cipher-word')?.textContent ?? '';
+        const ghost = slot.querySelector('.cipher-char-layout')?.textContent ?? '';
+        return /\p{L}/u.test(ghost) && overlay === ghost;
+      });
+
+      expect(flashing).toHaveLength(0);
+    });
+
+    it('should mount short-text overlays already scrambled when no frame has landed', () => {
+      const text = 'Hello';
+      mockResult.displayChars = ['', '', '', '', ''];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const chars = Array.from(container.querySelectorAll('.cipher-char'));
+      expect(chars).toHaveLength(5);
+      expect(chars.map((span) => span.textContent).join('')).not.toBe(text);
     });
 
     it('should emit per-char direction marks in short mode for mixed-direction text', () => {
