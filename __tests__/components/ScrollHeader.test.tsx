@@ -296,8 +296,8 @@ describe('ScrollHeader', () => {
     it('should apply pointer-events-none when not scrolled', () => {
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameContainer = header.querySelector('[aria-hidden]');
-      expect(navNameContainer?.className).toContain('pointer-events-none');
+      const navNameBlock = header.querySelector('a[aria-hidden] > div');
+      expect(navNameBlock?.className).toContain('pointer-events-none');
     });
 
     it('should remove pointer-events-none when scrolled', () => {
@@ -311,8 +311,43 @@ describe('ScrollHeader', () => {
       });
 
       const header = screen.getByRole('banner');
-      const navNameContainer = header.querySelector('[aria-hidden]');
-      expect(navNameContainer?.className).not.toContain('pointer-events-none');
+      const navNameBlock = header.querySelector('a[aria-hidden] > div');
+      expect(navNameBlock?.className).not.toContain('pointer-events-none');
+    });
+
+    it('should keep the collapsed brand link out of the accessibility tree', () => {
+      render(<ScrollHeader />);
+      const header = screen.getByRole('banner');
+      const brandLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
+
+      // aria-hidden on the inner block left the link itself exposed, so a screen
+      // reader announced a "Yosef Gamble" link that is not on screen.
+      expect(brandLink).toHaveAttribute('aria-hidden', 'true');
+      expect(brandLink).toHaveAttribute('inert');
+      expect(
+        within(header).queryByRole('link', { name: new RegExp(TEST_NAME, 'i') })
+      ).not.toBeInTheDocument();
+    });
+
+    it('should expose the brand link named by its visible text once scrolled', () => {
+      render(<ScrollHeader />);
+
+      act(() => {
+        observerCallback(
+          [{ isIntersecting: false } as IntersectionObserverEntry],
+          {} as IntersectionObserver
+        );
+      });
+
+      const header = screen.getByRole('banner');
+      const brandLink = within(header).getByRole('link', {
+        name: new RegExp(TEST_NAME, 'i'),
+      });
+      expect(brandLink).toHaveAttribute('href', '/en');
+      expect(brandLink).toHaveAttribute('aria-hidden', 'false');
+      expect(brandLink).not.toHaveAttribute('inert');
+      // The visible name is the accessible name (WCAG 2.5.3), not an aria-label.
+      expect(brandLink).not.toHaveAttribute('aria-label');
     });
 
     it('should apply backdrop-blur when scrolled', () => {

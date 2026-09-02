@@ -196,7 +196,9 @@ test.describe('language toggle layout stability', () => {
 
     await waitForHeaderTransition(page);
 
-    const brand = page.locator('header [aria-hidden="false"]').first();
+    // aria-hidden marks the brand link; the block inside it is the element that
+    // grows in and clips, so that is what the width assertions have to measure.
+    const brand = page.locator('header a[aria-hidden="false"] > div').first();
     await expect(brand).toBeVisible();
 
     const controls = page.locator('header > div > div:last-child');

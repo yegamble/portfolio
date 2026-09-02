@@ -44,11 +44,16 @@ export default function ScrollHeader() {
             isScrolled ? 'max-w-3xl justify-between xl:max-w-5xl' : 'max-w-3xl justify-center'
           }`}
         >
-          {/* Name — visible only when scrolled past hero */}
+          {/* Name — visible only when scrolled past hero. aria-hidden and inert
+              sit on the link itself: with them on the inner block the link
+              stayed in the accessibility tree at scroll 0, so a screen reader
+              announced a "Yosef Gamble" link nobody could see. No aria-label
+              either — the visible name inside is the accessible name. */}
           <Link
             className="min-w-0 flex-1 text-base font-bold tracking-tight text-text-primary"
             href={homeHref}
-            aria-label={t('hero.name')}
+            aria-hidden={!isScrolled}
+            inert={!isScrolled}
             tabIndex={isScrolled ? 0 : -1}
             onClick={(e) => {
               e.preventDefault();
@@ -66,7 +71,6 @@ export default function ScrollHeader() {
                   ? 'max-w-0 min-[375px]:max-w-[10rem] lg:max-w-[14rem] xl:max-w-[28rem] translate-y-0 opacity-100'
                   : 'max-w-0 -translate-y-2 opacity-0 pointer-events-none'
               }`}
-              aria-hidden={!isScrolled}
             >
               <CipherText>{t('hero.name')}</CipherText>
 

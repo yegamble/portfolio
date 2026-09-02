@@ -168,8 +168,9 @@ describe('Scroll Header — Responsive Layout', () => {
         cy.get('#experience').scrollIntoView();
         cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
 
-        // The name container should not have visible overflow
-        cy.get('header [aria-hidden="false"]').should('have.css', 'white-space', 'nowrap');
+        // The name container should not have visible overflow. aria-hidden lives
+        // on the brand link; the animated block inside it is what clips.
+        cy.get('header a[aria-hidden="false"] > div').should('have.css', 'white-space', 'nowrap');
 
         // Each navbar link should be fully visible (not clipped)
         if (width >= 640) {
