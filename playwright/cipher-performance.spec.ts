@@ -15,19 +15,19 @@ async function waitForPortfolioReady(page: Page) {
   });
 }
 
-/** Open the language dropdown and click the target language option. */
-async function switchLanguage(page: Page, langLabel: string) {
+/** Open the language dropdown and click the target locale's option. */
+async function switchLanguage(page: Page, locale: string) {
   await page.getByRole('button', { name: /select language/i }).click();
-  await page.getByRole('link', { name: langLabel }).click();
+  await page.locator(`header a[hreflang="${locale}"]`).click();
 }
 
 test.describe('cipher animation performance', () => {
-  test('no cipher animation fires on page reload with stored language', async ({ page }) => {
+  test('no cipher animation fires on page reload with the stored language', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await waitForPortfolioReady(page);
 
-    // Switch to Hebrew to store the language preference
-    await switchLanguage(page, 'עברית');
+    // Switch to Hebrew, which writes the locale cookie the middleware reads
+    await switchLanguage(page, 'he');
     await expect(page.locator('html')).toHaveAttribute('lang', 'he');
 
     // Wait for animation to complete
@@ -68,11 +68,12 @@ test.describe('cipher animation performance', () => {
       }
     });
 
-    // Reload the page — language should be restored from localStorage
-    await page.reload();
+    // Come back to the bare path so the middleware's cookie redirect is the
+    // thing being exercised, not a direct hit on /he.
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Verify language is still Hebrew (restored from localStorage)
+    // Verify language is still Hebrew (restored from the locale cookie)
     await expect(page.locator('html')).toHaveAttribute('lang', 'he');
 
     // Wait a bit to see if any animation triggers
@@ -107,7 +108,7 @@ test.describe('cipher animation performance', () => {
     });
 
     // Trigger language switch animation
-    await switchLanguage(page, 'עברית');
+    await switchLanguage(page, 'he');
 
     // Wait for animation to fully complete (BASE_DELAY + SPREAD_DURATION + buffer)
     await page.waitForTimeout(2500);
@@ -158,7 +159,7 @@ test.describe('cipher animation performance', () => {
     });
 
     // Trigger language switch
-    await switchLanguage(page, 'עברית');
+    await switchLanguage(page, 'he');
 
     // Wait for animation to complete
     await page.waitForTimeout(3000);
@@ -213,7 +214,7 @@ test.describe('cipher animation performance', () => {
     });
 
     // Trigger language switch
-    await switchLanguage(page, 'עברית');
+    await switchLanguage(page, 'he');
 
     // Wait for animation to complete
     await page.waitForTimeout(2500);
