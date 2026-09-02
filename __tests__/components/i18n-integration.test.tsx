@@ -642,6 +642,15 @@ describe('i18n Regression - Structural integrity across languages', () => {
     expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
   });
 
+  it('should mark the English technology names as such inside the Hebrew page', async () => {
+    await i18n.changeLanguage('he');
+    render(<Experience />);
+    const techLists = screen.getAllByRole('list', {
+      name: /טכנולוגיות בשימוש/,
+    });
+    expect(within(techLists[0]).getByText('C++')).toHaveAttribute('lang', 'en');
+  });
+
   it('should preserve project URLs in Hebrew Projects', async () => {
     await i18n.changeLanguage('he');
     render(<Projects />);

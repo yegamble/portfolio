@@ -95,10 +95,14 @@ export default function Projects() {
               <CipherText block>{project.description}</CipherText>
             </p>
 
+            {/* Technology names and repo names below both come from
+                src/data/projects.ts, which is never translated: they stay
+                English on every locale, so each is marked as an English part. */}
             <ul className="flex flex-wrap gap-x-4 gap-y-2" aria-label={t('projects.techAriaLabel')}>
               {meta.technologies.map((tech) => (
                 <li
                   key={tech}
+                  lang="en"
                   className="text-[11px] font-bold uppercase tracking-widest text-text-muted"
                 >
                   <CipherText>{tech}</CipherText>
@@ -121,7 +125,7 @@ export default function Projects() {
                     className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted transition-colors hover:text-primary"
                   >
                     <GitHubIcon className="h-3.5 w-3.5" />
-                    <span>
+                    <span lang="en">
                       <CipherText>{repo.name}</CipherText>
                     </span>
                   </a>

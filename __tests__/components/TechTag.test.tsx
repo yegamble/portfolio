@@ -58,6 +58,16 @@ describe('TechTag', () => {
     expect(screen.getByText('PostgreSQL')).toBeInTheDocument();
   });
 
+  it('should mark the label as English so RTL locales read it correctly', () => {
+    render(
+      <ul>
+        <TechTag label="PostgreSQL" />
+      </ul>
+    );
+    // The labels come from src/data/*, which is never translated.
+    expect(screen.getByText('PostgreSQL')).toHaveAttribute('lang', 'en');
+  });
+
   it('should render with text-primary color class', () => {
     render(
       <ul>

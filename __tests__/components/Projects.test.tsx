@@ -341,6 +341,26 @@ describe('Projects', () => {
       expect(techLists).toHaveLength(4);
     });
 
+    it('should mark the untranslated technology names as English', () => {
+      render(<Projects />);
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
+      within(techLists[0])
+        .getAllByRole('listitem')
+        .forEach((item) => {
+          expect(item).toHaveAttribute('lang', 'en');
+        });
+    });
+
+    it('should mark the untranslated repo names as English', () => {
+      render(<Projects />);
+      const repoLink = screen.getByRole('link', {
+        name: /view proj-alpha-core on github/i,
+      });
+      expect(within(repoLink).getByText('proj-alpha-core')).toHaveAttribute('lang', 'en');
+    });
+
     it('should render technologies for first project', () => {
       render(<Projects />);
       const techLists = screen.getAllByRole('list', {
