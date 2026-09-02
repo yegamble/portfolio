@@ -16,9 +16,13 @@ interface ExperienceJob {
   description: string;
 }
 
-const METADATA_BY_ID = new Map(experienceEntries.map((entry) => [entry.id, entry]));
+const METADATA_BY_ID = new Map(
+  experienceEntries.map((entry) => [entry.id, entry])
+);
 
-function hasExternalCompanyUrl(companyUrl?: string | null): companyUrl is string {
+function hasExternalCompanyUrl(
+  companyUrl?: string | null
+): companyUrl is string {
   if (!companyUrl) {
     return false;
   }

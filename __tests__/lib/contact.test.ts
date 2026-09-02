@@ -7,7 +7,9 @@ describe('validateMailto', () => {
   });
 
   it('trims surrounding whitespace before building the href', () => {
-    expect(validateMailto('  user@example.com  ')).toBe('mailto:user@example.com');
+    expect(validateMailto('  user@example.com  ')).toBe(
+      'mailto:user@example.com'
+    );
   });
 
   it('returns null for empty or whitespace-only input', () => {

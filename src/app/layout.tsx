@@ -26,7 +26,11 @@ export default async function RootLayout({
   const locale = isAppLocale(localeHeader) ? localeHeader : DEFAULT_LOCALE;
 
   return (
-    <html lang={locale} dir={getDirection(locale)} className={`${inter.variable} ${heebo.variable}`}>
+    <html
+      lang={locale}
+      dir={getDirection(locale)}
+      className={`${inter.variable} ${heebo.variable}`}
+    >
       <body className="min-h-screen font-[family-name:var(--font-inter),var(--font-heebo)] antialiased leading-relaxed">
         <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-slate-900" />

@@ -28,7 +28,9 @@ describe('Experience', () => {
   describe('Section structure', () => {
     it('should render the experience section with correct aria label', () => {
       render(<Experience />);
-      expect(screen.getByRole('region', { name: /work experience/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('region', { name: /work experience/i })
+      ).toBeInTheDocument();
     });
 
     it('should have the correct section id for anchor navigation', () => {
@@ -111,12 +113,18 @@ describe('Experience', () => {
       const edgeLink = screen.getByRole('link', {
         name: /principal engineer.*at edge corp/i,
       });
-      expect(edgeLink).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
+      expect(edgeLink).toHaveAttribute(
+        'href',
+        'https://example.com/edge-corp?q=test&lang=en#section'
+      );
 
       const cafeLink = screen.getByRole('link', {
         name: /full-stack developer at cafe societe/i,
       });
-      expect(cafeLink).toHaveAttribute('href', 'https://cafe-societe.example.com/');
+      expect(cafeLink).toHaveAttribute(
+        'href',
+        'https://cafe-societe.example.com/'
+      );
 
       expect(
         screen.queryByRole('link', {
@@ -152,13 +160,17 @@ describe('Experience', () => {
   describe('Technology tags', () => {
     it('should render technology tags for each position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(techLists).toHaveLength(3);
     });
 
     it('should render specific technologies for the Edge Corp position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
@@ -169,7 +181,9 @@ describe('Experience', () => {
 
     it('should render specific technologies for the Cafe Societe position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(within(techLists[1]).getByText('TypeScript')).toBeInTheDocument();
       expect(within(techLists[1]).getByText('React')).toBeInTheDocument();
       expect(within(techLists[1]).getByText('Node.js')).toBeInTheDocument();
@@ -178,7 +192,9 @@ describe('Experience', () => {
 
     it('should render specific technologies for the Open-Source Foundation position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(within(techLists[2]).getByText('Python')).toBeInTheDocument();
       expect(within(techLists[2]).getByText('Kotlin')).toBeInTheDocument();
       expect(within(techLists[2]).getByText('Swift')).toBeInTheDocument();
@@ -186,7 +202,9 @@ describe('Experience', () => {
 
     it('should render TechTag components within tech lists', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       const goTag = within(techLists[0]).getByText('Go');
       expect(goTag).toBeInTheDocument();
       expect(goTag.closest('li')).toBeInTheDocument();
@@ -219,7 +237,10 @@ describe('Experience', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
       const link = within(section).getByRole('link', { name: /view full/i });
-      expect(link).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
+      expect(link).toHaveAttribute(
+        'href',
+        'https://www.linkedin.com/in/yosefgamble/'
+      );
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
@@ -304,13 +325,22 @@ describe('Experience', () => {
       try {
         render(<Experience />);
         expect(
-          screen.getByRole('link', { name: /principal engineer.*at edge corp/i })
-        ).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
+          screen.getByRole('link', {
+            name: /principal engineer.*at edge corp/i,
+          })
+        ).toHaveAttribute(
+          'href',
+          'https://example.com/edge-corp?q=test&lang=en#section'
+        );
         expect(
-          screen.getByRole('link', { name: /full-stack developer at cafe societe/i })
+          screen.getByRole('link', {
+            name: /full-stack developer at cafe societe/i,
+          })
         ).toHaveAttribute('href', 'https://cafe-societe.example.com/');
         expect(
-          screen.queryByRole('link', { name: /intern to mid-level engineer at open-source foundation/i })
+          screen.queryByRole('link', {
+            name: /intern to mid-level engineer at open-source foundation/i,
+          })
         ).not.toBeInTheDocument();
       } finally {
         i18n.addResourceBundle('en', 'translation', original, false, true);

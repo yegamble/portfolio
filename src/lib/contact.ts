@@ -15,6 +15,11 @@ export function validateMailto(email: string | undefined): string | null {
   return EMAIL_PATTERN.test(trimmed) ? `mailto:${trimmed}` : null;
 }
 
-export const primaryEmailHref = validateMailto(process.env.NEXT_PUBLIC_CONTACT_EMAIL);
-export const secureEmailHref = validateMailto(process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL);
-export const pgpPublicKey = process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY?.trim() || null;
+export const primaryEmailHref = validateMailto(
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL
+);
+export const secureEmailHref = validateMailto(
+  process.env.NEXT_PUBLIC_SECURE_CONTACT_EMAIL
+);
+export const pgpPublicKey =
+  process.env.NEXT_PUBLIC_PGP_PUBLIC_KEY?.trim() || null;

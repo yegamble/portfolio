@@ -18,7 +18,9 @@ interface ProjectItem {
   description: string;
 }
 
-const METADATA_BY_ID = new Map(projectEntries.map((entry) => [entry.id, entry]));
+const METADATA_BY_ID = new Map(
+  projectEntries.map((entry) => [entry.id, entry])
+);
 
 export default function Projects() {
   const { t } = useTranslation();
@@ -83,7 +85,9 @@ export default function Projects() {
         {itemsWithMetadata.map(({ project, meta }, index) => (
           <div
             key={project.id}
-            ref={(el) => { cardRefs.current[index] = el; }}
+            ref={(el) => {
+              cardRefs.current[index] = el;
+            }}
             className="group relative flex shrink-0 snap-center flex-col rounded-2xl border border-border-card bg-bg-card p-8 shadow-xl shadow-black/20 transition-all hover:border-border-card-hover hover:bg-bg-card-hover w-[85vw] md:w-auto"
           >
             <div className="mb-6 flex items-start justify-between">

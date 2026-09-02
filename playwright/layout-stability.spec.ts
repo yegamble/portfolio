@@ -106,8 +106,10 @@ function expectWithinEnvelope(
     const key = targetName as keyof typeof LAYOUT_TARGETS;
     const maxWidth = Math.max(start[key].width, end[key].width) + tolerancePx;
     const minWidth = Math.min(start[key].width, end[key].width) - tolerancePx;
-    const maxHeight = Math.max(start[key].height, end[key].height) + tolerancePx;
-    const minHeight = Math.min(start[key].height, end[key].height) - tolerancePx;
+    const maxHeight =
+      Math.max(start[key].height, end[key].height) + tolerancePx;
+    const minHeight =
+      Math.min(start[key].height, end[key].height) - tolerancePx;
 
     snapshots.forEach((snapshot, index) => {
       expect(
@@ -154,8 +156,12 @@ test.describe('language toggle layout stability', () => {
 
     expect(brandBox).not.toBeNull();
     expect(controlsBox).not.toBeNull();
-    expect(brandBox!.x + brandBox!.width).toBeLessThanOrEqual(controlsBox!.x - 12);
-    expect(brandMetrics.scrollWidth).toBeLessThanOrEqual(brandMetrics.clientWidth + 1);
+    expect(brandBox!.x + brandBox!.width).toBeLessThanOrEqual(
+      controlsBox!.x - 12
+    );
+    expect(brandMetrics.scrollWidth).toBeLessThanOrEqual(
+      brandMetrics.clientWidth + 1
+    );
   });
 
   test('desktop transition avoids width and height overshoot during animation', async ({

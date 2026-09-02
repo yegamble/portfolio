@@ -10,8 +10,14 @@ mQENBGRhAAAAAAEIATestKeyData
 
 // Distinct keys keep tests independent of the module-level single-entry memo,
 // which persists for the lifetime of the module.
-const REUSE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'ReuseKeyData');
-const UNPARSEABLE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'BrokenKeyData');
+const REUSE_ARMORED_KEY = TEST_ARMORED_KEY.replace(
+  'TestKeyData',
+  'ReuseKeyData'
+);
+const UNPARSEABLE_ARMORED_KEY = TEST_ARMORED_KEY.replace(
+  'TestKeyData',
+  'BrokenKeyData'
+);
 
 const mockKeyData = {
   getFingerprint: () => 'abcd1234efgh5678ijkl9012mnop3456qrst7890',
@@ -40,28 +46,44 @@ beforeEach(() => {
 describe('PgpKeyModal', () => {
   it('should not render when isOpen is false', () => {
     render(
-      <PgpKeyModal isOpen={false} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={false}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('should render a dialog when isOpen is true', async () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('should display the modal title', async () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     expect(screen.getByText('PGP Public Key')).toBeInTheDocument();
   });
 
   it('should display parsed fingerprint', async () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     await waitFor(() => {
       expect(screen.getByText(/abcd 1234/i)).toBeInTheDocument();
@@ -70,16 +92,26 @@ describe('PgpKeyModal', () => {
 
   it('should display parsed user ID', async () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     await waitFor(() => {
-      expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
+      expect(
+        screen.getByText('Test User <test@example.com>')
+      ).toBeInTheDocument();
     });
   });
 
   it('should display the algorithm info', async () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     await waitFor(() => {
       expect(screen.getByText(/rsaEncryptSign/)).toBeInTheDocument();
@@ -88,7 +120,11 @@ describe('PgpKeyModal', () => {
 
   it('should display the full armored key in a code block', () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     const pre = screen.getByText(/BEGIN PGP PUBLIC KEY BLOCK/);
     expect(pre).toBeInTheDocument();
@@ -97,7 +133,11 @@ describe('PgpKeyModal', () => {
   it('should call onClose when close button is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     const closeButton = screen.getByRole('button', { name: /close/i });
     await user.click(closeButton);
@@ -107,7 +147,11 @@ describe('PgpKeyModal', () => {
   it('should call onClose when backdrop is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     const backdrop = screen.getByRole('dialog').parentElement!;
     await user.click(backdrop);
@@ -117,7 +161,11 @@ describe('PgpKeyModal', () => {
   it('should call onClose when Escape key is pressed', async () => {
     const user = userEvent.setup();
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     await user.keyboard('{Escape}');
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -125,14 +173,22 @@ describe('PgpKeyModal', () => {
 
   it('should have aria-modal attribute', () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
   });
 
   it('should copy key to clipboard when copy button is clicked', async () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     const copyButton = screen.getByRole('button', { name: /copy key/i });
     copyButton.click();
@@ -144,7 +200,11 @@ describe('PgpKeyModal', () => {
   it('should show copied feedback after clicking copy', async () => {
     const user = userEvent.setup({ writeToClipboard: false });
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     const copyButton = screen.getByRole('button', { name: /copy key/i });
     await user.click(copyButton);
@@ -155,12 +215,14 @@ describe('PgpKeyModal', () => {
 
   it('should display verify notice', async () => {
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={TEST_ARMORED_KEY}
+      />
     );
     await waitFor(() => {
-      expect(
-        screen.getByText(/verify this fingerprint/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/verify this fingerprint/i)).toBeInTheDocument();
     });
   });
 
@@ -169,29 +231,49 @@ describe('PgpKeyModal', () => {
     vi.mocked(readKey).mockClear();
 
     const { unmount } = render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={REUSE_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={REUSE_ARMORED_KEY}
+      />
     );
     await waitFor(() => {
-      expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
+      expect(
+        screen.getByText('Test User <test@example.com>')
+      ).toBeInTheDocument();
     });
     expect(readKey).toHaveBeenCalledTimes(1);
     unmount();
 
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={REUSE_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={REUSE_ARMORED_KEY}
+      />
     );
-    expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
+    expect(
+      screen.getByText('Test User <test@example.com>')
+    ).toBeInTheDocument();
     expect(readKey).toHaveBeenCalledTimes(1);
   });
 
   it('should display error message when key parsing fails', async () => {
     const openpgp = await import('openpgp');
-    vi.mocked(openpgp.readKey).mockRejectedValueOnce(new Error('parse failure'));
+    vi.mocked(openpgp.readKey).mockRejectedValueOnce(
+      new Error('parse failure')
+    );
     render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={UNPARSEABLE_ARMORED_KEY} />
+      <PgpKeyModal
+        isOpen={true}
+        onClose={mockOnClose}
+        armoredKey={UNPARSEABLE_ARMORED_KEY}
+      />
     );
     await waitFor(() => {
-      expect(screen.getByText('Could not parse key details')).toBeInTheDocument();
+      expect(
+        screen.getByText('Could not parse key details')
+      ).toBeInTheDocument();
     });
   });
 });

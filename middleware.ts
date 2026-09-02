@@ -26,9 +26,14 @@ export function middleware(request: NextRequest) {
   const pathnameLocale = getPathLocale(pathname);
 
   if (pathnameLocale == null) {
-    const locale = getPreferredLocale(request.cookies.get(LOCALE_COOKIE_NAME)?.value);
+    const locale = getPreferredLocale(
+      request.cookies.get(LOCALE_COOKIE_NAME)?.value
+    );
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = pathname === '/' ? getLocaleHref(locale) : `${getLocaleHref(locale)}${pathname}`;
+    redirectUrl.pathname =
+      pathname === '/'
+        ? getLocaleHref(locale)
+        : `${getLocaleHref(locale)}${pathname}`;
 
     const response = NextResponse.redirect(redirectUrl);
     response.cookies.set(LOCALE_COOKIE_NAME, locale, {

@@ -13,7 +13,10 @@ describe('Experience Data validation', () => {
   it('each entry should have a valid structure', () => {
     experienceEntries.forEach((entry) => {
       // Validate id
-      expect(entry.id, 'Entry id should be defined and non-empty').toBeDefined();
+      expect(
+        entry.id,
+        'Entry id should be defined and non-empty'
+      ).toBeDefined();
       expect(typeof entry.id).toBe('string');
       expect(entry.id.trim().length).toBeGreaterThan(0);
 
@@ -24,7 +27,10 @@ describe('Experience Data validation', () => {
       }
 
       // Validate technologies
-      expect(entry.technologies, 'Entry technologies should be defined and a non-empty array').toBeDefined();
+      expect(
+        entry.technologies,
+        'Entry technologies should be defined and a non-empty array'
+      ).toBeDefined();
       expect(Array.isArray(entry.technologies)).toBe(true);
       expect(entry.technologies.length).toBeGreaterThan(0);
       entry.technologies.forEach((tech) => {

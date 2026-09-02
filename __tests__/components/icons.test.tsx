@@ -17,12 +17,42 @@ import {
 } from '@/components/icons';
 
 const ICONS_CONFIG = [
-  { name: 'GitHubIcon', Component: GitHubIcon, viewBox: '0 0 16 16', defaultClass: 'h-5 w-5' },
-  { name: 'LinkedInIcon', Component: LinkedInIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
-  { name: 'EmailIcon', Component: EmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
-  { name: 'SecureEmailIcon', Component: SecureEmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
-  { name: 'ArrowOutwardIcon', Component: ArrowOutwardIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
-  { name: 'ArrowRightIcon', Component: ArrowRightIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
+  {
+    name: 'GitHubIcon',
+    Component: GitHubIcon,
+    viewBox: '0 0 16 16',
+    defaultClass: 'h-5 w-5',
+  },
+  {
+    name: 'LinkedInIcon',
+    Component: LinkedInIcon,
+    viewBox: '0 0 24 24',
+    defaultClass: 'h-5 w-5',
+  },
+  {
+    name: 'EmailIcon',
+    Component: EmailIcon,
+    viewBox: '0 0 24 24',
+    defaultClass: 'h-5 w-5',
+  },
+  {
+    name: 'SecureEmailIcon',
+    Component: SecureEmailIcon,
+    viewBox: '0 0 24 24',
+    defaultClass: 'h-5 w-5',
+  },
+  {
+    name: 'ArrowOutwardIcon',
+    Component: ArrowOutwardIcon,
+    viewBox: '0 0 20 20',
+    defaultClass: 'h-4 w-4',
+  },
+  {
+    name: 'ArrowRightIcon',
+    Component: ArrowRightIcon,
+    viewBox: '0 0 20 20',
+    defaultClass: 'h-4 w-4',
+  },
   {
     name: 'FolderIcon',
     Component: FolderIcon,
@@ -53,7 +83,10 @@ describe('Icon components', () => {
 
       it('should have aria-hidden attribute', () => {
         const { container } = render(<Component />);
-        expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+        expect(container.querySelector('svg')).toHaveAttribute(
+          'aria-hidden',
+          'true'
+        );
       });
 
       it('should apply default className', () => {
@@ -72,12 +105,18 @@ describe('Icon components', () => {
 
       it(`should use correct viewBox: ${viewBox}`, () => {
         const { container } = render(<Component />);
-        expect(container.querySelector('svg')).toHaveAttribute('viewBox', viewBox);
+        expect(container.querySelector('svg')).toHaveAttribute(
+          'viewBox',
+          viewBox
+        );
       });
 
       it('should use fill="currentColor"', () => {
         const { container } = render(<Component />);
-        expect(container.querySelector('svg')).toHaveAttribute('fill', 'currentColor');
+        expect(container.querySelector('svg')).toHaveAttribute(
+          'fill',
+          'currentColor'
+        );
       });
 
       it('should have xmlns attribute', () => {
@@ -149,7 +188,10 @@ describe('Icon components', () => {
 
         it('should have aria-hidden attribute', () => {
           const { container } = render(<Component />);
-          expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+          expect(container.querySelector('svg')).toHaveAttribute(
+            'aria-hidden',
+            'true'
+          );
         });
 
         it('should have default flag dimensions class', () => {

@@ -50,10 +50,9 @@ describe('Footer', () => {
 
     it('should render secure email link with a mailto href', () => {
       render(<Footer />);
-      expect(screen.getByRole('link', { name: /secure email/i })).toHaveAttribute(
-        'href',
-        expect.stringMatching(/^mailto:/)
-      );
+      expect(
+        screen.getByRole('link', { name: /secure email/i })
+      ).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
     });
 
     it('should render all four social links with icons', () => {
@@ -127,7 +126,10 @@ describe('Footer', () => {
     it('should link to Inter font', () => {
       render(<Footer />);
       const link = screen.getByRole('link', { name: 'Inter' });
-      expect(link).toHaveAttribute('href', 'https://fonts.google.com/specimen/Inter');
+      expect(link).toHaveAttribute(
+        'href',
+        'https://fonts.google.com/specimen/Inter'
+      );
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });
@@ -144,9 +146,9 @@ describe('Footer', () => {
 
     it('should have all external links with noreferrer noopener', () => {
       render(<Footer />);
-      const externalLinks = screen.getAllByRole('link').filter(
-        (link) => link.getAttribute('target') === '_blank'
-      );
+      const externalLinks = screen
+        .getAllByRole('link')
+        .filter((link) => link.getAttribute('target') === '_blank');
       externalLinks.forEach((link) => {
         expect(link).toHaveAttribute('rel', 'noreferrer noopener');
       });

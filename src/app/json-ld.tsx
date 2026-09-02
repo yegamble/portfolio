@@ -35,7 +35,10 @@ const personSchema = {
   ],
   alumniOf: [
     { [TYPE_KEY]: COLLEGE_OR_UNIVERSITY_TYPE, name: 'University of Auckland' },
-    { [TYPE_KEY]: COLLEGE_OR_UNIVERSITY_TYPE, name: 'Central Washington University' },
+    {
+      [TYPE_KEY]: COLLEGE_OR_UNIVERSITY_TYPE,
+      name: 'Central Washington University',
+    },
   ],
 };
 

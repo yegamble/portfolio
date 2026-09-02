@@ -48,13 +48,19 @@ describe('SectionHeader', () => {
 
   it('should render different titles correctly', () => {
     const { rerender } = render(<SectionHeader title="About" />);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('About');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'About'
+    );
 
     rerender(<SectionHeader title="Experience" />);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Experience');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Experience'
+    );
 
     rerender(<SectionHeader title="Projects" />);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Projects');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Projects'
+    );
   });
 
   it('should work without className prop', () => {

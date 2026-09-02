@@ -110,7 +110,9 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
 
     it('should render the company link in paragraph 2 in English', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      const link = screen.getByRole('link', {
+        name: /test-company\.example\.com/i,
+      });
       expect(link).toHaveAttribute('href');
       const section = screen.getByRole('region', { name: /about me/i });
       const paragraphs = section.querySelectorAll('p');
@@ -120,7 +122,9 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
     it('should render the company link in paragraph 2 in Hebrew', async () => {
       await i18n.changeLanguage('he');
       render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      const link = screen.getByRole('link', {
+        name: /test-company\.example\.com/i,
+      });
       expect(link).toHaveAttribute('href');
       const section = screen.getByRole('region', { name: 'אודותיי' });
       const paragraphs = section.querySelectorAll('p');
@@ -150,13 +154,17 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
     it('should have one heading in English and Hebrew', async () => {
       const { unmount } = render(<About />);
       const enSection = screen.getByRole('region', { name: /about me/i });
-      expect(within(enSection).getAllByRole('heading', { level: 2 })).toHaveLength(1);
+      expect(
+        within(enSection).getAllByRole('heading', { level: 2 })
+      ).toHaveLength(1);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<About />);
       const heSection = screen.getByRole('region', { name: 'אודותיי' });
-      expect(within(heSection).getAllByRole('heading', { level: 2 })).toHaveLength(1);
+      expect(
+        within(heSection).getAllByRole('heading', { level: 2 })
+      ).toHaveLength(1);
     });
   });
 
@@ -189,13 +197,17 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
 
     it('should preserve three technology tag lists in both languages', async () => {
       const { unmount } = render(<Experience />);
-      const enTechLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const enTechLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(enTechLists).toHaveLength(3);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<Experience />);
-      const heTechLists = screen.getAllByRole('list', { name: /טכנולוגיות בשימוש/ });
+      const heTechLists = screen.getAllByRole('list', {
+        name: /טכנולוגיות בשימוש/,
+      });
       expect(heTechLists).toHaveLength(3);
     });
 
@@ -216,18 +228,18 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
     it('should preserve the external company links and resume link in both languages', async () => {
       const { unmount } = render(<Experience />);
       let section = screen.getByRole('region', { name: /work experience/i });
-      let blankLinks = within(section).getAllByRole('link').filter(
-        (l) => l.getAttribute('target') === '_blank'
-      );
+      let blankLinks = within(section)
+        .getAllByRole('link')
+        .filter((l) => l.getAttribute('target') === '_blank');
       expect(blankLinks).toHaveLength(3);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<Experience />);
       section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-      blankLinks = within(section).getAllByRole('link').filter(
-        (l) => l.getAttribute('target') === '_blank'
-      );
+      blankLinks = within(section)
+        .getAllByRole('link')
+        .filter((l) => l.getAttribute('target') === '_blank');
       expect(blankLinks).toHaveLength(3);
     });
   });
@@ -269,7 +281,9 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
 
     it('should preserve four technology lists in both languages', async () => {
       const { unmount } = render(<Projects />);
-      let techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      let techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(techLists).toHaveLength(4);
       unmount();
 
@@ -315,7 +329,9 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
 
     it('should preserve three tool links in both languages', async () => {
       const { unmount } = render(<Footer />);
-      let vscodeLink = screen.getByRole('link', { name: /visual studio code/i });
+      let vscodeLink = screen.getByRole('link', {
+        name: /visual studio code/i,
+      });
       let tailwindLink = screen.getByRole('link', { name: /tailwind css/i });
       let interLink = screen.getByRole('link', { name: 'Inter' });
       expect(vscodeLink).toBeInTheDocument();
@@ -375,7 +391,9 @@ describe('Cipher Integration - Language switch preserves structure', () => {
   it('should preserve About p2 link after switching language', async () => {
     render(<About />);
 
-    let link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+    let link = screen.getByRole('link', {
+      name: /test-company\.example\.com/i,
+    });
     expect(link).toHaveAttribute('href');
 
     await i18n.changeLanguage('he');
@@ -388,17 +406,17 @@ describe('Cipher Integration - Language switch preserves structure', () => {
     render(<Experience />);
 
     let section = screen.getByRole('region', { name: /work experience/i });
-    let companyLinks = within(section).getAllByRole('link').filter(
-      (l) => l.getAttribute('target') === '_blank'
-    );
+    let companyLinks = within(section)
+      .getAllByRole('link')
+      .filter((l) => l.getAttribute('target') === '_blank');
     const enHrefs = companyLinks.map((l) => l.getAttribute('href')).sort();
 
     await i18n.changeLanguage('he');
 
     section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-    companyLinks = within(section).getAllByRole('link').filter(
-      (l) => l.getAttribute('target') === '_blank'
-    );
+    companyLinks = within(section)
+      .getAllByRole('link')
+      .filter((l) => l.getAttribute('target') === '_blank');
     const heHrefs = companyLinks.map((l) => l.getAttribute('href')).sort();
 
     expect(heHrefs).toEqual(enHrefs);
@@ -408,7 +426,8 @@ describe('Cipher Integration - Language switch preserves structure', () => {
     render(<Footer />);
 
     const getToolHrefs = () =>
-      screen.getAllByRole('link')
+      screen
+        .getAllByRole('link')
         .filter((l) => l.getAttribute('target') === '_blank')
         .map((l) => l.getAttribute('href'))
         .sort();

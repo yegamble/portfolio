@@ -41,7 +41,9 @@ describe('HeroContactIcons', () => {
 
     it('should render PGP key button', () => {
       render(<HeroContactIcons />);
-      expect(screen.getByRole('button', { name: /pgp key/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /pgp key/i })
+      ).toBeInTheDocument();
     });
 
     it('should open PGP modal when key button is clicked', async () => {
@@ -65,16 +67,28 @@ describe('HeroContactIcons', () => {
 
     it('should render all three icons', () => {
       render(<HeroContactIcons />);
-      expect(screen.getByRole('link', { name: /^email$/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /secure email/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /pgp key/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: /^email$/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: /secure email/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /pgp key/i })
+      ).toBeInTheDocument();
     });
 
     it('should have sr-only labels via aria-label', () => {
       render(<HeroContactIcons />);
-      expect(screen.getByRole('link', { name: /^email$/i })).toHaveAttribute('aria-label');
-      expect(screen.getByRole('link', { name: /secure email/i })).toHaveAttribute('aria-label');
-      expect(screen.getByRole('button', { name: /pgp key/i })).toHaveAttribute('aria-label');
+      expect(screen.getByRole('link', { name: /^email$/i })).toHaveAttribute(
+        'aria-label'
+      );
+      expect(
+        screen.getByRole('link', { name: /secure email/i })
+      ).toHaveAttribute('aria-label');
+      expect(screen.getByRole('button', { name: /pgp key/i })).toHaveAttribute(
+        'aria-label'
+      );
     });
   });
 

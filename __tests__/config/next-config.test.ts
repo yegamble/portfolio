@@ -26,7 +26,9 @@ const EXPECTED_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'Content-Security-Policy': EXPECTED_CSP,
 };
 
-async function getRouteHeaders(source: string): Promise<Record<string, string>> {
+async function getRouteHeaders(
+  source: string
+): Promise<Record<string, string>> {
   expect(nextConfig.headers).toBeTypeOf('function');
 
   const routes = await nextConfig.headers!();
@@ -34,7 +36,9 @@ async function getRouteHeaders(source: string): Promise<Record<string, string>> 
 
   expect(route).toBeDefined();
 
-  return Object.fromEntries(route!.headers.map((header) => [header.key, header.value]));
+  return Object.fromEntries(
+    route!.headers.map((header) => [header.key, header.value])
+  );
 }
 
 describe('next.config security headers', () => {

@@ -83,10 +83,9 @@ describe('useCipherTransition', () => {
     it('should schedule rAF when animation is enabled and text changes', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
 
-      const { rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
 
@@ -94,10 +93,9 @@ describe('useCipherTransition', () => {
     });
 
     it('should not schedule rAF when animation is disabled', () => {
-      const { rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       (global.requestAnimationFrame as ReturnType<typeof vi.fn>).mockClear();
       rerender({ text: 'World' });
@@ -143,10 +141,9 @@ describe('useCipherTransition', () => {
         dispatchEvent: vi.fn(),
       }));
 
-      const { rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
 
@@ -159,8 +156,7 @@ describe('useCipherTransition', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
 
       const { result, rerender } = renderHook(
-        ({ text, isVisible }) =>
-          useCipherTransition(text, { isVisible }),
+        ({ text, isVisible }) => useCipherTransition(text, { isVisible }),
         { initialProps: { text: 'Hello', isVisible: false } }
       );
 
@@ -177,8 +173,7 @@ describe('useCipherTransition', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
 
       const { rerender } = renderHook(
-        ({ text, isVisible }) =>
-          useCipherTransition(text, { isVisible }),
+        ({ text, isVisible }) => useCipherTransition(text, { isVisible }),
         { initialProps: { text: 'Hello', isVisible: true } }
       );
 
@@ -191,7 +186,9 @@ describe('useCipherTransition', () => {
 
   describe('cleanup', () => {
     it('should handle unmount gracefully', () => {
-      const { unmount, result } = renderHook(() => useCipherTransition('Hello'));
+      const { unmount, result } = renderHook(() =>
+        useCipherTransition('Hello')
+      );
 
       expect(result.current.displayChars).toEqual(['H', 'e', 'l', 'l', 'o']);
 

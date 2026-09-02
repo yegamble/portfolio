@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { USFlagIcon, IsraelFlagIcon, RussiaFlagIcon, EstoniaFlagIcon } from '@/components/icons';
+import {
+  USFlagIcon,
+  IsraelFlagIcon,
+  RussiaFlagIcon,
+  EstoniaFlagIcon,
+} from '@/components/icons';
 import { getDirection, getLocalizedPathname, type AppLocale } from '@/lib/i18n';
 
 interface LanguageOption {
@@ -40,7 +45,10 @@ function buildLanguageHref(
  * Cancels immediately on any user scroll/keypress so it never fights the reader.
  */
 function pinViewportDuringReflow(durationMs = 1500) {
-  if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') {
+  if (
+    typeof window === 'undefined' ||
+    typeof requestAnimationFrame !== 'function'
+  ) {
     return;
   }
 
@@ -93,7 +101,9 @@ export default function LanguageSelector() {
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const currentLang = LANGUAGES.find((language) => language.code === i18n.language) ?? LANGUAGES[0];
+  const currentLang =
+    LANGUAGES.find((language) => language.code === i18n.language) ??
+    LANGUAGES[0];
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -193,7 +203,11 @@ export default function LanguageSelector() {
             <ul className="space-y-1">
               {LANGUAGES.map((language) => {
                 const isCurrent = language.code === i18n.language;
-                const href = buildLanguageHref(pathname, language.code, searchParams);
+                const href = buildLanguageHref(
+                  pathname,
+                  language.code,
+                  searchParams
+                );
 
                 return (
                   <li key={language.code}>
@@ -202,7 +216,9 @@ export default function LanguageSelector() {
                       lang={language.code}
                       hrefLang={language.code}
                       aria-current={isCurrent ? 'page' : undefined}
-                      onClick={(event) => selectLanguage(event, language.code, href)}
+                      onClick={(event) =>
+                        selectLanguage(event, language.code, href)
+                      }
                       className={`flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-colors ${
                         isCurrent
                           ? 'bg-slate-700/50 text-primary'
@@ -210,7 +226,9 @@ export default function LanguageSelector() {
                       }`}
                     >
                       <language.Flag className="h-3.5 w-5" />
-                      <span className="flex-1 text-start">{language.label}</span>
+                      <span className="flex-1 text-start">
+                        {language.label}
+                      </span>
                       <span className="text-xs font-bold tracking-wide opacity-60">
                         {language.initials}
                       </span>

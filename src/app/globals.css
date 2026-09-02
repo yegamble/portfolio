@@ -74,7 +74,10 @@ body {
 .cipher-char {
   opacity: 0.7;
   white-space: pre;
-  transition: opacity 400ms ease-out, color 400ms ease-out, text-shadow 400ms ease-out;
+  transition:
+    opacity 400ms ease-out,
+    color 400ms ease-out,
+    text-shadow 400ms ease-out;
 }
 
 .cipher-char.cipher-resolved {
@@ -109,7 +112,9 @@ body {
 
 @media (pointer: coarse), (max-width: 768px) {
   .cipher-char {
-    transition: opacity 200ms linear, color 200ms linear;
+    transition:
+      opacity 200ms linear,
+      color 200ms linear;
   }
 
   .cipher-char.cipher-resolved {

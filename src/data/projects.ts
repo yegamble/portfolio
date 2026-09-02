@@ -17,14 +17,19 @@ export const projectEntries: ProjectEntry[] = [
       { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
       { name: 'vidra-user', url: 'https://github.com/yegamble/vidra-user' },
     ],
-    technologies: ['Go', 'ActivityPub', 'ATProto', 'PostgreSQL', 'Redis', 'Docker'],
+    technologies: [
+      'Go',
+      'ActivityPub',
+      'ATProto',
+      'PostgreSQL',
+      'Redis',
+      'Docker',
+    ],
     icon: 'layers',
   },
   {
     id: 'aurialis',
-    repos: [
-      { name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' },
-    ],
+    repos: [{ name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' }],
     technologies: ['Next.js', 'TypeScript', 'Web Audio API', 'Tailwind CSS'],
     icon: 'layers',
   },
@@ -32,7 +37,10 @@ export const projectEntries: ProjectEntry[] = [
     id: 'goimg',
     repos: [
       { name: 'goimg-user', url: 'https://github.com/yegamble/goimg-user' },
-      { name: 'goimg-datalayer', url: 'https://github.com/yegamble/goimg-datalayer' },
+      {
+        name: 'goimg-datalayer',
+        url: 'https://github.com/yegamble/goimg-datalayer',
+      },
     ],
     technologies: ['Next.js', 'TypeScript', 'Go', 'PostgreSQL', 'S3'],
     icon: 'folder',
@@ -40,8 +48,14 @@ export const projectEntries: ProjectEntry[] = [
   {
     id: 'iota-token-creator',
     repos: [
-      { name: 'iota-token-creator-web', url: 'https://github.com/yegamble/iota-token-creator-web' },
-      { name: 'iota-token-creator-api', url: 'https://github.com/yegamble/iota-token-creator-api' },
+      {
+        name: 'iota-token-creator-web',
+        url: 'https://github.com/yegamble/iota-token-creator-web',
+      },
+      {
+        name: 'iota-token-creator-api',
+        url: 'https://github.com/yegamble/iota-token-creator-api',
+      },
     ],
     technologies: ['Next.js', 'TypeScript', 'Go', 'IOTA'],
     icon: 'folder',

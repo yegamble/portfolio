@@ -42,7 +42,10 @@ test.describe('cipher animation performance', () => {
         false;
       const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
-          if (mutation.type === 'characterData' || mutation.type === 'childList') {
+          if (
+            mutation.type === 'characterData' ||
+            mutation.type === 'childList'
+          ) {
             const target =
               mutation.type === 'characterData'
                 ? (mutation.target.parentElement as HTMLElement | null)
@@ -123,9 +126,8 @@ test.describe('cipher animation performance', () => {
 
     // Collect long task results
     const results = await page.evaluate(() => {
-      const tasks = (
-        window as unknown as Record<string, unknown[]>
-      ).__longTasks as PerformanceEntry[];
+      const tasks = (window as unknown as Record<string, unknown[]>)
+        .__longTasks as PerformanceEntry[];
       const observer = (
         window as unknown as Record<string, PerformanceObserver>
       ).__longTaskObserver;
@@ -177,9 +179,8 @@ test.describe('cipher animation performance', () => {
 
     // Collect results
     const results = await page.evaluate(() => {
-      const tasks = (
-        window as unknown as Record<string, unknown[]>
-      ).__longTasks as PerformanceEntry[];
+      const tasks = (window as unknown as Record<string, unknown[]>)
+        .__longTasks as PerformanceEntry[];
       const observer = (
         window as unknown as Record<string, PerformanceObserver>
       ).__longTaskObserver;
@@ -217,14 +218,11 @@ test.describe('cipher animation performance', () => {
       (window as unknown as Record<string, unknown>).__frameTimes = [];
       (window as unknown as Record<string, unknown>).__measuring = true;
 
-      const frameTimes = (
-        window as unknown as Record<string, number[]>
-      ).__frameTimes;
+      const frameTimes = (window as unknown as Record<string, number[]>)
+        .__frameTimes;
 
       function measure(time: number) {
-        if (
-          (window as unknown as Record<string, boolean>).__measuring
-        ) {
+        if ((window as unknown as Record<string, boolean>).__measuring) {
           frameTimes.push(time);
           requestAnimationFrame(measure);
         }
@@ -242,11 +240,11 @@ test.describe('cipher animation performance', () => {
     const fpsData = await page.evaluate(() => {
       (window as unknown as Record<string, boolean>).__measuring = false;
 
-      const frameTimes = (
-        window as unknown as Record<string, number[]>
-      ).__frameTimes;
+      const frameTimes = (window as unknown as Record<string, number[]>)
+        .__frameTimes;
 
-      if (frameTimes.length < 2) return { avgFps: 0, minFps: 0, droppedFrames: 0 };
+      if (frameTimes.length < 2)
+        return { avgFps: 0, minFps: 0, droppedFrames: 0 };
 
       const deltas: number[] = [];
       for (let i = 1; i < frameTimes.length; i++) {

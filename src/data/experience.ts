@@ -8,7 +8,14 @@ export const experienceEntries: ExperienceEntry[] = [
   {
     id: 'independent',
     companyUrl: 'https://github.com/yegamble',
-    technologies: ['Go', 'ActivityPub', 'Docker', 'PostgreSQL', 'Redis', 'Cloudflare'],
+    technologies: [
+      'Go',
+      'ActivityPub',
+      'Docker',
+      'PostgreSQL',
+      'Redis',
+      'Cloudflare',
+    ],
   },
   {
     id: 'realestate',

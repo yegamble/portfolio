@@ -5,7 +5,11 @@ import JsonLd from '@/app/json-ld';
 describe('JsonLd', () => {
   function getSchemas(): unknown[] {
     const markup = renderToStaticMarkup(<JsonLd />);
-    const matches = [...markup.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/g)];
+    const matches = [
+      ...markup.matchAll(
+        /<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/g
+      ),
+    ];
     return matches.map((m) => JSON.parse(m[1]));
   }
 
@@ -47,7 +51,10 @@ describe('JsonLd', () => {
   it('includes workLocation with City entries', () => {
     const schemas = getSchemas();
     const person = schemas.find((s: any) => s['@type'] === 'Person') as any;
-    const locations = person.workLocation as Array<{ '@type': string; name: string }>;
+    const locations = person.workLocation as Array<{
+      '@type': string;
+      name: string;
+    }>;
     expect(Array.isArray(locations)).toBe(true);
     expect(locations.length).toBeGreaterThan(0);
     locations.forEach((loc) => {

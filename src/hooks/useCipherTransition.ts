@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type RefObject,
+} from 'react';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 interface CipherTransitionResult {
@@ -85,13 +91,18 @@ function unregisterTick(fn: TickFn) {
 // Pure helpers (unchanged logic, no side-effects)
 // ---------------------------------------------------------------------------
 
-function calculateResolveTimes(maxLen: number, profile: AnimationProfile): number[] {
+function calculateResolveTimes(
+  maxLen: number,
+  profile: AnimationProfile
+): number[] {
   const resolveTimes: number[] = [];
   for (let i = 0; i < maxLen; i++) {
     const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
     const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
     resolveTimes[i] =
-      profile.scrambleDuration + progress * profile.revealStagger + randomJitter;
+      profile.scrambleDuration +
+      progress * profile.revealStagger +
+      randomJitter;
   }
   return resolveTimes;
 }
@@ -300,7 +311,12 @@ function useCipherAnimationLoop(text: string, isEnabled: boolean) {
     Array.from(text)
   );
 
-  const { isAnimating } = useCipherLoop(text, isEnabled, setDisplayChars, undefined);
+  const { isAnimating } = useCipherLoop(
+    text,
+    isEnabled,
+    setDisplayChars,
+    undefined
+  );
 
   return { displayChars, isAnimating };
 }
@@ -354,7 +370,10 @@ export function useCipherTransition(
   }
 
   if (useRefMode) {
-    return { displayChars: Array.from(text), isAnimating: refResult.isAnimating };
+    return {
+      displayChars: Array.from(text),
+      isAnimating: refResult.isAnimating,
+    };
   }
 
   return charResult;

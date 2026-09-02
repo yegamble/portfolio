@@ -10,7 +10,9 @@ describe('ErrorPage', () => {
 
     render(<ErrorPage error={mockError} reset={mockReset} />);
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/something went wrong/i);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      /something went wrong/i
+    );
   });
 
   it('should render reset button that calls reset prop when clicked', async () => {

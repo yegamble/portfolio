@@ -56,7 +56,8 @@ export default function ScrollHeader() {
               e.preventDefault();
               window.scrollTo({
                 top: 0,
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)')
+                  .matches
                   ? 'auto'
                   : 'smooth',
               });

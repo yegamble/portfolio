@@ -1,4 +1,8 @@
-import { createInstance, type Resource, type i18n as I18nInstance } from 'i18next';
+import {
+  createInstance,
+  type Resource,
+  type i18n as I18nInstance,
+} from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import en from '../../public/locales/en/translation.json';
@@ -44,7 +48,9 @@ export function createI18nInstance(locale: AppLocale = DEFAULT_LOCALE) {
   return initI18nInstance(createInstance(), locale);
 }
 
-export function isAppLocale(value: string | null | undefined): value is AppLocale {
+export function isAppLocale(
+  value: string | null | undefined
+): value is AppLocale {
   return value != null && LOCALE_SET.has(value as AppLocale);
 }
 
@@ -56,7 +62,10 @@ export function getLocaleHref(locale: AppLocale) {
   return `/${locale}`;
 }
 
-export function getLocalizedPathname(pathname: string | null | undefined, locale: AppLocale) {
+export function getLocalizedPathname(
+  pathname: string | null | undefined,
+  locale: AppLocale
+) {
   const normalizedPathname =
     pathname == null || pathname === ''
       ? getLocaleHref(locale)

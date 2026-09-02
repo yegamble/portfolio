@@ -7,7 +7,9 @@ describe('About', () => {
   describe('Section structure', () => {
     it('should render the about section with correct aria label', () => {
       render(<About />);
-      expect(screen.getByRole('region', { name: /about me/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('region', { name: /about me/i })
+      ).toBeInTheDocument();
     });
 
     it('should have the correct section id for anchor navigation', () => {
@@ -113,13 +115,17 @@ describe('About', () => {
   describe('Links', () => {
     it('should contain a link to the company', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      const link = screen.getByRole('link', {
+        name: /test-company\.example\.com/i,
+      });
       expect(link).toHaveAttribute('href');
     });
 
     it('should open company link in new tab', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      const link = screen.getByRole('link', {
+        name: /test-company\.example\.com/i,
+      });
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });

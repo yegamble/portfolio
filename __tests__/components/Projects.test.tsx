@@ -7,7 +7,10 @@ vi.mock('@/data/projects', () => ({
     {
       id: 'proj-alpha',
       repos: [
-        { name: 'proj-alpha-core', url: 'https://github.com/example/proj-alpha-core' },
+        {
+          name: 'proj-alpha-core',
+          url: 'https://github.com/example/proj-alpha-core',
+        },
         { name: 'proj-alpha-ui', url: '#' },
       ],
       technologies: ['Go', 'PostgreSQL', 'Docker'],
@@ -109,24 +112,32 @@ describe('Projects', () => {
   describe('Section structure', () => {
     it('should render the projects section with correct aria label', () => {
       render(<Projects />);
-      expect(screen.getByRole('region', { name: /selected projects/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('region', { name: /selected projects/i })
+      ).toBeInTheDocument();
     });
 
     it('should have the correct section id for anchor navigation', () => {
       render(<Projects />);
-      const section = screen.getByRole('region', { name: /selected projects/i });
+      const section = screen.getByRole('region', {
+        name: /selected projects/i,
+      });
       expect(section).toHaveAttribute('id', 'projects');
     });
 
     it('should have scroll-mt-24 class for fixed header offset', () => {
       render(<Projects />);
-      const section = screen.getByRole('region', { name: /selected projects/i });
+      const section = screen.getByRole('region', {
+        name: /selected projects/i,
+      });
       expect(section).toHaveClass('scroll-mt-24');
     });
 
     it('should have a top border separator', () => {
       render(<Projects />);
-      const section = screen.getByRole('region', { name: /selected projects/i });
+      const section = screen.getByRole('region', {
+        name: /selected projects/i,
+      });
       expect(section.className).toContain('border-t');
     });
   });
@@ -134,7 +145,9 @@ describe('Projects', () => {
   describe('Section header', () => {
     it('should render the "Projects" heading via SectionHeader', () => {
       render(<Projects />);
-      const section = screen.getByRole('region', { name: /selected projects/i });
+      const section = screen.getByRole('region', {
+        name: /selected projects/i,
+      });
       const heading = within(section).getByRole('heading', { level: 2 });
       expect(heading).toHaveTextContent(/projects/i);
     });
@@ -155,10 +168,18 @@ describe('Projects', () => {
 
     it('should render project titles from translation', () => {
       render(<Projects />);
-      expect(screen.getByRole('heading', { level: 3, name: /project alpha/i })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: /project beta/i })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: /project gamma/i })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: /project delta/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 3, name: /project alpha/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 3, name: /project beta/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 3, name: /project gamma/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 3, name: /project delta/i })
+      ).toBeInTheDocument();
     });
   });
 
@@ -198,7 +219,9 @@ describe('Projects', () => {
     it('should render repo links for each project', () => {
       render(<Projects />);
       // proj-alpha has 2, proj-beta has 1, proj-gamma has 2, proj-delta has 2 = 7 total
-      const repoLinks = screen.getAllByRole('link', { name: /view .+ on github/i });
+      const repoLinks = screen.getAllByRole('link', {
+        name: /view .+ on github/i,
+      });
       expect(repoLinks.length).toBe(7);
     });
 
@@ -215,21 +238,29 @@ describe('Projects', () => {
 
     it('should render the repo name as link text', () => {
       render(<Projects />);
-      expect(screen.getByRole('link', { name: /view proj-alpha-core on github/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /view proj-beta on github/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: /view proj-alpha-core on github/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: /view proj-beta on github/i })
+      ).toBeInTheDocument();
     });
   });
 
   describe('Technology labels', () => {
     it('should render technology labels for each project', () => {
       render(<Projects />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(techLists).toHaveLength(4);
     });
 
     it('should render technologies for first project', () => {
       render(<Projects />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('PostgreSQL')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Docker')).toBeInTheDocument();
@@ -262,7 +293,10 @@ describe('Projects', () => {
       i18n.addResourceBundle(
         'en',
         'translation',
-        { ...bundle, projects: { ...bundle.projects, items: testProjectItems } },
+        {
+          ...bundle,
+          projects: { ...bundle.projects, items: testProjectItems },
+        },
         false,
         true
       );
@@ -284,7 +318,10 @@ describe('Projects', () => {
       i18n.addResourceBundle(
         'en',
         'translation',
-        { ...bundle, projects: { ...bundle.projects, items: withUnknownEntry } },
+        {
+          ...bundle,
+          projects: { ...bundle.projects, items: withUnknownEntry },
+        },
         false,
         true
       );
@@ -296,7 +333,10 @@ describe('Projects', () => {
         i18n.addResourceBundle(
           'en',
           'translation',
-          { ...bundle, projects: { ...bundle.projects, items: testProjectItems } },
+          {
+            ...bundle,
+            projects: { ...bundle.projects, items: testProjectItems },
+          },
           false,
           true
         );

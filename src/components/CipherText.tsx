@@ -83,7 +83,10 @@ const CHAR_THRESHOLD_DESKTOP = 80;
 const CHAR_THRESHOLD_MOBILE = 40;
 
 function getCharThreshold(): number {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+  if (
+    typeof window === 'undefined' ||
+    typeof window.matchMedia !== 'function'
+  ) {
     return CHAR_THRESHOLD_DESKTOP;
   }
   const isMobile =
@@ -109,7 +112,10 @@ function getCharThreshold(): number {
  * comes from the ghost layers above (per-char and per-word), which pin the
  * box to the final text's geometry for the whole animation.
  */
-export default function CipherText({ children, block = false }: CipherTextProps) {
+export default function CipherText({
+  children,
+  block = false,
+}: CipherTextProps) {
   const text = children || '';
   const isCipherEnabled = process.env.NEXT_PUBLIC_CIPHER_TRANSITION === 'true';
 
@@ -141,7 +147,10 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   useEffect(() => {
     const update = () => setCharThreshold(getCharThreshold());
     update();
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    if (
+      typeof window === 'undefined' ||
+      typeof window.matchMedia !== 'function'
+    ) {
       return;
     }
     const queries = [

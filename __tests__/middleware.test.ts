@@ -40,7 +40,9 @@ describe('middleware', () => {
     const res = middleware(req);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toBe('http://localhost:3000/he/projects');
+    expect(res.headers.get('location')).toBe(
+      'http://localhost:3000/he/projects'
+    );
     expect(res.cookies.get('locale')?.value).toBe('he');
   });
 

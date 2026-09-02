@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  getRandomCipherChar,
-  isScramblable,
-} from '@/lib/cipher-chars';
+import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 describe('cipher-chars utility', () => {
   describe('getRandomCipherChar', () => {

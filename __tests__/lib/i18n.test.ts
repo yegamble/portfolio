@@ -36,7 +36,9 @@ describe('i18n initialization', () => {
     // We add a temporary resource for testing
     i18n.addResource('en', 'translation', 'security_test', 'Hello {{name}}');
 
-    const result = i18n.t('security_test', { name: '<script>alert("xss")</script>' });
+    const result = i18n.t('security_test', {
+      name: '<script>alert("xss")</script>',
+    });
     expect(result).toBe('Hello <script>alert("xss")</script>');
   });
 });

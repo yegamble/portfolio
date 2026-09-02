@@ -25,7 +25,10 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
   const href = `${SITE_URL}${getLocaleHref(locale)}`;
   const meta = getLocaleMessages(locale).meta;
   const languages = Object.fromEntries(
-    LOCALES.map((supportedLocale) => [supportedLocale, `${SITE_URL}${getLocaleHref(supportedLocale)}`])
+    LOCALES.map((supportedLocale) => [
+      supportedLocale,
+      `${SITE_URL}${getLocaleHref(supportedLocale)}`,
+    ])
   );
 
   return {
