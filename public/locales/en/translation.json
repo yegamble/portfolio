@@ -1,6 +1,7 @@
 {
   "nav": {
     "ariaLabel": "Main navigation",
+    "skipToContent": "Skip to content",
     "about": "About",
     "experience": "Experience",
     "projects": "Projects"
@@ -55,7 +56,9 @@
     "heading": "Projects",
     "ariaLabel": "Selected projects",
     "techAriaLabel": "Technologies used",
-    "viewOnGitHub": "View {{name}} on GitHub",
+    "onGitHub": "on GitHub",
+    "opensInNewTab": "(opens in a new tab)",
+    "pagination": "Project pagination",
     "viewRepos": "View repositories",
     "items": [
       {
@@ -97,6 +100,7 @@
   },
   "pgp": {
     "title": "PGP Public Key",
+    "keyRegion": "PGP key text",
     "fingerprint": "Fingerprint",
     "userId": "User ID",
     "algorithm": "Algorithm",
@@ -104,8 +108,10 @@
     "keyId": "Key ID",
     "copyKey": "Copy Key",
     "copied": "Copied!",
+    "copyFailed": "Copy failed",
     "close": "Close",
     "loading": "Loading key details...",
+    "loaded": "Key details loaded",
     "error": "Could not parse key details",
     "verifyNotice": "Verify this fingerprint through a trusted channel before use."
   },
@@ -115,7 +121,7 @@
   },
   "meta": {
     "title": "Yosef Gamble | Senior Software Engineer — Go, TypeScript, AWS",
-    "description": "Yosef Gamble — Senior Software Engineer in New York & Auckland. Go (Golang), TypeScript, AWS specialist. Real estate portals, video streaming platforms, and scalable cloud systems.",
+    "description": "Yosef Gamble — Senior Software Engineer in New York & Auckland. Go, TypeScript and AWS: real estate portals, video streaming and scalable cloud systems.",
     "ogDescription": "Senior Software Engineer in New York & Auckland. Go (Golang), TypeScript, AWS. Real estate portals, video streaming, and scalable cloud systems."
   },
   "notFound": {

@@ -1,7 +1,10 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useBlockHeightEase } from '@/hooks/useBlockHeightEase';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
+import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
+import { COARSE_POINTER_QUERY, isCoarsePointerOrNarrow, NARROW_VIEWPORT_QUERY } from '@/lib/media';
 
 interface CipherTextProps {
   children?: string;
@@ -12,6 +15,15 @@ const BLOCK_STYLE = {
   display: 'inline-block',
   width: '100%',
 } as const;
+
+// The block wrapper is emitted as the same element type in the same position in
+// BOTH the animating and non-animating branches below, so React reconciles it to
+// one DOM node that survives the branch swap. That identity is load-bearing: the
+// height ease sets inline styles on this node imperatively and the transition
+// keeps running across the render that flips isAnimating (and the one that flips
+// it back). Introduce a different wrapper — another element type, a conditional
+// parent, a key — in either branch and React will remount it mid-ease, dropping
+// the inline height and snapping the layout back.
 
 const CHAR_STYLE = {
   position: 'absolute',
@@ -29,9 +41,15 @@ const CHAR_SLOT_STYLE = {
   verticalAlign: 'baseline',
 } as const;
 
-// Word slots reuse CHAR_SLOT_STYLE. Notably they must NOT set overflow:hidden —
-// a non-visible overflow moves an inline-block's baseline to its bottom edge,
-// which inflates every line box and shifts the page during the animation.
+// Word slots reuse CHAR_SLOT_STYLE. A slot is sized to the FINAL glyph, so a
+// wider scramble glyph spills out of it; globals.css clips that with
+// `overflow-x: clip` on the slot classes. It must stay `clip` and stay on one
+// axis: `hidden` (or clipping both axes) makes the slot a scroll container,
+// which moves an inline-block's baseline to its bottom edge and inflates every
+// line box for the length of the animation.
+
+// Stable identity for the non-animating case so the memo below never churns.
+const NO_SEED: string[] = [];
 
 const RTL_CHAR_REGEX = /[\u0590-\u07BF\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 const LETTER_REGEX = /\p{L}/u;
@@ -43,12 +61,12 @@ const LETTER_REGEX = /\p{L}/u;
 // affecting layout. Both sides matter: with a leading mark only, the last
 // slot of a run sits between its own mark and the next run's opposite mark,
 // resolves to the paragraph direction, and jumps across the run.
+//
+// Only letter-bearing text ever gets a slot (digits and punctuation stay plain
+// text, so they keep their neutral bidi class and are not mirrored), so a mark
+// is always emitted here.
 function directionMark(text: string): string {
-  for (const char of text) {
-    if (RTL_CHAR_REGEX.test(char)) return '\u200F';
-    if (LETTER_REGEX.test(char)) return '\u200E';
-  }
-  return '';
+  return RTL_CHAR_REGEX.test(text) ? '\u200F' : '\u200E';
 }
 
 interface WordSegment {
@@ -83,13 +101,7 @@ const CHAR_THRESHOLD_DESKTOP = 80;
 const CHAR_THRESHOLD_MOBILE = 40;
 
 function getCharThreshold(): number {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return CHAR_THRESHOLD_DESKTOP;
-  }
-  const isMobile =
-    window.matchMedia('(pointer: coarse)').matches ||
-    window.matchMedia('(max-width: 768px)').matches;
-  return isMobile ? CHAR_THRESHOLD_MOBILE : CHAR_THRESHOLD_DESKTOP;
+  return isCoarsePointerOrNarrow() ? CHAR_THRESHOLD_MOBILE : CHAR_THRESHOLD_DESKTOP;
 }
 
 /**
@@ -104,10 +116,29 @@ function getCharThreshold(): number {
  *   the target text pins layout so scramble frames never reflow the page, and
  *   the hook writes overlay text via the DOM, bypassing React reconciliation
  *
- * When block={true}, wraps content in a full-width inline-block span so the
- * text behaves as its own paragraph box. Layout stability during transitions
- * comes from the ghost layers above (per-char and per-word), which pin the
- * box to the final text's geometry for the whole animation.
+ * Layout stability, in two parts:
+ * - WITHIN a transition, the ghost layers above (per-char and per-word) pin the
+ *   box to the final text's geometry, so no scramble frame ever reflows the
+ *   page. Nothing moves for the whole ~1.4s animation.
+ * - ACROSS a transition, the final geometry itself differs per language: a
+ *   translation that wraps to a different number of lines changes the block's
+ *   height in the single commit that swaps the text, and everything below it
+ *   jumps by the delta in one frame (measured: the 1280px hero <h1> 240 ->
+ *   180px on en->he, #about copy 633 -> 692px on en->et). When block={true}
+ *   that step is replayed as a 300ms ease instead — see useBlockHeightEase and
+ *   src/lib/height-ease.ts. Only on-screen instances ease; the ~7-8 invisible
+ *   ones still step, since a transition nobody can see is pure cost during the
+ *   busiest 300ms on the page.
+ * - EITHER WAY a reader scrolled past the block keeps their place. Measured on
+ *   a production build, he->en with #experience 80px above the fold: the
+ *   section ends exactly where it started and src/lib/viewport-pin.ts issues a
+ *   single 1px correction. That figure is Chromium's scroll anchoring doing the
+ *   work — an engine without it (WebKit) instead gets a per-frame instant
+ *   correction from the pin, which is equally stable, just more corrections.
+ *
+ * When block={true}, content is wrapped in a full-width inline-block span so
+ * the text behaves as its own paragraph box — that box is what the ease
+ * animates.
  */
 export default function CipherText({ children, block = false }: CipherTextProps) {
   const text = children || '';
@@ -116,18 +147,29 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   // --- Viewport gating via IntersectionObserver ---
   const observerRef = useRef<HTMLSpanElement>(null);
   const [isVisible, setIsVisible] = useState(true);
+  // The same fact as `isVisible`, in a form the height ease can read at the
+  // moment it fires without taking a dependency on it (see useBlockHeightEase).
+  const isVisibleRef = useRef(true);
 
   useEffect(() => {
     if (!isCipherEnabled) return;
     const el = observerRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      ([e]) => setIsVisible(e.isIntersecting),
+      ([e]) => {
+        isVisibleRef.current = e.isIntersecting;
+        setIsVisible(e.isIntersecting);
+      },
       { rootMargin: '200px' }
     );
     io.observe(el);
     return () => io.disconnect();
   }, [isCipherEnabled]);
+
+  // --- Block mode: ease the wrapper's height across a text swap ---
+  const blockRef = useRef<HTMLSpanElement>(null);
+  const canEaseHeight = isCipherEnabled && block;
+  useBlockHeightEase(blockRef, text, canEaseHeight, isVisibleRef);
 
   // --- Long text: ref for direct DOM updates (bypasses React) ---
   const longTextRef = useRef<HTMLSpanElement>(null);
@@ -145,8 +187,8 @@ export default function CipherText({ children, block = false }: CipherTextProps)
       return;
     }
     const queries = [
-      window.matchMedia('(pointer: coarse)'),
-      window.matchMedia('(max-width: 768px)'),
+      window.matchMedia(COARSE_POINTER_QUERY),
+      window.matchMedia(NARROW_VIEWPORT_QUERY),
     ].filter((query) => typeof query?.addEventListener === 'function');
     queries.forEach((query) => query.addEventListener('change', update));
     return () => {
@@ -161,6 +203,23 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     elementRef: isLongText ? longTextRef : undefined,
   });
 
+  // Overlays must never mount showing the final word: they appear on the render
+  // that flips isAnimating, one or two painted frames before the first scramble
+  // write lands, and a readable translation in that window reads as a flash of
+  // the answer. Seeding them with cipher glyphs closes the gap.
+  //
+  // Gated on isAnimating so Math.random never runs on the server or on any
+  // non-animating render: both SSR and the first client render take the
+  // non-animating branch, so they produce identical markup and hydration is
+  // unaffected. Keyed on targetChars too, so a language switch reseeds.
+  const scrambleSeed = useMemo(
+    () =>
+      isAnimating
+        ? targetChars.map((char) => (isScramblable(char) ? getRandomCipherChar(char) : char))
+        : NO_SEED,
+    [isAnimating, targetChars]
+  );
+
   // --- Render helper: wrap with observer ref when cipher is enabled ---
   const wrapObserver = (content: React.ReactNode): React.ReactNode =>
     isCipherEnabled ? <span ref={observerRef}>{content}</span> : <>{content}</>;
@@ -171,7 +230,11 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   }
 
   if (!isAnimating && block) {
-    return wrapObserver(<span style={BLOCK_STYLE}>{text}</span>);
+    return wrapObserver(
+      <span ref={blockRef} style={BLOCK_STYLE}>
+        {text}
+      </span>
+    );
   }
 
   // --- Animating: choose rendering path ---
@@ -185,13 +248,12 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     animationContent = (
       <>
         <span className="sr-only">{text}</span>
-        <span
-          ref={longTextRef}
-          aria-hidden="true"
-          className="cipher-text-scramble"
-        >
+        <span ref={longTextRef} aria-hidden="true" data-cipher-text={text}>
           {segmentWords(targetChars).map((segment) =>
-            segment.scramble ? (
+            // A segment with no letters (a bare year, an em dash) stays plain
+            // text so it keeps its neutral bidi class and its digits are not
+            // reordered by an RTL paragraph.
+            segment.scramble && LETTER_REGEX.test(segment.text) ? (
               <Fragment key={segment.start}>
                 {directionMark(segment.text)}
                 <span className="cipher-word-slot" style={CHAR_SLOT_STYLE}>
@@ -202,7 +264,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
                     data-end={segment.end}
                     style={CHAR_STYLE}
                   >
-                    {segment.text}
+                    {scrambleSeed.slice(segment.start, segment.end).join('')}
                   </span>
                 </span>
                 {directionMark(segment.text)}
@@ -222,6 +284,15 @@ export default function CipherText({ children, block = false }: CipherTextProps)
         <span aria-hidden="true">
           {displayChars.map((char, index) => {
             const targetChar = targetChars[index] ?? '';
+
+            // Digits, punctuation, dashes and spaces render as plain text
+            // nodes: an inline-block slot is bidi-neutral, so a digit run made
+            // of slots is laid out by paragraph direction and "2024" shows up
+            // as "4202" inside Hebrew copy.
+            if (!isScramblable(targetChar)) {
+              return <Fragment key={index}>{targetChar}</Fragment>;
+            }
+
             const isResolved = char === targetChar;
 
             return (
@@ -233,7 +304,7 @@ export default function CipherText({ children, block = false }: CipherTextProps)
                     className={`cipher-char${isResolved ? ' cipher-resolved' : ''}`}
                     style={CHAR_STYLE}
                   >
-                    {char || targetChar}
+                    {char || scrambleSeed[index]}
                   </span>
                 </span>
                 {directionMark(targetChar)}
@@ -246,7 +317,11 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   }
 
   if (block) {
-    return wrapObserver(<span style={BLOCK_STYLE}>{animationContent}</span>);
+    return wrapObserver(
+      <span ref={blockRef} style={BLOCK_STYLE}>
+        {animationContent}
+      </span>
+    );
   }
 
   return wrapObserver(animationContent);

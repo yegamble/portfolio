@@ -33,8 +33,8 @@ export default function Footer() {
           rel="noreferrer noopener"
         >
           <CipherText>{t('footer.tailwind')}</CipherText>
-        </a>
-        {' '}<CipherText>{t('footer.and')}</CipherText>{' '}
+        </a>{' '}
+        <CipherText>{t('footer.and')}</CipherText>{' '}
         <a
           className="font-medium text-text-secondary transition-colors hover:text-primary"
           href="https://fonts.google.com/specimen/Inter"

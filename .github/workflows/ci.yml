@@ -5,23 +5,47 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      rollback_version_id:
+        description: >-
+          Cloudflare Worker version id to roll production back to (from
+          `wrangler versions list`, or the id recorded in a previous deploy's
+          job summary). Leave empty to run the pipeline normally.
+        required: false
+        default: ''
 
+# The default GITHUB_TOKEN permissions are whatever the repository grants.
+# Nothing here writes to the repository, so read is the whole budget; the
+# deploy job authenticates to Cloudflare with its own secrets instead.
+permissions:
+  contents: read
+
+# One run per ref, but a rollback dispatch gets its own group. Sharing
+# `ci-refs/heads/main` with the push pipeline is precisely the wrong behaviour
+# during an incident: the rollback would queue behind the run that shipped the
+# bad version, and the next push to main would cancel it while it waited.
+# Only pull request runs are cancelled; runs on main queue, so a merge never
+# loses its deploy.
+concurrency:
+  # One line on purpose: a folded scalar keeps the newlines of its more-indented
+  # continuation lines, and they would land inside the ${{ }} expression.
+  group: ci-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.rollback_version_id != '' && 'rollback' || 'pipeline' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Job ids are the names branch protection matches on, so `lint-and-typecheck`,
+# `unit-tests` and `build` keep the names they already report under. `e2e` and
+# `playwright` are new checks and have to be added to the rule by hand;
+# `playwright-perf` is advisory and must not be.
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # A rollback dispatch is an incident response. It does not wait for tests.
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.rollback_version_id == '' }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
 
       - name: Lint
         run: pnpm lint
@@ -29,50 +53,57 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Check formatting
+        run: pnpm format:check
+
   unit-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.rollback_version_id == '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Unit tests with coverage
+        run: |
+          set -o pipefail
+          pnpm test:coverage 2>&1 | tee "$RUNNER_TEMP/coverage.log"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
+      - name: Publish coverage summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo '### Unit test coverage'
+            echo
+            echo '```'
+            if grep -q 'Coverage summary' "$RUNNER_TEMP/coverage.log"; then
+              awk '/Coverage summary/ { found = 1 } found' "$RUNNER_TEMP/coverage.log"
+            else
+              echo 'No coverage summary was produced.'
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      # Blocking at `critical` only, deliberately. The three advisories open
+      # today (2 high, 1 low) are all transitive under
+      # next > styled-jsx > @babel/core with no upstream release to move to, so
+      # a `high` gate would fail every run without anyone being able to fix it.
+      # The informational step below keeps them visible in the log.
+      - name: Audit production dependencies (blocking)
+        run: pnpm audit --prod --audit-level=critical
 
-      - name: Run unit tests
-        run: pnpm test
+      - name: Audit production dependencies (informational)
+        continue-on-error: true
+        run: pnpm audit --prod
 
   build:
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests]
+    # Two builds: `next build`, then the OpenNext bundle on top of it.
+    timeout-minutes: 15
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.rollback_version_id == '' }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Cache Cypress binary
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Install Cypress Binary
-        run: pnpm exec cypress install
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
 
       - name: Set up environment
         run: cp .env.example .env
@@ -80,80 +111,307 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      # `next build` cannot exercise the Cloudflare adapter, and until this step
+      # existed `opennextjs-cloudflare build` ran for the FIRST time inside the
+      # deploy job — on main, after merge, with nothing left to gate. This is
+      # what turns an `open-next.config.ts`, `wrangler.jsonc` or
+      # `@opennextjs/cloudflare` regression into a red pull request instead of a
+      # red deploy. `.open-next/` is deliberately not uploaded: the browser jobs
+      # serve `.next` through `next start`, and `pnpm run deploy` rebuilds from
+      # source anyway, so keeping the bundle would only invite someone to
+      # mistake it for the deployed bytes.
+      - name: Build the Cloudflare Worker
+        run: pnpm build:worker
+
+      # The three browser jobs share this one build, so they all exercise the
+      # same commit rather than three separate compilations. It is not the
+      # deployed bytes — `pnpm run deploy` rebuilds through
+      # `opennextjs-cloudflare build` — but it is the same source at the same
+      # settings. `.next/cache` is the local compiler cache: useless to a
+      # downloader, and most of the artifact's size.
+      - name: Upload build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: nextjs-build
-          path: .next/
+          name: next-build
+          path: |
+            .next
+            !.next/cache
           include-hidden-files: true
           retention-days: 1
 
-  e2e-tests:
+  e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [build]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+      # The shared setup installs dependencies with CYPRESS_INSTALL_BINARY=0, so
+      # these two steps are the only place the binary is fetched. Restore and
+      # save are split so the save still runs when the suite goes red — with the
+      # combined action, a failing job never reaches its post step and a cold
+      # cache stays cold across every retry.
       - name: Restore Cypress binary
-        uses: actions/cache@v4
+        id: cypress-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-
+
+      - name: Install Cypress binary
+        run: pnpm exec cypress install
+
+      - name: Save Cypress binary
+        # Only on a miss: saving under a key that already exists is an error.
+        if: ${{ always() && steps.cypress-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install Cypress Binary
-        run: pnpm exec cypress install
+      - name: Download build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: next-build
+          path: .next
 
       - name: Set up environment
         run: cp .env.example .env
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
+      # `install: false` because the shared setup already installed everything;
+      # the action's own install path would find the lockfile satisfied, skip
+      # cypress's postinstall, and then fail its binary verification.
+      # `/en` rather than `/` — the proxy answers `/` with a redirect, which
+      # wait-on would accept before the app can actually render a page.
+      - name: Run Cypress
+        uses: cypress-io/github-action@09090944bd8aaa2a517cefb6e38bf1aae336b42b # v7.4.3
         with:
-          name: nextjs-build
-          path: .next/
-
-      - name: Run Cypress E2E tests
-        uses: cypress-io/github-action@v6
-        with:
+          install: false
           start: pnpm start
-          wait-on: 'http://localhost:3000'
-          wait-on-timeout: 60
+          wait-on: http://localhost:3000/en
+          wait-on-timeout: 90
           browser: chrome
+
+      # cypress.config.ts currently sets `video: false` and
+      # `screenshotOnRunFailure: false`, so this collects nothing until one of
+      # those is turned on. It is here so that flipping either flag while
+      # chasing a CI-only failure produces artifacts without also needing a
+      # workflow edit.
+      - name: Upload Cypress artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cypress-artifacts
+          path: |
+            cypress/screenshots
+            cypress/videos
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Geometry. Deterministic, so this one gates the deploy.
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Download build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: next-build
+          path: .next
+
+      - name: Set up environment
+        run: cp .env.example .env
+
+      # playwright.config.ts starts `next start` (not `next dev`) when CI is
+      # set, so these assertions describe the production bundle.
+      - name: Run layout and accessibility specs
+        run: pnpm exec playwright test --project=layout
+
+      - name: Upload Playwright results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-layout-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Wall-clock budgets — frame rate, long tasks, animation shape. These
+  # thresholds were tuned on a laptop and have never been observed on a 4-vCPU
+  # runner, so the job reports without blocking. Its own runner is also what
+  # gives the measurements the machine to themselves. Promote it to a required
+  # check once a few weeks of runs show what the numbers actually look like.
+  playwright-perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build]
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Download build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: next-build
+          path: .next
+
+      - name: Set up environment
+        run: cp .env.example .env
+
+      - name: Run performance specs
+        run: pnpm exec playwright test --project=perf
+
+      - name: Upload Playwright results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-perf-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [e2e-tests]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # `pnpm run deploy` is a full OpenNext build plus an upload, not just an
+    # upload; the smoke test adds up to eight more minutes on a bad day.
+    timeout-minutes: 20
+    needs: [lint-and-typecheck, unit-tests, build, e2e, playwright]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    environment:
+      name: Production
+      url: https://yosefgamble.com
+    # Not keyed on the ref: two merges to main must not deploy at once. The
+    # older run finishing last is how production went backwards on 2026-08-16.
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    # Nothing downstream consumes this today. It exists so the id is reachable
+    # from `gh run view <id> --json jobs` and the REST API without scraping the
+    # log, which is what an incident script would want.
+    outputs:
+      version-id: ${{ steps.deploy.outputs.version-id }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
 
       - name: Set up environment
         run: cp .env.example .env
 
       - name: Deploy to Cloudflare Workers
-        run: pnpm run deploy
+        id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -o pipefail
+          pnpm run deploy 2>&1 | tee "$RUNNER_TEMP/deploy.log"
+
+          # The version id is the only handle `wrangler rollback` accepts, and
+          # the deploy log is the only place it is printed. The ANSI strip uses
+          # GNU sed's \x1b escape — fine on ubuntu-latest, not on BSD sed.
+          uuid='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+          version_id="$(
+            sed -E 's/\x1b\[[0-9;]*[A-Za-z]//g' "$RUNNER_TEMP/deploy.log" \
+              | grep -iE 'current version id:' \
+              | tail -n 1 \
+              | grep -oE "$uuid"
+          )" || version_id=''
+
+          if [[ ! "$version_id" =~ ^${uuid}$ ]]; then
+            echo "::warning::No Worker version id in the deploy output. A rollback will have to read it from 'wrangler versions list'."
+            version_id=''
+          fi
+          echo "version-id=$version_id" >> "$GITHUB_OUTPUT"
+
+          {
+            echo '### Deployed to production'
+            echo
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            if [ -n "$version_id" ]; then
+              echo "- Worker version id: \`${version_id}\`"
+              echo
+              echo 'To roll back, run this workflow from the Actions tab with'
+              echo '`rollback_version_id` set to the id of a **previous** deploy.'
+            else
+              echo '- Worker version id: not found in the deploy output'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Its own budget, comfortably above the script's worst case (5 attempts,
+      # 20s per request, 15s between), so a hung origin fails here rather than
+      # eating the job timeout and losing the summary below.
+      - name: Smoke test production
+        timeout-minutes: 8
+        env:
+          SMOKE_FAILURE_HINT: >-
+            Roll back by re-running this workflow from the Actions tab with
+            `rollback_version_id` set to the version id of the previous deploy.
+        run: .github/scripts/smoke.sh
+
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Pinned to main as well as to the input. The Production environment has no
+    # protection rules and the Cloudflare secrets are repository-scoped, so the
+    # ref check is the only thing stopping a dispatch from an arbitrary branch
+    # reaching production credentials.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.rollback_version_id != '' && github.ref == 'refs/heads/main' }}
+    environment:
+      name: Production
+      url: https://yosefgamble.com
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+
+      # The input reaches the shell through the environment, never through
+      # string interpolation into the script.
+      - name: Roll back the Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ROLLBACK_VERSION_ID: ${{ inputs.rollback_version_id }}
+          TRIGGERED_BY: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+
+          uuid='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+          if [[ ! "$ROLLBACK_VERSION_ID" =~ ^${uuid}$ ]]; then
+            echo "::error::'$ROLLBACK_VERSION_ID' is not a Worker version id."
+            exit 1
+          fi
+
+          pnpm exec wrangler rollback "$ROLLBACK_VERSION_ID" -y \
+            --message "manual rollback by $TRIGGERED_BY"
+
+          {
+            echo '### Rolled back'
+            echo
+            echo "- Worker version id: \`${ROLLBACK_VERSION_ID}\`"
+            echo "- Triggered by: @${TRIGGERED_BY}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # A rollback that is not verified is a hope. Same checks as the deploy.
+      - name: Smoke test production
+        timeout-minutes: 8
+        env:
+          SMOKE_FAILURE_HINT: >-
+            The rollback did not restore a healthy site. Check the Worker's
+            versions in the Cloudflare dashboard before dispatching another one.
+        run: .github/scripts/smoke.sh

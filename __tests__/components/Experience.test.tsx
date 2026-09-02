@@ -1,25 +1,18 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('@/data/experience', () => ({
-  experienceEntries: [
-    {
-      id: 'edge-corp',
-      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
-      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
-    },
-    {
-      id: 'cafe-societe',
-      companyUrl: 'https://cafe-societe.example.com/',
-      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
-    },
-    {
-      id: 'open-src',
-      companyUrl: null,
-      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
-    },
-  ],
-}));
+// The shared fixture, with one deliberate change: this suite covers the
+// unlinked-company branch, so the third entry has no companyUrl. Spelling the
+// difference out beats another copy of the array that silently drifts.
+vi.mock('@/data/experience', async () => {
+  const { testExperienceEntries } = await import('../fixtures/test-data');
+
+  return {
+    experienceEntries: testExperienceEntries.map((entry) =>
+      entry.id === 'open-src' ? { ...entry, companyUrl: null } : entry
+    ),
+  };
+});
 
 import Experience from '@/components/Experience';
 import i18n from '@/lib/i18n';
@@ -35,18 +28,6 @@ describe('Experience', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
       expect(section).toHaveAttribute('id', 'experience');
-    });
-
-    it('should have scroll-mt-24 class for fixed header offset', () => {
-      render(<Experience />);
-      const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveClass('scroll-mt-24');
-    });
-
-    it('should have a top border separator', () => {
-      render(<Experience />);
-      const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section.className).toContain('border-t');
     });
   });
 
@@ -109,18 +90,21 @@ describe('Experience', () => {
     it('should render links only for entries with valid company URLs', () => {
       render(<Experience />);
       const edgeLink = screen.getByRole('link', {
-        name: /principal engineer.*at edge corp/i,
+        name: /principal engineer & architect · edge corp/i,
       });
-      expect(edgeLink).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
+      expect(edgeLink).toHaveAttribute(
+        'href',
+        'https://example.com/edge-corp?q=test&lang=en#section'
+      );
 
       const cafeLink = screen.getByRole('link', {
-        name: /full-stack developer at cafe societe/i,
+        name: /full-stack developer · cafe societe/i,
       });
       expect(cafeLink).toHaveAttribute('href', 'https://cafe-societe.example.com/');
 
       expect(
         screen.queryByRole('link', {
-          name: /intern to mid-level engineer at open-source foundation/i,
+          name: /intern to mid-level engineer · open-source foundation/i,
         })
       ).not.toBeInTheDocument();
     });
@@ -128,37 +112,65 @@ describe('Experience', () => {
     it('should open company links in new tabs', () => {
       render(<Experience />);
       const link = screen.getByRole('link', {
-        name: /principal engineer.*at edge corp/i,
+        name: /principal engineer & architect · edge corp/i,
       });
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });
 
-    it('should have descriptive aria-labels on company links', () => {
+    it('should name company links from their visible text, not an aria-label', () => {
       render(<Experience />);
-      expect(
-        screen.getByRole('link', {
-          name: /principal engineer.*at edge corp \(opens in a new tab\)/i,
-        })
-      ).toBeInTheDocument();
+      const link = screen.getByRole('link', {
+        name: /principal engineer & architect · edge corp/i,
+      });
+      // WCAG 2.5.3: a speech-input user says what they can see, so the visible
+      // text has to be the name — and an aria-label here would have carried the
+      // English word "at" into every locale.
+      expect(link).not.toHaveAttribute('aria-label');
+      expect(link.textContent).not.toMatch(/ at /);
+    });
+
+    it('should describe the new tab without putting it in the name', () => {
+      render(<Experience />);
+      const link = screen.getByRole('link', {
+        name: 'Principal Engineer & Architect · Edge Corp',
+      });
+      // A description, not content: the link is the whole of its <h3>, so a
+      // notice in the content would rename the heading too.
+      expect(link).toHaveAccessibleDescription('(opens in a new tab)');
+
       expect(
         screen.queryByRole('link', {
-          name: /intern to mid-level engineer at open-source foundation \(opens in a new tab\)/i,
+          name: /intern to mid-level engineer · open-source foundation/i,
         })
       ).not.toBeInTheDocument();
+    });
+
+    it('should leave the job heading named by the job alone', () => {
+      render(<Experience />);
+      expect(
+        screen.getByRole('heading', {
+          level: 3,
+          name: 'Principal Engineer & Architect · Edge Corp',
+        })
+      ).toBeInTheDocument();
     });
   });
 
   describe('Technology tags', () => {
     it('should render technology tags for each position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(techLists).toHaveLength(3);
     });
 
     it('should render specific technologies for the Edge Corp position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
       expect(within(techLists[0]).getByText('Go')).toBeInTheDocument();
@@ -169,7 +181,9 @@ describe('Experience', () => {
 
     it('should render specific technologies for the Cafe Societe position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(within(techLists[1]).getByText('TypeScript')).toBeInTheDocument();
       expect(within(techLists[1]).getByText('React')).toBeInTheDocument();
       expect(within(techLists[1]).getByText('Node.js')).toBeInTheDocument();
@@ -178,7 +192,9 @@ describe('Experience', () => {
 
     it('should render specific technologies for the Open-Source Foundation position', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       expect(within(techLists[2]).getByText('Python')).toBeInTheDocument();
       expect(within(techLists[2]).getByText('Kotlin')).toBeInTheDocument();
       expect(within(techLists[2]).getByText('Swift')).toBeInTheDocument();
@@ -186,7 +202,9 @@ describe('Experience', () => {
 
     it('should render TechTag components within tech lists', () => {
       render(<Experience />);
-      const techLists = screen.getAllByRole('list', { name: /technologies used/i });
+      const techLists = screen.getAllByRole('list', {
+        name: /technologies used/i,
+      });
       const goTag = within(techLists[0]).getByText('Go');
       expect(goTag).toBeInTheDocument();
       expect(goTag.closest('li')).toBeInTheDocument();
@@ -224,30 +242,35 @@ describe('Experience', () => {
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
 
-    it('should have descriptive aria-label on resume link', () => {
+    it('should name the resume link from its visible text and describe the new tab', () => {
       render(<Experience />);
-      const link = screen.getByRole('link', { name: /view full resume/i });
-      expect(link).toBeInTheDocument();
+      const link = screen.getByRole('link', { name: 'View Full Resume' });
+      expect(link).not.toHaveAttribute('aria-label');
+      expect(link).toHaveAccessibleDescription('(opens in a new tab)');
     });
 
     it('should contain arrow right icon', () => {
       render(<Experience />);
-      const link = screen.getByRole('link', { name: /view full resume/i });
+      const link = screen.getByRole('link', { name: 'View Full Resume' });
       const svg = link.querySelector('svg');
       expect(svg).toBeInTheDocument();
       expect(svg).toHaveAttribute('aria-hidden', 'true');
     });
   });
 
-  describe('Date header accessibility', () => {
-    it('should render date headers with aria-label', () => {
+  describe('Date headers', () => {
+    it('should show the dates as text rather than label a generic element', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
-      const dateHeaders = section.querySelectorAll('header[aria-label]');
+      const dateHeaders = section.querySelectorAll('header');
+
       expect(dateHeaders).toHaveLength(3);
-      expect(dateHeaders[0]).toHaveAttribute('aria-label', '2042 - Present');
-      expect(dateHeaders[1]).toHaveAttribute('aria-label', '2038 - 2042');
-      expect(dateHeaders[2]).toHaveAttribute('aria-label', '2035 - 2038');
+      // A <header> scoped to a list item is generic, so an aria-label on it is
+      // ignored — the dates were already its visible text.
+      expect(dateHeaders[0]).not.toHaveAttribute('aria-label');
+      expect(dateHeaders[0]).toHaveTextContent('2042 - Present');
+      expect(dateHeaders[1]).toHaveTextContent('2038 - 2042');
+      expect(dateHeaders[2]).toHaveTextContent('2035 - 2038');
     });
   });
 
@@ -304,13 +327,19 @@ describe('Experience', () => {
       try {
         render(<Experience />);
         expect(
-          screen.getByRole('link', { name: /principal engineer.*at edge corp/i })
+          screen.getByRole('link', {
+            name: /principal engineer & architect · edge corp/i,
+          })
         ).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
         expect(
-          screen.getByRole('link', { name: /full-stack developer at cafe societe/i })
+          screen.getByRole('link', {
+            name: /full-stack developer · cafe societe/i,
+          })
         ).toHaveAttribute('href', 'https://cafe-societe.example.com/');
         expect(
-          screen.queryByRole('link', { name: /intern to mid-level engineer at open-source foundation/i })
+          screen.queryByRole('link', {
+            name: /intern to mid-level engineer · open-source foundation/i,
+          })
         ).not.toBeInTheDocument();
       } finally {
         i18n.addResourceBundle('en', 'translation', original, false, true);

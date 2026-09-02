@@ -1,18 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-const { redirectMock, cookiesMock, notFoundMock } = vi.hoisted(() => ({
-  redirectMock: vi.fn(),
-  cookiesMock: vi.fn(),
+// Next's notFound() throws to unwind the render, so the mock does too.
+const NOT_FOUND_ERROR = 'NEXT_HTTP_ERROR_FALLBACK;404';
+
+const { notFoundMock } = vi.hoisted(() => ({
   notFoundMock: vi.fn(),
 }));
 
-vi.mock('next/headers', () => ({
-  cookies: cookiesMock,
-}));
-
 vi.mock('next/navigation', () => ({
-  redirect: redirectMock,
   notFound: notFoundMock,
 }));
 
@@ -36,38 +32,16 @@ vi.mock('@/components/Footer', () => ({
   default: () => <div data-testid="footer">Mock Footer</div>,
 }));
 
-import IndexPage from '@/app/page';
 import LocalizedHomePage from '@/app/[locale]/page';
 
-describe('Index Page', () => {
-  beforeEach(() => {
-    redirectMock.mockReset();
-    cookiesMock.mockReset();
-    notFoundMock.mockReset();
-  });
-
-  it('redirects to the default locale when no locale cookie is set', async () => {
-    cookiesMock.mockResolvedValue({
-      get: vi.fn().mockReturnValue(undefined),
-    });
-
-    await IndexPage();
-
-    expect(redirectMock).toHaveBeenCalledWith('/en');
-  });
-
-  it('redirects to the cookie locale when it is valid', async () => {
-    cookiesMock.mockResolvedValue({
-      get: vi.fn().mockReturnValue({ value: 'he' }),
-    });
-
-    await IndexPage();
-
-    expect(redirectMock).toHaveBeenCalledWith('/he');
-  });
-});
-
 describe('Localized Home Page', () => {
+  beforeEach(() => {
+    notFoundMock.mockReset();
+    notFoundMock.mockImplementation(() => {
+      throw new Error(NOT_FOUND_ERROR);
+    });
+  });
+
   it('renders all sections successfully for a valid locale', async () => {
     const markup = renderToStaticMarkup(
       await LocalizedHomePage({ params: Promise.resolve({ locale: 'en' }) })
@@ -78,11 +52,25 @@ describe('Localized Home Page', () => {
     expect(markup).toContain('Mock Experience');
     expect(markup).toContain('Mock Projects');
     expect(markup).toContain('Mock Footer');
-    expect(markup).toContain('mx-auto w-full max-w-3xl px-6 pb-24 lg:px-8');
   });
 
-  it('calls notFound for an invalid locale', async () => {
-    await LocalizedHomePage({ params: Promise.resolve({ locale: 'de' }) });
+  it('gives <main> the skip link target and makes it focusable', async () => {
+    const markup = renderToStaticMarkup(
+      await LocalizedHomePage({ params: Promise.resolve({ locale: 'en' }) })
+    );
+
+    expect(markup).toContain('id="main"');
+    // Without tabindex the skip link would move the viewport but leave focus in
+    // the header, so the next Tab press would land back on the nav.
+    expect(markup).toMatch(/<main[^>]*tabindex="-1"/);
+    // That the landing is actually drawn is measured from the computed outline
+    // in cypress/e2e/portfolio.cy.ts, where there is real CSS.
+  });
+
+  it('stops rendering for an invalid locale', async () => {
+    await expect(LocalizedHomePage({ params: Promise.resolve({ locale: 'de' }) })).rejects.toThrow(
+      NOT_FOUND_ERROR
+    );
 
     expect(notFoundMock).toHaveBeenCalled();
   });

@@ -9,6 +9,7 @@ import CipherText from '@/components/CipherText';
 import ProfilePicture from '@/components/ProfilePicture';
 import HeroContactIcons from '@/components/HeroContactIcons';
 import { getLocaleHref, type AppLocale } from '@/lib/i18n';
+import { prefersReducedMotion } from '@/lib/media';
 
 export default function ScrollHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -20,10 +21,10 @@ export default function ScrollHeader() {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsScrolled(!entry.isIntersecting),
-      { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
-    );
+    const observer = new IntersectionObserver(([entry]) => setIsScrolled(!entry.isIntersecting), {
+      threshold: 0,
+      rootMargin: '-64px 0px 0px 0px',
+    });
 
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -41,24 +42,25 @@ export default function ScrollHeader() {
       >
         <div
           className={`mx-auto flex h-16 w-full items-center gap-4 px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:gap-6 lg:px-8 ${
-            isScrolled
-              ? 'max-w-3xl justify-between xl:max-w-5xl'
-              : 'max-w-3xl justify-center'
+            isScrolled ? 'max-w-3xl justify-between xl:max-w-5xl' : 'max-w-3xl justify-center'
           }`}
         >
-          {/* Name — visible only when scrolled past hero */}
+          {/* Name — visible only when scrolled past hero. aria-hidden and inert
+              sit on the link itself: with them on the inner block the link
+              stayed in the accessibility tree at scroll 0, so a screen reader
+              announced a "Yosef Gamble" link nobody could see. No aria-label
+              either — the visible name inside is the accessible name. */}
           <Link
             className="min-w-0 flex-1 text-base font-bold tracking-tight text-text-primary"
             href={homeHref}
-            aria-label={t('hero.name')}
+            aria-hidden={!isScrolled}
+            inert={!isScrolled}
             tabIndex={isScrolled ? 0 : -1}
             onClick={(e) => {
               e.preventDefault();
               window.scrollTo({
                 top: 0,
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                  ? 'auto'
-                  : 'smooth',
+                behavior: prefersReducedMotion() ? 'auto' : 'smooth',
               });
             }}
           >
@@ -68,7 +70,6 @@ export default function ScrollHeader() {
                   ? 'max-w-0 min-[375px]:max-w-[10rem] lg:max-w-[14rem] xl:max-w-[28rem] translate-y-0 opacity-100'
                   : 'max-w-0 -translate-y-2 opacity-0 pointer-events-none'
               }`}
-              aria-hidden={!isScrolled}
             >
               <CipherText>{t('hero.name')}</CipherText>
 

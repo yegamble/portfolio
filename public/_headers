@@ -1,0 +1,43 @@
+# Cloudflare Workers static-asset response headers.
+#
+# OpenNext copies `public/` into `.open-next/assets`, so this file ships as
+# `.open-next/assets/_headers` and Workers Static Assets applies it to every
+# asset it serves. Without it, content-hashed build output is served with the
+# platform default `public, max-age=0, must-revalidate` and revalidated on
+# every navigation.
+#
+# `next.config.ts` `headers()` cannot reach these responses: assets are served
+# by the ASSETS binding before the Worker runs, so anything an asset needs has
+# to be repeated here. HTML still gets its headers from `next.config.ts`.
+#
+# Cloudflare treats `_headers` as a config file and does not serve it.
+
+# Content-hashed chunks, CSS and next/font woff2 files. The hash changes
+# whenever the bytes do, so these can never go stale.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Hand-managed images: not content-hashed, so a week of caching with a day of
+# stale-while-revalidate rather than a year of immutable.
+/images/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+# PWA icons, fetched once at install time.
+/icons/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+# Regenerated only when scripts/process-images.mjs runs, and served as an asset
+# rather than a route, so next.config.ts cannot reach it.
+/favicon.ico
+  Cache-Control: public, max-age=86400
+
+# Everything else the ASSETS binding answers. HSTS is host-wide the moment any
+# response carries it, so the HTML from `next.config.ts` already covers a normal
+# visit — but a first request that is an asset (a bookmarked chunk URL, a
+# prefetch, a hotlinked image) reaches the binding without ever touching the
+# Worker, and this is the only place that can answer it. Keep the value in step
+# with `SECURITY_HEADERS` in `src/lib/security-headers.ts`; a test pins them
+# together.
+/*
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload

@@ -1,6 +1,7 @@
 {
   "nav": {
     "ariaLabel": "Main navigation",
+    "skipToContent": "Перейти к основному содержимому",
     "about": "Обо мне",
     "experience": "Опыт",
     "projects": "Проекты"
@@ -55,7 +56,9 @@
     "heading": "Проекты",
     "ariaLabel": "Избранные проекты",
     "techAriaLabel": "Используемые технологии",
-    "viewOnGitHub": "Открыть {{name}} на GitHub",
+    "onGitHub": "на GitHub",
+    "opensInNewTab": "(откроется в новой вкладке)",
+    "pagination": "Навигация по проектам",
     "viewRepos": "Просмотреть репозитории",
     "items": [
       {
@@ -85,8 +88,8 @@
     "vscode": "Visual Studio Code",
     "builtWith": "Создано с помощью",
     "tailwind": "Tailwind CSS",
-    "and": "и",
-    "font": "шрифт"
+    "and": "и шрифта",
+    "font": ""
   },
   "social": {
     "github": "GitHub",
@@ -97,6 +100,7 @@
   },
   "pgp": {
     "title": "Публичный ключ PGP",
+    "keyRegion": "Текст ключа PGP",
     "fingerprint": "Отпечаток",
     "userId": "Идентификатор",
     "algorithm": "Алгоритм",
@@ -104,8 +108,10 @@
     "keyId": "ID ключа",
     "copyKey": "Копировать ключ",
     "copied": "Скопировано!",
+    "copyFailed": "Не удалось скопировать",
     "close": "Закрыть",
     "loading": "Загрузка данных ключа...",
+    "loaded": "Данные ключа загружены",
     "error": "Не удалось разобрать данные ключа",
     "verifyNotice": "Проверьте отпечаток через доверенный канал перед использованием."
   },

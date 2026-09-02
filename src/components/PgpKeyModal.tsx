@@ -32,7 +32,12 @@ function decodeArmoredKey(raw: string): string {
   }
 }
 
-export const keyInfoCache = new Map<string, PgpKeyInfo>();
+// How long an outcome stays in the status region before it goes back to empty.
+const STATUS_WINDOW_MS = 2000;
+
+// Single-entry memo: the modal renders one key at a time, so remembering the
+// most recently parsed key is enough to make reopening it instant.
+let cached: { key: string; info: PgpKeyInfo } | null = null;
 
 export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModalProps) {
   const { t } = useTranslation();
@@ -40,9 +45,12 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const [justLoaded, setJustLoaded] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const focusableElementsRef = useRef<HTMLElement[]>([]);
+  const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const decodedKey = useMemo(() => decodeArmoredKey(armoredKey), [armoredKey]);
 
@@ -51,6 +59,8 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
       setKeyInfo(null);
       setError(false);
       setCopied(false);
+      setCopyFailed(false);
+      setJustLoaded(false);
       previousFocusRef.current?.focus();
       return;
     }
@@ -59,8 +69,8 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
 
     let cancelled = false;
 
-    if (keyInfoCache.has(decodedKey)) {
-      setKeyInfo(keyInfoCache.get(decodedKey)!);
+    if (cached?.key === decodedKey) {
+      setKeyInfo(cached.info);
       setLoading(false);
       setError(false);
     } else {
@@ -81,8 +91,12 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
             created: key.getCreationTime().toISOString().split('T')[0],
             keyId: key.getKeyID().toHex(),
           };
-          keyInfoCache.set(decodedKey, info);
+          cached = { key: decodedKey, info };
           setKeyInfo(info);
+          // A parse that finishes leaves no visible change a screen reader can
+          // notice on its own — the details it fills in are above the fold of
+          // the dialog's own scroll — so the status region says so.
+          setJustLoaded(true);
         } catch {
           if (!cancelled) setError(true);
         } finally {
@@ -114,7 +128,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
         )
       );
     }
-  }, [isOpen, loading, error, keyInfo, copied]);
+  }, [isOpen, loading, error, keyInfo]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -141,10 +155,49 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // The "loaded" line is an announcement, not a permanent label: it clears on
+  // the same 2s window the copy outcome uses, leaving the region empty again.
+  useEffect(() => {
+    if (!justLoaded) return;
+    const timer = setTimeout(() => setJustLoaded(false), STATUS_WINDOW_MS);
+    return () => clearTimeout(timer);
+  }, [justLoaded]);
+
+  // The reset timer outlives a click, so it has to be cancellable: reopening the
+  // modal or unmounting mid-window would otherwise leave it running.
+  useEffect(
+    () => () => {
+      if (copyResetRef.current !== null) {
+        clearTimeout(copyResetRef.current);
+      }
+    },
+    []
+  );
+
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(decodedKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (copyResetRef.current !== null) {
+      clearTimeout(copyResetRef.current);
+    }
+
+    try {
+      // navigator.clipboard is absent outside secure contexts, and writeText
+      // rejects when the document lacks permission or focus. Either way the key
+      // is still selectable in the <pre> above, so say so rather than throwing.
+      if (navigator.clipboard === undefined) {
+        throw new Error('Clipboard API unavailable');
+      }
+      await navigator.clipboard.writeText(decodedKey);
+      setCopied(true);
+      setCopyFailed(false);
+    } catch {
+      setCopied(false);
+      setCopyFailed(true);
+    }
+
+    copyResetRef.current = setTimeout(() => {
+      setCopied(false);
+      setCopyFailed(false);
+    }, STATUS_WINDOW_MS);
   }, [decodedKey]);
 
   const handleBackdropClick = useCallback(
@@ -157,6 +210,17 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
   );
 
   if (!isOpen) return null;
+
+  const statusMessage = copyFailed
+    ? t('pgp.copyFailed')
+    : copied
+      ? t('pgp.copied')
+      : loading
+        ? t('pgp.loading')
+        : justLoaded
+          ? t('pgp.loaded')
+          : '';
+  const statusTone = copyFailed ? 'text-red-400' : copied ? 'text-primary' : 'text-text-muted';
 
   return (
     <div
@@ -186,19 +250,21 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </button>
         </div>
 
-        {loading && (
-          <p className="mb-4 text-sm text-text-muted">{t('pgp.loading')}</p>
-        )}
-
+        {/* Failure is the one thing that interrupts: the rest of the dialog's
+            lifecycle goes through the single status region below. */}
         {error && (
-          <p className="mb-4 text-sm text-red-400">{t('pgp.error')}</p>
+          <p role="alert" className="mb-4 text-sm text-red-400">
+            {t('pgp.error')}
+          </p>
         )}
 
         {keyInfo && (
           <div className="mb-4 space-y-2 text-sm">
             <div>
               <span className="font-medium text-text-muted">{t('pgp.fingerprint')}: </span>
-              <code className="break-all font-mono text-xs text-primary">{keyInfo.fingerprint}</code>
+              <code className="break-all font-mono text-xs text-primary">
+                {keyInfo.fingerprint}
+              </code>
             </div>
             {keyInfo.userIds.map((uid) => (
               <div key={uid}>
@@ -222,19 +288,41 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </div>
         )}
 
-        <div className="mb-4 max-h-96 overflow-auto rounded border border-slate-700 bg-slate-950 p-5 [&]:scrollbar-thin">
+        {/* A scroll container holding nothing focusable is unreachable from the
+            keyboard on WebKit, so the key block is a labelled region in the tab
+            order (Close -> key -> Copy; the focus trap picks it up via its
+            tabindex). */}
+        <div
+          role="region"
+          aria-label={t('pgp.keyRegion')}
+          tabIndex={0}
+          className="mb-4 max-h-96 overflow-auto rounded border border-slate-700 bg-slate-950 p-5 [&]:scrollbar-thin"
+        >
           <pre className="whitespace-pre font-mono text-[11px] leading-relaxed text-text-secondary">
             {decodedKey}
           </pre>
         </div>
 
-        <button
-          onClick={handleCopy}
-          className="rounded bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
-          aria-label={t('pgp.copyKey')}
-        >
-          {copied ? t('pgp.copied') : t('pgp.copyKey')}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* The label stays put: swapping it would rename the control mid-use
+              and, being the accessible name, would be announced as a new button
+              rather than as the outcome of pressing this one. */}
+          <button
+            onClick={handleCopy}
+            className="rounded bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            {t('pgp.copyKey')}
+          </button>
+
+          {/* The dialog's one status region: it carries the key parse (loading
+              -> loaded -> empty) and then every copy outcome. Outside the button
+              so the announcement never becomes part of its accessible name, and
+              mounted even when empty — a live region that appears together with
+              its first message is not announced. */}
+          <p role="status" aria-live="polite" className={`text-sm ${statusTone}`}>
+            {statusMessage}
+          </p>
+        </div>
       </div>
     </div>
   );

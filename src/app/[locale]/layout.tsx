@@ -1,16 +1,25 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
+import { fontVariables } from '@/app/fonts';
+import JsonLd from '@/app/json-ld';
 import I18nProvider from '@/components/I18nProvider';
+import SkipLink from '@/components/SkipLink';
 import {
   DEFAULT_LOCALE,
+  getDirection,
   getLocaleHref,
   getLocaleMessages,
   isAppLocale,
   LOCALES,
+  SITE_URL,
   type AppLocale,
 } from '@/lib/i18n';
+import '../globals.css';
 
-const SITE_URL = 'https://yosefgamble.com';
+// This is the application's root layout: it owns <html>/<body>. Everything the
+// document needs comes from the `locale` route param, so the four locale routes
+// prerender at build time instead of being forced dynamic by a per-request
+// header read.
 
 // Record<AppLocale, ...> keeps this exhaustive: adding a locale without an
 // Open Graph mapping fails typecheck.
@@ -25,29 +34,16 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
   const href = `${SITE_URL}${getLocaleHref(locale)}`;
   const meta = getLocaleMessages(locale).meta;
   const languages = Object.fromEntries(
-    LOCALES.map((supportedLocale) => [supportedLocale, `${SITE_URL}${getLocaleHref(supportedLocale)}`])
+    LOCALES.map((supportedLocale) => [
+      supportedLocale,
+      `${SITE_URL}${getLocaleHref(supportedLocale)}`,
+    ])
   );
 
   return {
     metadataBase: new URL(SITE_URL),
     title: meta.title,
     description: meta.description,
-    keywords: [
-      'Yosef Gamble',
-      'senior software engineer',
-      'Golang',
-      'Go developer',
-      'TypeScript',
-      'AWS',
-      'New York software engineer',
-      'Auckland software engineer',
-      'New Zealand developer',
-      'real estate portal engineer',
-      'video streaming',
-      'full-stack engineer',
-      'ActivityPub',
-      'cloud infrastructure',
-    ],
     alternates: {
       canonical: href,
       languages: {
@@ -61,6 +57,10 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
       url: href,
       siteName: 'Yosef Gamble',
       locale: OG_LOCALES[locale],
+      // The three other translations of this same page.
+      alternateLocale: LOCALES.filter((other) => other !== locale).map(
+        (other) => OG_LOCALES[other]
+      ),
       type: 'website',
       images: [
         {
@@ -83,6 +83,13 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
     },
   };
 }
+
+// Paints the browser chrome to match the page background instead of leaving a
+// white bar above a dark document. Locale-independent, so it is a constant
+// rather than part of generateMetadata.
+export const viewport: Viewport = {
+  themeColor: '#0f172a',
+};
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -115,5 +122,22 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  return <I18nProvider locale={locale}>{children}</I18nProvider>;
+  return (
+    <html lang={locale} dir={getDirection(locale)} className={fontVariables}>
+      <body className="min-h-screen font-[family-name:var(--font-inter),var(--font-heebo)] antialiased leading-relaxed">
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-slate-900" />
+          <div className="absolute -right-[10%] -top-[10%] h-[40rem] w-[40rem] rounded-full bg-[#1e293b] opacity-30 blur-[100px]" />
+          <div className="absolute -bottom-[10%] -left-[10%] h-[30rem] w-[30rem] rounded-full bg-[#1e293b] opacity-30 blur-[80px]" />
+        </div>
+        <JsonLd locale={locale} />
+        <I18nProvider locale={locale}>
+          {/* Inside the provider so its label is translated, and first in the
+              body so it is the first thing a Tab press reaches. */}
+          <SkipLink />
+          {children}
+        </I18nProvider>
+      </body>
+    </html>
+  );
 }

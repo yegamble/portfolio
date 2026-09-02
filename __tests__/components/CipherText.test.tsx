@@ -1,6 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CipherText from '@/components/CipherText';
+import {
+  stubIntersectionObserver,
+  stubMatchMedia,
+  stubResizeObserver,
+  type IntersectionObserverStub,
+  type MatchMediaStub,
+  type ResizeObserverStub,
+} from '../helpers/observers';
 
 const mockResult = { displayChars: [] as string[], isAnimating: false };
 vi.mock('@/hooks/useCipherTransition', () => ({
@@ -13,44 +21,22 @@ vi.mock('@/hooks/useCipherTransition', () => ({
 }));
 
 describe('CipherText', () => {
-  let observeMock: ReturnType<typeof vi.fn>;
-  let disconnectMock: ReturnType<typeof vi.fn>;
+  let viewport: IntersectionObserverStub;
+  let matchMedia: MatchMediaStub;
 
   beforeEach(() => {
     mockResult.displayChars = [];
     mockResult.isAnimating = false;
 
-    observeMock = vi.fn();
-    disconnectMock = vi.fn();
-    global.IntersectionObserver = vi.fn(function (
-      this: IntersectionObserver,
-      _callback: IntersectionObserverCallback
-    ) {
-      return {
-        observe: observeMock,
-        unobserve: vi.fn(),
-        disconnect: disconnectMock,
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        takeRecords: () => [],
-      };
-    }) as unknown as typeof IntersectionObserver;
-
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    viewport = stubIntersectionObserver();
+    // Desktop: the long-text threshold is 80 characters rather than 40.
+    matchMedia = stubMatchMedia();
   });
 
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_CIPHER_TRANSITION;
+    viewport.restore();
+    matchMedia.restore();
   });
 
   describe('rendering', () => {
@@ -80,6 +66,21 @@ describe('CipherText', () => {
       expect(screen.getByText('Screen Reader Text')).toBeInTheDocument();
     });
 
+    it('should not draw cipher glyphs on a render that is not animating', () => {
+      const random = vi.spyOn(Math, 'random');
+
+      render(
+        <CipherText>{'a fairly long sentence to exercise the ref path '.repeat(3)}</CipherText>
+      );
+
+      // The scramble seed is only needed by the animating branch. Drawing it
+      // unconditionally would run Math.random once per character on the server
+      // and on every idle render.
+      expect(random).not.toHaveBeenCalled();
+
+      random.mockRestore();
+    });
+
     it('should not have animation spans when not animating', () => {
       const { container } = render(<CipherText>Hello</CipherText>);
 
@@ -103,18 +104,18 @@ describe('CipherText', () => {
   });
 
   describe('animated rendering path', () => {
-    it('should render sr-only span with actual text when animating', () => {
+    it('should keep the finished text readable while the glyphs scramble', () => {
       mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
       mockResult.isAnimating = true;
 
-      const { container } = render(<CipherText>Hello</CipherText>);
+      render(<CipherText>Hello</CipherText>);
 
-      const srOnly = container.querySelector('.sr-only');
-      expect(srOnly).toBeInTheDocument();
-      expect(srOnly).toHaveTextContent('Hello');
+      // The scrambling layer is hidden from assistive technology, so the only
+      // text left in the accessibility tree is the finished string.
+      expect(screen.getByText('Hello')).toBeInTheDocument();
     });
 
-    it('should render aria-hidden span wrapping animation characters', () => {
+    it('should hide the scrambling glyphs from assistive technology', () => {
       mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
       mockResult.isAnimating = true;
 
@@ -122,84 +123,16 @@ describe('CipherText', () => {
 
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       expect(ariaHidden).toBeInTheDocument();
-      expect(ariaHidden?.querySelectorAll('.cipher-char-slot').length).toBe(5);
-    });
-
-    it('should apply cipher-resolved class to resolved characters', () => {
-      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden?.querySelectorAll('.cipher-char');
-
-      expect(charSpans?.[0]).toHaveClass('cipher-resolved');
-      expect(charSpans?.[1]).not.toHaveClass('cipher-resolved');
-      expect(charSpans?.[2]).toHaveClass('cipher-resolved');
-    });
-
-    it('should apply cipher-char base class to all character spans', () => {
-      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
-
-      charSpans.forEach((span) => {
-        expect(span).toHaveClass('cipher-char');
-      });
-    });
-
-    it('should have both cipher-char and cipher-resolved on resolved characters', () => {
-      mockResult.displayChars = ['H', 'X', 'l', 'l', 'o'];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
-
-      expect(charSpans[0]).toHaveClass('cipher-char', 'cipher-resolved');
-      expect(charSpans[1]).toHaveClass('cipher-char');
-      expect(charSpans[1]).not.toHaveClass('cipher-resolved');
+      // The mid-flight glyphs exist only inside that hidden layer, so nothing
+      // announces "XYZlo" on the way to "Hello".
+      expect(ariaHidden?.textContent).toContain('X');
+      expect(ariaHidden?.textContent).toContain('Y');
+      expect(screen.queryByText('XYZlo')).not.toBeInTheDocument();
     });
   });
 
   describe('layout stability during animation', () => {
-    it('should apply display inline-block to each character slot', () => {
-      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
-
-      charSpans.forEach((span) => {
-        const charSlot = span as HTMLElement;
-        expect(charSlot.style.display).toBe('inline-block');
-      });
-    });
-
-    it('should apply unicode-bidi plaintext to each character slot', () => {
-      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
-
-      charSpans.forEach((span) => {
-        const charSlot = span as HTMLElement;
-        expect(charSlot.style.unicodeBidi).toBe('plaintext');
-      });
-    });
-
-    it('should reserve layout with one hidden target span per character', () => {
+    it('should reserve layout with one hidden target span per scramblable character', () => {
       const text = 'Hello World';
       mockResult.displayChars = Array.from(text).map(() => 'X');
       mockResult.isAnimating = true;
@@ -209,55 +142,36 @@ describe('CipherText', () => {
       const ariaHidden = container.querySelector('[aria-hidden="true"]');
       const layoutSpans = ariaHidden!.querySelectorAll('.cipher-char-layout');
 
-      expect(layoutSpans).toHaveLength(Array.from(text).length);
+      // The space is a plain text node, not a slot — inline-block slots are
+      // bidi-neutral, so only letters may become one.
+      expect(layoutSpans).toHaveLength(10);
       expect(layoutSpans[0]).toHaveTextContent('H');
-      expect(layoutSpans[5]?.textContent).toBe(' ');
+      expect(layoutSpans[5]?.textContent).toBe('W');
+
+      // The space survives as a direct text node between the two word runs.
+      const plainTextNodes = Array.from(ariaHidden!.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent);
+      expect(plainTextNodes).toContain(' ');
     });
 
-    it('should absolutely position visual characters over the reserved layout', () => {
-      mockResult.displayChars = ['X', 'Y', 'Z', 'l', 'o'];
-      mockResult.isAnimating = true;
+    it('should not render a hidden animation layer when not animating', () => {
+      render(<CipherText>Hello</CipherText>);
 
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('.cipher-char');
-
-      charSpans.forEach((span) => {
-        const charVisual = span as HTMLElement;
-        expect(charVisual.style.position).toBe('absolute');
-        expect(charVisual.style.inset).toBe('0px');
-      });
+      // Idle text is a single readable node: no duplicate of it for screen
+      // readers, and nothing hidden from them either.
+      expect(screen.getAllByText('Hello')).toHaveLength(1);
+      expect(document.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
     });
 
-    it('should render one span per character matching text length', () => {
-      const text = 'Hello World';
-      mockResult.displayChars = Array.from(text).map(() => 'X');
-      mockResult.isAnimating = true;
-
-      const { container } = render(<CipherText>{text}</CipherText>);
-
-      const ariaHidden = container.querySelector('[aria-hidden="true"]');
-      const charSpans = ariaHidden!.querySelectorAll('.cipher-char-slot');
-      expect(charSpans).toHaveLength(Array.from(text).length);
-    });
-
-    it('should not render wrapper spans when not animating', () => {
-      const { container } = render(<CipherText>Hello</CipherText>);
-
-      expect(container.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
-      expect(container.querySelector('.sr-only')).not.toBeInTheDocument();
-    });
-
-    it('should preserve text content in sr-only span during animation', () => {
+    it('should keep the whole target text readable during animation', () => {
       const text = 'Test content';
       mockResult.displayChars = Array.from(text).map(() => 'X');
       mockResult.isAnimating = true;
 
-      const { container } = render(<CipherText>{text}</CipherText>);
+      render(<CipherText>{text}</CipherText>);
 
-      const srOnly = container.querySelector('.sr-only');
-      expect(srOnly).toHaveTextContent(text);
+      expect(screen.getByText(text)).toBeInTheDocument();
     });
   });
 
@@ -268,7 +182,6 @@ describe('CipherText', () => {
       const wrapper = container.querySelector('span');
       expect(wrapper).toBeInTheDocument();
       expect(wrapper).toHaveTextContent('Block text');
-      expect(wrapper?.style.display).toBe('inline-block');
     });
 
     it('should not render wrapper span when block is false (default)', () => {
@@ -285,20 +198,12 @@ describe('CipherText', () => {
 
       const { container } = render(<CipherText block>Hey</CipherText>);
 
-      // Should have wrapper span containing sr-only and aria-hidden
+      // One wrapper span carrying both the readable text and the hidden
+      // scrambling layer.
       const wrapper = container.firstElementChild as HTMLElement;
       expect(wrapper?.tagName).toBe('SPAN');
-      expect(wrapper?.style.display).toBe('inline-block');
-      expect(wrapper?.querySelector('.sr-only')).toBeInTheDocument();
+      expect(within(wrapper).getByText('Hey')).toBeInTheDocument();
       expect(wrapper?.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
-    });
-
-    it('should render a full-width inline-block wrapper when block is true', () => {
-      const { container } = render(<CipherText block>Tall text</CipherText>);
-
-      const wrapper = container.querySelector('span');
-      expect(wrapper?.style.display).toBe('inline-block');
-      expect(wrapper?.style.width).toBe('100%');
     });
 
     it('should keep the block wrapper when switching between animating and non-animating states', () => {
@@ -334,8 +239,8 @@ describe('CipherText', () => {
 
       render(<CipherText>Hello</CipherText>);
 
-      expect(global.IntersectionObserver).toHaveBeenCalled();
-      expect(observeMock).toHaveBeenCalled();
+      expect(viewport.ctor).toHaveBeenCalled();
+      expect(viewport.observe).toHaveBeenCalled();
     });
 
     it('should disconnect IntersectionObserver on unmount', () => {
@@ -344,7 +249,7 @@ describe('CipherText', () => {
       const { unmount } = render(<CipherText>Hello</CipherText>);
       unmount();
 
-      expect(disconnectMock).toHaveBeenCalled();
+      expect(viewport.disconnect).toHaveBeenCalled();
     });
   });
 
@@ -373,12 +278,12 @@ describe('CipherText', () => {
       expect(animationLayer?.textContent).toContain('‎');
 
       const slots = Array.from(container.querySelectorAll('.cipher-word-slot'));
-      const latinSlot = slots.find((slot) =>
-        slot.querySelector('.cipher-char-layout')?.textContent === 'AWS'
+      const latinSlot = slots.find(
+        (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'AWS'
       );
       expect(latinSlot?.previousSibling?.textContent).toBe('‎');
-      const hebrewSlot = slots.find((slot) =>
-        slot.querySelector('.cipher-char-layout')?.textContent === 'מערכת'
+      const hebrewSlot = slots.find(
+        (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'מערכת'
       );
       expect(hebrewSlot?.previousSibling?.textContent).toBe('‏');
     });
@@ -407,16 +312,36 @@ describe('CipherText', () => {
       expect(secondOverlay).toHaveAttribute('data-end', '10');
     });
 
-    it('should still render sr-only text for accessibility during long text animation', () => {
-      const longText = 'A'.repeat(100);
+    it('should still keep long text readable to a screen reader while animating', () => {
+      // Multi-word, so the hidden ghost is split per word and the only node
+      // carrying the whole sentence is the one a screen reader reads.
+      const longText = 'alpha beta gamma delta '.repeat(6).trim();
       mockResult.displayChars = Array.from(longText);
       mockResult.isAnimating = true;
 
-      const { container } = render(<CipherText>{longText}</CipherText>);
+      render(<CipherText>{longText}</CipherText>);
 
-      const srOnly = container.querySelector('.sr-only');
-      expect(srOnly).toBeInTheDocument();
-      expect(srOnly).toHaveTextContent(longText);
+      expect(screen.getByText(longText)).toBeInTheDocument();
+    });
+
+    it('should render one slot for a long word with nowhere to break', () => {
+      // 100 characters and no whitespace: segmentWords produces a single
+      // segment, so one ghost and one overlay have to cover the whole string.
+      // The multi-word case above passes whether or not that boundary is right.
+      const longWord = 'A'.repeat(100);
+      mockResult.displayChars = Array.from(longWord);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longWord}</CipherText>);
+
+      const slots = container.querySelectorAll('.cipher-word-slot');
+      expect(slots).toHaveLength(1);
+      expect(slots[0].querySelector('.cipher-char-layout')).toHaveTextContent(longWord);
+
+      const overlay = slots[0].querySelector('.cipher-word');
+      expect(overlay).toHaveAttribute('data-start', '0');
+      expect(overlay).toHaveAttribute('data-end', String(longWord.length));
+      expect(container.querySelectorAll('.cipher-char-slot')).toHaveLength(0);
     });
 
     it('should still create per-char spans for short text during animation', () => {
@@ -427,6 +352,68 @@ describe('CipherText', () => {
 
       // Short text keeps per-char span animation
       expect(container.querySelectorAll('.cipher-char-slot').length).toBe(5);
+    });
+
+    it('should leave digits, dashes and spaces outside the bidi-neutral slots', () => {
+      const text = '2024 — היום';
+      mockResult.displayChars = Array.from(text);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      // A run of inline-block slots is laid out by paragraph direction, so a
+      // digit inside one is mirrored ("2024" renders as "4202") in Hebrew.
+      const layouts = Array.from(container.querySelectorAll('.cipher-char-layout'));
+      expect(layouts.every((span) => !/[0-9]/.test(span.textContent ?? ''))).toBe(true);
+
+      // Only the four Hebrew letters get a slot; the rest is plain text.
+      expect(container.querySelectorAll('.cipher-char-slot')).toHaveLength(4);
+      expect(container.querySelector('[aria-hidden="true"]')).toHaveTextContent('2024');
+    });
+
+    it('should emit long-text word slots only for segments that contain letters', () => {
+      const longText = `${'\u05d4\u05e7\u05de\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05ea\u05e8\u05d0\u05d5\u05ea '.repeat(6)}2024 \u2014 \u05d4\u05d9\u05d5\u05dd`;
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      const layouts = Array.from(container.querySelectorAll('.cipher-char-layout'));
+      expect(layouts.length).toBeGreaterThan(0);
+      expect(layouts.every((span) => !/[0-9]/.test(span.textContent ?? ''))).toBe(true);
+      expect(layouts.some((span) => span.textContent === '\u2014')).toBe(false);
+      expect(container.querySelector('[aria-hidden="true"]')).toHaveTextContent('2024');
+    });
+
+    it('should mount long-text overlays already scrambled so the answer never flashes', () => {
+      const longText = 'systeme alertes serverless sur AWS Lambda et DynamoDB '.repeat(3).trim();
+      mockResult.displayChars = Array.from(longText);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longText}</CipherText>);
+
+      const slots = Array.from(container.querySelectorAll('.cipher-word-slot'));
+      expect(slots.length).toBeGreaterThan(10);
+
+      const flashing = slots.filter((slot) => {
+        const overlay = slot.querySelector('.cipher-word')?.textContent ?? '';
+        const ghost = slot.querySelector('.cipher-char-layout')?.textContent ?? '';
+        return /\p{L}/u.test(ghost) && overlay === ghost;
+      });
+
+      expect(flashing).toHaveLength(0);
+    });
+
+    it('should mount short-text overlays already scrambled when no frame has landed', () => {
+      const text = 'Hello';
+      mockResult.displayChars = ['', '', '', '', ''];
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{text}</CipherText>);
+
+      const chars = Array.from(container.querySelectorAll('.cipher-char'));
+      expect(chars).toHaveLength(5);
+      expect(chars.map((span) => span.textContent).join('')).not.toBe(text);
     });
 
     it('should emit per-char direction marks in short mode for mixed-direction text', () => {
@@ -452,6 +439,101 @@ describe('CipherText', () => {
         (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'o'
       );
       expect(lastLatinSlot?.nextSibling?.textContent).toBe('‎');
+    });
+  });
+  describe('block-mode height ease', () => {
+    let resize: ResizeObserverStub;
+
+    /**
+     * jsdom reports a zero rect for everything, so the wrapper's height is
+     * scripted. The mechanics of the ease itself are covered in
+     * __tests__/hooks/useBlockHeightEase.test.ts; what matters here is that the
+     * component hands the hook the right element and the right visibility.
+     */
+    function stubHeight(element: HTMLElement, height: number) {
+      element.getBoundingClientRect = vi.fn(
+        () => ({ height, width: 0, top: 0, bottom: height, left: 0, right: 0 }) as DOMRect
+      );
+    }
+
+    function reportSettledHeight(height: number) {
+      resize.emit(height);
+    }
+
+    function reportVisibility(isIntersecting: boolean) {
+      viewport.emit(isIntersecting);
+    }
+
+    function blockWrapper(container: HTMLElement) {
+      // The observer span carries no style attribute, so the first styled span
+      // in document order is the block wrapper.
+      return container.querySelector<HTMLElement>('span[style]')!;
+    }
+
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+      resize = stubResizeObserver();
+
+      // jsdom has a CSS namespace but no CSS.supports, and the ease refuses to
+      // run without `overflow-y: clip` support.
+      (globalThis.CSS as unknown as { supports?: () => boolean }).supports = () => true;
+    });
+
+    afterEach(() => {
+      delete (globalThis.CSS as unknown as { supports?: () => boolean }).supports;
+      resize.restore();
+    });
+
+    it('should ease the block wrapper when the text changes', () => {
+      const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
+      const wrapper = blockWrapper(container);
+
+      reportSettledHeight(240);
+      stubHeight(wrapper, 180);
+      rerender(<CipherText block>Beta</CipherText>);
+
+      expect(wrapper.style.height).toBe('180px');
+      expect(wrapper.style.transition).toBe('height 300ms ease-out');
+    });
+
+    it('should animate the same DOM node the animating branch renders into', () => {
+      const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
+      const wrapper = blockWrapper(container);
+
+      reportSettledHeight(240);
+      stubHeight(wrapper, 180);
+
+      // The switch that matters: new text AND the branch flip to the animating
+      // markup, in one commit. Both branches emit the same wrapper element, so
+      // React reuses this node and the inline styles the ease just wrote to it
+      // survive.
+      mockResult.displayChars = ['X', 'Y', 'Z', 'A'];
+      mockResult.isAnimating = true;
+      rerender(<CipherText block>Beta</CipherText>);
+
+      expect(blockWrapper(container)).toBe(wrapper);
+      expect(within(wrapper).getByText('Beta')).toBeInTheDocument();
+      expect(wrapper.style.height).toBe('180px');
+    });
+
+    it('should not ease an instance the viewport observer reports as off-screen', () => {
+      const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
+      const wrapper = blockWrapper(container);
+
+      reportSettledHeight(240);
+      reportVisibility(false);
+      stubHeight(wrapper, 180);
+      rerender(<CipherText block>Beta</CipherText>);
+
+      expect(wrapper.style.height).toBe('');
+    });
+
+    it('should not observe anything in inline (non-block) mode', () => {
+      const { rerender } = render(<CipherText>Alpha</CipherText>);
+
+      rerender(<CipherText>Beta</CipherText>);
+
+      expect(resize.ctor).not.toHaveBeenCalled();
     });
   });
 });

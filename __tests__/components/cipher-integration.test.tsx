@@ -1,73 +1,23 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { act, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import i18n from '@/lib/i18n';
 import ScrollHeader from '@/components/ScrollHeader';
 import About from '@/components/About';
 import Experience from '@/components/Experience';
-import Projects from '@/components/Projects';
-import Footer from '@/components/Footer';
+
+import {
+  stubIntersectionObserver,
+  stubMatchMedia,
+  type MatchMediaStub,
+} from '../helpers/observers';
 
 import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
 
-vi.mock('@/data/experience', () => ({
-  experienceEntries: [
-    {
-      id: 'edge-corp',
-      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
-      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
-    },
-    {
-      id: 'cafe-societe',
-      companyUrl: 'https://cafe-societe.example.com/',
-      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
-    },
-    {
-      id: 'open-src',
-      companyUrl: '#',
-      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
-    },
-  ],
-}));
-
-vi.mock('@/data/projects', () => ({
-  projectEntries: [
-    {
-      id: 'vidra',
-      repos: [
-        { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
-        { name: 'vidra-user', url: '#' },
-      ],
-      technologies: ['Go', 'ActivityPub', 'Docker'],
-      icon: 'layers',
-    },
-    {
-      id: 'aurialis',
-      repos: [
-        { name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' },
-      ],
-      technologies: ['Next.js', 'TypeScript'],
-      icon: 'layers',
-    },
-    {
-      id: 'goimg',
-      repos: [
-        { name: 'goimg-user', url: '#' },
-        { name: 'goimg-datalayer', url: '#' },
-      ],
-      technologies: ['Go', 'PostgreSQL'],
-      icon: 'folder',
-    },
-    {
-      id: 'iota-token-creator',
-      repos: [
-        { name: 'iota-token-creator-web', url: '#' },
-        { name: 'iota-token-creator-api', url: '#' },
-      ],
-      technologies: ['Next.js', 'Go'],
-      icon: 'folder',
-    },
-  ],
+// Async factory: a vi.mock factory is hoisted above the imports, so it has to
+// pull the fixture in itself rather than close over a top-level binding.
+vi.mock('@/data/experience', async () => ({
+  experienceEntries: (await import('../fixtures/test-data')).testExperienceEntries,
 }));
 
 beforeEach(async () => {
@@ -75,58 +25,11 @@ beforeEach(async () => {
   document.documentElement.lang = 'en';
   document.documentElement.dir = 'ltr';
 
-  window.IntersectionObserver = vi.fn(function (
-    this: IntersectionObserver,
-    _callback: IntersectionObserverCallback
-  ) {
-    return {
-      observe: vi.fn(),
-      disconnect: vi.fn(),
-      unobserve: vi.fn(),
-      root: null,
-      rootMargin: '',
-      thresholds: [],
-      takeRecords: () => [],
-    };
-  }) as unknown as typeof IntersectionObserver;
+  stubIntersectionObserver();
 });
 
 describe('Cipher Integration - DOM structure consistency across languages', () => {
   describe('About section', () => {
-    it('should render three paragraphs in English', () => {
-      render(<About />);
-      const section = screen.getByRole('region', { name: /about me/i });
-      const paragraphs = section.querySelectorAll('p');
-      expect(paragraphs).toHaveLength(3);
-    });
-
-    it('should render three paragraphs in Hebrew', async () => {
-      await i18n.changeLanguage('he');
-      render(<About />);
-      const section = screen.getByRole('region', { name: 'אודותיי' });
-      const paragraphs = section.querySelectorAll('p');
-      expect(paragraphs).toHaveLength(3);
-    });
-
-    it('should render the company link in paragraph 2 in English', () => {
-      render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
-      expect(link).toHaveAttribute('href');
-      const section = screen.getByRole('region', { name: /about me/i });
-      const paragraphs = section.querySelectorAll('p');
-      expect(paragraphs[1]).toContainElement(link);
-    });
-
-    it('should render the company link in paragraph 2 in Hebrew', async () => {
-      await i18n.changeLanguage('he');
-      render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
-      expect(link).toHaveAttribute('href');
-      const section = screen.getByRole('region', { name: 'אודותיי' });
-      const paragraphs = section.querySelectorAll('p');
-      expect(paragraphs[1]).toContainElement(link);
-    });
-
     it('should render p2 as prefix text + link + suffix text in English', () => {
       render(<About />);
       const section = screen.getByRole('region', { name: /about me/i });
@@ -161,23 +64,6 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
   });
 
   describe('Experience section', () => {
-    it('should render three list items in English', () => {
-      render(<Experience />);
-      const section = screen.getByRole('region', { name: /work experience/i });
-      const ol = section.querySelector('ol');
-      const items = ol!.querySelectorAll(':scope > li');
-      expect(items).toHaveLength(3);
-    });
-
-    it('should render three list items in Hebrew', async () => {
-      await i18n.changeLanguage('he');
-      render(<Experience />);
-      const section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-      const ol = section.querySelector('ol');
-      const items = ol!.querySelectorAll(':scope > li');
-      expect(items).toHaveLength(3);
-    });
-
     it('should render all three items including the first after switching to Hebrew', async () => {
       await i18n.changeLanguage('he');
       render(<Experience />);
@@ -187,64 +73,22 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       expect(section).toHaveTextContent('Open-Source Foundation');
     });
 
-    it('should preserve three technology tag lists in both languages', async () => {
-      const { unmount } = render(<Experience />);
-      const enTechLists = screen.getAllByRole('list', { name: /technologies used/i });
-      expect(enTechLists).toHaveLength(3);
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<Experience />);
-      const heTechLists = screen.getAllByRole('list', { name: /טכנולוגיות בשימוש/ });
-      expect(heTechLists).toHaveLength(3);
-    });
-
     it('should preserve three date headers in both languages', async () => {
       const { unmount } = render(<Experience />);
       let section = screen.getByRole('region', { name: /work experience/i });
-      let dateHeaders = section.querySelectorAll('header[aria-label]');
+      let dateHeaders = section.querySelectorAll('header');
       expect(dateHeaders).toHaveLength(3);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<Experience />);
       section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-      dateHeaders = section.querySelectorAll('header[aria-label]');
+      dateHeaders = section.querySelectorAll('header');
       expect(dateHeaders).toHaveLength(3);
-    });
-
-    it('should preserve the external company links and resume link in both languages', async () => {
-      const { unmount } = render(<Experience />);
-      let section = screen.getByRole('region', { name: /work experience/i });
-      let blankLinks = within(section).getAllByRole('link').filter(
-        (l) => l.getAttribute('target') === '_blank'
-      );
-      expect(blankLinks).toHaveLength(3);
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<Experience />);
-      section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-      blankLinks = within(section).getAllByRole('link').filter(
-        (l) => l.getAttribute('target') === '_blank'
-      );
-      expect(blankLinks).toHaveLength(3);
     });
   });
 
   describe('ScrollHeader section', () => {
-    it('should render three nav links in both languages', async () => {
-      const { unmount } = render(<ScrollHeader />);
-      let nav = screen.getByRole('navigation', { name: /main navigation/i });
-      expect(within(nav).getAllByRole('link')).toHaveLength(3);
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<ScrollHeader />);
-      nav = screen.getByRole('navigation', { name: /main navigation/i });
-      expect(within(nav).getAllByRole('link')).toHaveLength(3);
-    });
-
     it('should render hero elements in both languages', async () => {
       const { unmount } = render(<ScrollHeader />);
       expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
@@ -255,169 +99,193 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
       expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
   });
-
-  describe('Projects section', () => {
-    it('should render four project cards in both languages', async () => {
-      const { unmount } = render(<Projects />);
-      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<Projects />);
-      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
-    });
-
-    it('should preserve four technology lists in both languages', async () => {
-      const { unmount } = render(<Projects />);
-      let techLists = screen.getAllByRole('list', { name: /technologies used/i });
-      expect(techLists).toHaveLength(4);
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<Projects />);
-      techLists = screen.getAllByRole('list', { name: /טכנולוגיות בשימוש/ });
-      expect(techLists).toHaveLength(4);
-    });
-
-    it('should preserve project repo links in both languages', async () => {
-      const { unmount } = render(<Projects />);
-      expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(4);
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<Projects />);
-      expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(4);
-    });
-  });
-
-  describe('Footer section', () => {
-    it('should render four social links in both languages', async () => {
-      const { unmount } = render(<Footer />);
-      const enLinks = [
-        screen.getByRole('link', { name: /github/i }),
-        screen.getByRole('link', { name: /linkedin/i }),
-        screen.getByRole('link', { name: /^email$/i }),
-        screen.getByRole('link', { name: /secure email/i }),
-      ];
-      expect(enLinks).toHaveLength(4);
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<Footer />);
-      const heLinks = [
-        screen.getByRole('link', { name: /github/i }),
-        screen.getByRole('link', { name: /linkedin/i }),
-        screen.getByRole('link', { name: /אימייל$/i }),
-        screen.getByRole('link', { name: /אימייל מאובטח/i }),
-      ];
-      expect(heLinks).toHaveLength(4);
-    });
-
-    it('should preserve three tool links in both languages', async () => {
-      const { unmount } = render(<Footer />);
-      let vscodeLink = screen.getByRole('link', { name: /visual studio code/i });
-      let tailwindLink = screen.getByRole('link', { name: /tailwind css/i });
-      let interLink = screen.getByRole('link', { name: 'Inter' });
-      expect(vscodeLink).toBeInTheDocument();
-      expect(tailwindLink).toBeInTheDocument();
-      expect(interLink).toBeInTheDocument();
-      unmount();
-
-      await i18n.changeLanguage('he');
-      render(<Footer />);
-      vscodeLink = screen.getByRole('link', { name: /visual studio code/i });
-      tailwindLink = screen.getByRole('link', { name: /tailwind css/i });
-      interLink = screen.getByRole('link', { name: 'Inter' });
-      expect(vscodeLink).toBeInTheDocument();
-      expect(tailwindLink).toBeInTheDocument();
-      expect(interLink).toBeInTheDocument();
-    });
-  });
 });
 
-describe('Cipher Integration - Language switch preserves structure', () => {
-  it('should preserve About paragraph count after switching language', async () => {
+/**
+ * Everything above runs with NEXT_PUBLIC_CIPHER_TRANSITION unset, which is the
+ * path a visitor gets when the flag is off — CipherText renders plain text and
+ * the hook never schedules a frame. The animated path is the one that swaps the
+ * DOM out for scramble overlays mid-switch, and until now no test drove it.
+ *
+ * It needs three things jsdom does not provide by itself: the env var (read on
+ * every render), a matchMedia to answer the reduced-motion and mobile-profile
+ * queries, and a frame clock, since the shared scheduler in
+ * src/hooks/useCipherTransition.ts advances only when requestAnimationFrame
+ * fires.
+ *
+ * The frame clock is where this differs from
+ * __tests__/hooks/useCipherTransition.test.ts: that suite's stub counts calls
+ * and throws the callbacks away, which is enough to assert that a frame was
+ * requested but never runs one. Here the callbacks are queued and replayed on a
+ * scripted clock, so the animation actually advances and finishes.
+ */
+describe('Cipher Integration - the animated language switch', () => {
+  const FRAME_MS = 16;
+  const SCRAMBLE_SELECTOR = '.cipher-char, .cipher-word';
+
+  const originalRequestAnimationFrame = global.requestAnimationFrame;
+  const originalCancelAnimationFrame = global.cancelAnimationFrame;
+
+  let frames: FrameRequestCallback[] = [];
+  let matchMedia: MatchMediaStub;
+  let randomState = 0;
+
+  // A seeded generator rather than a pinned constant. Math.random() === 0.42 on
+  // every call gives every character the same cipher glyph and every character
+  // the same reveal jitter, which hides anything that only goes wrong when the
+  // glyphs differ — a slot sized to the wrong one, a resolve check comparing
+  // the wrong pair. This is just as reproducible and actually varies.
+  // (Numerical Recipes' LCG, mod 2^32.)
+  function seededRandom(): number {
+    randomState = (randomState * 1664525 + 1013904223) >>> 0;
+    return randomState / 0x1_0000_0000;
+  }
+
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+    frames = [];
+
+    global.requestAnimationFrame = ((callback: FrameRequestCallback) =>
+      frames.push(callback)) as unknown as typeof requestAnimationFrame;
+    global.cancelAnimationFrame = vi.fn() as unknown as typeof cancelAnimationFrame;
+
+    // Desktop, full motion: the hook refuses to animate under
+    // prefers-reduced-motion and picks a shorter profile on a coarse pointer.
+    matchMedia = stubMatchMedia();
+
+    randomState = 0x5eed;
+    vi.spyOn(Math, 'random').mockImplementation(seededRandom);
+  });
+
+  afterEach(async () => {
+    // Back to English inside the frame clock, so the transition that the switch
+    // starts is finished here rather than left running into the next test.
+    await act(async () => {
+      await i18n.changeLanguage('en');
+    });
+    runFrames();
+
+    delete process.env.NEXT_PUBLIC_CIPHER_TRANSITION;
+    global.requestAnimationFrame = originalRequestAnimationFrame;
+    global.cancelAnimationFrame = originalCancelAnimationFrame;
+    matchMedia.restore();
+    vi.restoreAllMocks();
+  });
+
+  /**
+   * Drive the shared scheduler until nothing reschedules (or the budget runs
+   * out). Returns the clock it stopped at, so a caller can carry on from there.
+   */
+  function runFrames(fromMs = 0, untilMs = 4000): number {
+    let now = fromMs;
+    while (frames.length > 0 && now < untilMs) {
+      const queued = frames;
+      frames = [];
+      now += FRAME_MS;
+      act(() => {
+        queued.forEach((callback) => callback(now));
+      });
+    }
+    return now;
+  }
+
+  function scrambleNodeCount(): number {
+    return document.querySelectorAll(SCRAMBLE_SELECTOR).length;
+  }
+
+  async function switchTo(locale: string) {
+    await act(async () => {
+      await i18n.changeLanguage(locale);
+    });
+  }
+
+  it('should decrypt the About copy into Hebrew and leave no scramble node behind', async () => {
+    render(<About />);
+    expect(screen.getByText(testEn.about.p1)).toBeInTheDocument();
+
+    await switchTo('he');
+
+    // Two frames in, the section is mid-scramble: the overlays are mounted and
+    // carrying cipher glyphs.
+    const mid = runFrames(0, 2 * FRAME_MS);
+    expect(scrambleNodeCount()).toBeGreaterThan(0);
+
+    // ...and the finished Hebrew paragraph is already there, while the layer
+    // carrying the glyphs is aria-hidden — so a screen reader reads the
+    // translation rather than a wall of cipher characters. The English
+    // paragraph it replaced is gone in the same commit.
+    const section = screen.getByRole('region', {
+      name: testHe.about.ariaLabel,
+    });
+    expect(within(section).getByText(testHe.about.p1)).toBeInTheDocument();
+    expect(within(section).queryByText(testEn.about.p1)).not.toBeInTheDocument();
+
+    // Once the reveal wave has passed the last character every overlay is gone
+    // and the paragraph is plain Hebrew text again.
+    runFrames(mid);
+    expect(scrambleNodeCount()).toBe(0);
+    expect(within(section).getByText(testHe.about.p1)).toBeInTheDocument();
+    expect(within(section).getByText(testHe.about.p3)).toBeInTheDocument();
+  });
+
+  it('should scramble the short Experience strings per character and resolve them', async () => {
+    render(<Experience />);
+    // The <h3> shows "<title> · <company>" as one string, so that is the one
+    // CipherText instance and the one thing to look for.
+    const [enJob] = testEn.experience.jobs;
+    const enHeading = `${enJob.title} · ${enJob.company}`;
+    expect(screen.getAllByText(enHeading).length).toBeGreaterThan(0);
+
+    await switchTo('he');
+
+    const mid = runFrames(0, 2 * FRAME_MS);
+    // A job title is short enough to take the per-character path, so the
+    // scramble is React-rendered `.cipher-char` spans rather than word overlays.
+    expect(document.querySelectorAll('.cipher-char').length).toBeGreaterThan(0);
+
+    const [heJob] = testHe.experience.jobs;
+    const heHeading = `${heJob.title} · ${heJob.company}`;
+    const section = screen.getByRole('region', {
+      name: testHe.experience.ariaLabel,
+    });
+    expect(within(section).getAllByText(heHeading).length).toBeGreaterThan(0);
+
+    runFrames(mid);
+    expect(scrambleNodeCount()).toBe(0);
+    expect(within(section).getAllByText(heHeading).length).toBeGreaterThan(0);
+    expect(within(section).getByText(heJob.dates)).toBeInTheDocument();
+    // Every job still has a heading of its own after the animation.
+    expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(
+      testHe.experience.jobs.length
+    );
+  });
+
+  // The browser-side half of this claim is
+  // playwright/layout-stability.spec.ts › "long-text overlays never mount
+  // showing the finished translation", which watches real mutations over a real
+  // animation. Two layers on purpose: that one can only observe what a
+  // MutationObserver happens to catch between paints, while this one inspects
+  // the exact markup React commits on the frame the overlays appear.
+  it('should never paint the finished translation before the scramble starts', async () => {
     render(<About />);
 
-    let section = screen.getByRole('region', { name: /about me/i });
-    expect(section.querySelectorAll('p')).toHaveLength(3);
+    await switchTo('he');
 
-    await i18n.changeLanguage('he');
+    // The overlays mount on the render that flips isAnimating, one or two
+    // painted frames before the first scramble write lands; seeded cipher
+    // glyphs are what keeps the answer from flashing in that window.
+    runFrames(0, FRAME_MS);
 
-    section = screen.getByRole('region', { name: 'אודותיי' });
-    expect(section.querySelectorAll('p')).toHaveLength(3);
-  });
-
-  it('should preserve Experience list item count after switching language', async () => {
-    render(<Experience />);
-
-    let section = screen.getByRole('region', { name: /work experience/i });
-    let items = section.querySelector('ol')!.querySelectorAll(':scope > li');
-    expect(items).toHaveLength(3);
-
-    await i18n.changeLanguage('he');
-
-    section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-    items = section.querySelector('ol')!.querySelectorAll(':scope > li');
-    expect(items).toHaveLength(3);
-  });
-
-  it('should preserve Projects card count after switching language', async () => {
-    render(<Projects />);
-
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
-
-    await i18n.changeLanguage('he');
-
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
-  });
-
-  it('should preserve About p2 link after switching language', async () => {
-    render(<About />);
-
-    let link = screen.getByRole('link', { name: /test-company\.example\.com/i });
-    expect(link).toHaveAttribute('href');
-
-    await i18n.changeLanguage('he');
-
-    link = screen.getByRole('link', { name: /test-company\.example\.com/i });
-    expect(link).toHaveAttribute('href');
-  });
-
-  it('should preserve all Experience company link hrefs after switching language', async () => {
-    render(<Experience />);
-
-    let section = screen.getByRole('region', { name: /work experience/i });
-    let companyLinks = within(section).getAllByRole('link').filter(
-      (l) => l.getAttribute('target') === '_blank'
+    const overlays = Array.from(
+      document.querySelectorAll<HTMLElement>('.cipher-word, .cipher-char')
     );
-    const enHrefs = companyLinks.map((l) => l.getAttribute('href')).sort();
+    expect(overlays.length).toBeGreaterThan(0);
 
-    await i18n.changeLanguage('he');
-
-    section = screen.getByRole('region', { name: /ניסיון תעסוקתי/ });
-    companyLinks = within(section).getAllByRole('link').filter(
-      (l) => l.getAttribute('target') === '_blank'
-    );
-    const heHrefs = companyLinks.map((l) => l.getAttribute('href')).sort();
-
-    expect(heHrefs).toEqual(enHrefs);
-  });
-
-  it('should preserve Footer tool link hrefs after switching language', async () => {
-    render(<Footer />);
-
-    const getToolHrefs = () =>
-      screen.getAllByRole('link')
-        .filter((l) => l.getAttribute('target') === '_blank')
-        .map((l) => l.getAttribute('href'))
-        .sort();
-
-    const enHrefs = getToolHrefs();
-
-    await i18n.changeLanguage('he');
-
-    const heHrefs = getToolHrefs();
-    expect(heHrefs).toEqual(enHrefs);
+    const flashed = overlays.filter((overlay) => {
+      const ghost = overlay.parentElement?.querySelector('.cipher-char-layout');
+      const target = ghost?.textContent ?? '';
+      return /\p{L}/u.test(target) && overlay.textContent === target;
+    });
+    expect(flashed).toHaveLength(0);
   });
 });

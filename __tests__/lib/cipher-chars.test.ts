@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  getRandomCipherChar,
-  isScramblable,
-} from '@/lib/cipher-chars';
+import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 describe('cipher-chars utility', () => {
   describe('getRandomCipherChar', () => {
@@ -25,6 +22,63 @@ describe('cipher-chars utility', () => {
         const char = getRandomCipherChar();
         expect(Array.from(char).length).toBe(1);
         expect(char.trim()).toBe(char);
+      }
+    });
+  });
+
+  describe('getRandomCipherChar width-aware pools', () => {
+    // Wide glyphs (CJK, kana, Devanagari, Arabic, Georgian) advance 1.2-1.8x a
+    // Latin lowercase letter. Drawn into a slot sized to the final glyph they
+    // overflow it, which on a phone widens the document and makes the browser
+    // rescale the layout viewport for the length of the animation.
+    const WIDE_SCRIPT_REGEX =
+      /[\u3040-\u30FF\u4E00-\u9FFF\u0900-\u097F\u0600-\u06FF\u10A0-\u10FF]/u;
+
+    it('should never draw a wide-script glyph for a narrow Latin target', () => {
+      for (let i = 0; i < 1000; i++) {
+        const char = getRandomCipherChar('a');
+        expect(WIDE_SCRIPT_REGEX.test(char), `drew wide glyph ${char} for target "a"`).toBe(false);
+      }
+    });
+
+    it('should match the case of a Latin target so the scramble keeps its height', () => {
+      const lower = new Set<string>();
+      const upper = new Set<string>();
+      for (let i = 0; i < 500; i++) {
+        lower.add(getRandomCipherChar('a'));
+        upper.add(getRandomCipherChar('A'));
+      }
+
+      // Hebrew and the binary digits are caseless, so only the cased letters
+      // in each draw are checked.
+      expect(Array.from(lower).some((char) => /\p{Lu}/u.test(char))).toBe(false);
+      expect(Array.from(upper).some((char) => /\p{Ll}/u.test(char))).toBe(false);
+    });
+
+    it('should keep narrow pools for Cyrillic, Greek and Hebrew targets', () => {
+      for (const target of ['\u0434', '\u0414', '\u03b4', '\u0394', '\u05d0']) {
+        for (let i = 0; i < 200; i++) {
+          const char = getRandomCipherChar(target);
+          expect(WIDE_SCRIPT_REGEX.test(char), `drew wide glyph ${char} for ${target}`).toBe(false);
+        }
+      }
+    });
+
+    it('should keep the full multi-script mix for wide targets and untargeted calls', () => {
+      const wideTargetChars = new Set<string>();
+      const untargetedChars = new Set<string>();
+      for (let i = 0; i < 500; i++) {
+        wideTargetChars.add(getRandomCipherChar('\u4e2d'));
+        untargetedChars.add(getRandomCipherChar());
+      }
+
+      expect(Array.from(wideTargetChars).some((char) => WIDE_SCRIPT_REGEX.test(char))).toBe(true);
+      expect(Array.from(untargetedChars).some((char) => WIDE_SCRIPT_REGEX.test(char))).toBe(true);
+    });
+
+    it('should still return exactly one code point when a target is given', () => {
+      for (const target of ['a', 'Z', '\u05d0', '\u4e2d']) {
+        expect(Array.from(getRandomCipherChar(target)).length).toBe(1);
       }
     });
   });

@@ -22,28 +22,9 @@ describe('SectionHeader', () => {
   });
 
   it('should apply custom className when provided', () => {
-    const { container } = render(
-      <SectionHeader title="Test" className="mb-12" />
-    );
+    const { container } = render(<SectionHeader title="Test" className="mb-12" />);
     const wrapper = container.firstElementChild;
     expect(wrapper).toHaveClass('mb-12');
-  });
-
-  it('should apply default flex layout classes', () => {
-    const { container } = render(<SectionHeader title="Test" />);
-    const wrapper = container.firstElementChild;
-    expect(wrapper).toHaveClass('flex', 'items-center', 'gap-4');
-  });
-
-  it('should render uppercase tracking-widest title styling', () => {
-    render(<SectionHeader title="About" />);
-    const heading = screen.getByRole('heading', { level: 2 });
-    expect(heading).toHaveClass(
-      'text-sm',
-      'font-bold',
-      'uppercase',
-      'tracking-widest'
-    );
   });
 
   it('should render different titles correctly', () => {

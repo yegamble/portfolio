@@ -4,6 +4,7 @@ import About from '@/components/About';
 import Experience from '@/components/Experience';
 import Projects from '@/components/Projects';
 import Footer from '@/components/Footer';
+import MainRegion from '@/components/MainRegion';
 import { isAppLocale } from '@/lib/i18n';
 
 export default async function LocalizedHomePage({
@@ -24,11 +25,11 @@ export default async function LocalizedHomePage({
           `header + section`). Keeping <header> and <footer> outside <main>
           exposes them as the banner and contentinfo landmarks. */}
       <ScrollHeader />
-      <main className="mx-auto w-full max-w-3xl px-6 pb-24 lg:px-8">
+      <MainRegion className="mx-auto w-full max-w-3xl px-6 pb-24 lg:px-8">
         <About />
         <Experience />
         <Projects />
-      </main>
+      </MainRegion>
       <Footer />
     </>
   );

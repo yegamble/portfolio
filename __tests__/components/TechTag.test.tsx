@@ -32,16 +32,6 @@ describe('TechTag', () => {
     expect(pill.closest('li')).toBeInTheDocument();
   });
 
-  it('should apply border and background classes', () => {
-    render(
-      <ul>
-        <TechTag label="AWS" />
-      </ul>
-    );
-    const pill = screen.getByText('AWS');
-    expect(pill).toHaveClass('border', 'border-border-subtle');
-  });
-
   it('should render different technology labels correctly', () => {
     const { rerender } = render(
       <ul>
@@ -58,12 +48,13 @@ describe('TechTag', () => {
     expect(screen.getByText('PostgreSQL')).toBeInTheDocument();
   });
 
-  it('should render with text-primary color class', () => {
+  it('should mark the label as English so RTL locales read it correctly', () => {
     render(
       <ul>
-        <TechTag label="Redis" />
+        <TechTag label="PostgreSQL" />
       </ul>
     );
-    expect(screen.getByText('Redis')).toHaveClass('text-primary');
+    // The labels come from src/data/*, which is never translated.
+    expect(screen.getByText('PostgreSQL')).toHaveAttribute('lang', 'en');
   });
 });

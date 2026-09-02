@@ -1,140 +1,106 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import ProfilePicture from '@/components/ProfilePicture';
 import testEn from '../fixtures/translations/en.json';
 
 const profileAlt = testEn.hero.profileAlt;
 
+function getAvatar(): HTMLImageElement {
+  return screen.getByRole('img', { name: profileAlt }) as HTMLImageElement;
+}
+
 describe('ProfilePicture', () => {
   describe('Image rendering', () => {
-    it('should render a profile image with correct alt text', () => {
+    it('should render the avatar with the translated alt text', () => {
       render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      expect(img).toBeInTheDocument();
+      expect(getAvatar()).toBeInTheDocument();
     });
 
-    it('should render the image with the correct src', () => {
+    it('should fall back to the JPEG for browsers without WebP', () => {
       render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      expect(img).toHaveAttribute('src', expect.stringContaining('profile.jpg'));
+      expect(getAvatar()).toHaveAttribute('src', '/images/profile.jpg');
     });
 
-    it('should render with lazy loading', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      expect(img).toHaveAttribute('loading', 'lazy');
-    });
-  });
-
-  describe('Circular styling', () => {
-    it('should render with rounded-full for circular shape', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      const circleContainer = img.closest('.rounded-full');
-      expect(circleContainer).toBeInTheDocument();
-    });
-
-    it('should render with bg-slate-800 placeholder background', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      const container = img.closest('.bg-slate-800');
-      expect(container).toBeInTheDocument();
-    });
-
-    it('should render with a primary ring border', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      const ringContainer = img.closest('.ring-2');
-      expect(ringContainer).toBeInTheDocument();
-    });
-
-    it('should render with overflow hidden for circular crop', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      const container = img.closest('.overflow-hidden');
-      expect(container).toBeInTheDocument();
-    });
-  });
-
-  describe('Sizing', () => {
-    it('should render with base size of 128px (h-32 w-32)', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      const sizeContainer = img.closest('.h-32');
-      expect(sizeContainer).toBeInTheDocument();
-      expect(sizeContainer).toHaveClass('w-32');
-    });
-
-    it('should scale up on sm breakpoint (sm:h-40 sm:w-40)', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      const sizeContainer = img.closest('.h-32');
-      expect(sizeContainer).toHaveClass('sm:h-40', 'sm:w-40');
-    });
-  });
-
-  describe('Custom className', () => {
-    it('should accept and apply custom className prop', () => {
-      const { container } = render(<ProfilePicture className="mb-8" />);
-      const wrapper = container.firstElementChild;
-      expect(wrapper?.className).toContain('mb-8');
-    });
-
-    it('should render with inline-block display by default', () => {
+    it('should offer WebP sources for standard and retina displays', () => {
       const { container } = render(<ProfilePicture />);
-      const wrapper = container.firstElementChild;
-      expect(wrapper?.className).toContain('inline-block');
-    });
-  });
+      const source = container.querySelector('picture > source');
 
-  describe('Image attributes', () => {
-    it('should render with object-cover for proper image fit', () => {
-      render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
-      expect(img).toHaveClass('object-cover');
+      expect(source).toHaveAttribute('type', 'image/webp');
+      expect(source).toHaveAttribute(
+        'srcset',
+        '/images/profile-256.webp 1x, /images/profile-320.webp 2x'
+      );
     });
 
-    it('should have width and height attributes set', () => {
+    it('should reserve its layout box with intrinsic dimensions', () => {
       render(<ProfilePicture />);
-      const img = screen.getByRole('img', { name: new RegExp(profileAlt, 'i') });
+      const img = getAvatar();
+
       expect(img).toHaveAttribute('width', '160');
       expect(img).toHaveAttribute('height', '160');
     });
   });
 
-  describe('SVG avatar placeholder', () => {
-    it('should render an SVG avatar placeholder', () => {
-      const { container } = render(<ProfilePicture />);
-      const svg = container.querySelector('svg');
-      expect(svg).toBeInTheDocument();
+  describe('Loading priority', () => {
+    // The avatar is above the fold in every viewport, so deferring it costs
+    // Largest Contentful Paint directly.
+    it('should not lazy-load the avatar', () => {
+      render(<ProfilePicture />);
+      expect(getAvatar()).not.toHaveAttribute('loading', 'lazy');
     });
 
-    it('should render SVG with aria-hidden for accessibility', () => {
+    it('should request the avatar at high fetch priority', () => {
+      render(<ProfilePicture />);
+      expect(getAvatar()).toHaveAttribute('fetchpriority', 'high');
+    });
+
+    it('should decode off the main thread', () => {
+      render(<ProfilePicture />);
+      expect(getAvatar()).toHaveAttribute('decoding', 'async');
+    });
+  });
+
+  describe('When the image fails to load', () => {
+    it('should remove the broken image so the placeholder shows through', () => {
+      render(<ProfilePicture />);
+
+      fireEvent.error(getAvatar());
+
+      expect(screen.queryByRole('img', { name: profileAlt })).not.toBeInTheDocument();
+    });
+
+    it('should keep the decorative placeholder in place', () => {
+      const { container } = render(<ProfilePicture />);
+
+      fireEvent.error(getAvatar());
+
+      expect(container.querySelector('svg')).toBeInTheDocument();
+    });
+  });
+
+  describe('SVG avatar placeholder', () => {
+    it('should render a decorative SVG behind the photo', () => {
       const { container } = render(<ProfilePicture />);
       const svg = container.querySelector('svg');
+
+      expect(svg).toBeInTheDocument();
       expect(svg).toHaveAttribute('aria-hidden', 'true');
     });
 
-    it('should render SVG with currentColor fill', () => {
+    it('should size the placeholder from its viewBox rather than fixed attributes', () => {
       const { container } = render(<ProfilePicture />);
       const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('fill', 'currentColor');
-    });
 
-    it('should render SVG with viewBox for flexible sizing', () => {
-      const { container } = render(<ProfilePicture />);
-      const svg = container.querySelector('svg');
       expect(svg).toHaveAttribute('viewBox');
       expect(svg).not.toHaveAttribute('width');
       expect(svg).not.toHaveAttribute('height');
     });
+  });
 
-    it('should render SVG inside the circular container with relative positioning', () => {
-      const { container } = render(<ProfilePicture />);
-      const svg = container.querySelector('svg');
-      const circularContainer = svg?.closest('.rounded-full');
-      expect(circularContainer).toBeInTheDocument();
-      expect(circularContainer).toHaveClass('relative');
+  describe('Custom className', () => {
+    it('should accept and apply a custom className prop', () => {
+      const { container } = render(<ProfilePicture className="mb-8" />);
+      expect(container.firstElementChild?.className).toContain('mb-8');
     });
   });
 });

@@ -8,6 +8,11 @@ import About from '@/components/About';
 import Experience from '@/components/Experience';
 import Projects from '@/components/Projects';
 import Footer from '@/components/Footer';
+import SkipLink from '@/components/SkipLink';
+
+import { projectEntries } from '@/data/projects';
+
+import { stubIntersectionObserver } from '../helpers/observers';
 
 import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
@@ -26,64 +31,14 @@ vi.mock('openpgp', () => ({
   ),
 }));
 
-vi.mock('@/data/experience', () => ({
-  experienceEntries: [
-    {
-      id: 'edge-corp',
-      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
-      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
-    },
-    {
-      id: 'cafe-societe',
-      companyUrl: 'https://cafe-societe.example.com/',
-      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
-    },
-    {
-      id: 'open-src',
-      companyUrl: '#',
-      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
-    },
-  ],
+// Async factories: a vi.mock factory is hoisted above the imports, so it has to
+// pull the fixture in itself rather than close over a top-level binding.
+vi.mock('@/data/experience', async () => ({
+  experienceEntries: (await import('../fixtures/test-data')).testExperienceEntries,
 }));
 
-vi.mock('@/data/projects', () => ({
-  projectEntries: [
-    {
-      id: 'vidra',
-      repos: [
-        { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
-        { name: 'vidra-user', url: '#' },
-      ],
-      technologies: ['Go', 'ActivityPub', 'Docker'],
-      icon: 'layers',
-    },
-    {
-      id: 'aurialis',
-      repos: [
-        { name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' },
-      ],
-      technologies: ['Next.js', 'TypeScript'],
-      icon: 'layers',
-    },
-    {
-      id: 'goimg',
-      repos: [
-        { name: 'goimg-user', url: '#' },
-        { name: 'goimg-datalayer', url: '#' },
-      ],
-      technologies: ['Go', 'PostgreSQL'],
-      icon: 'folder',
-    },
-    {
-      id: 'iota-token-creator',
-      repos: [
-        { name: 'iota-token-creator-web', url: '#' },
-        { name: 'iota-token-creator-api', url: '#' },
-      ],
-      technologies: ['Next.js', 'Go'],
-      icon: 'folder',
-    },
-  ],
+vi.mock('@/data/projects', async () => ({
+  projectEntries: (await import('../fixtures/test-data')).testProjectEntries,
 }));
 
 beforeEach(async () => {
@@ -91,20 +46,7 @@ beforeEach(async () => {
   document.documentElement.lang = 'en';
   document.documentElement.dir = 'ltr';
 
-  window.IntersectionObserver = vi.fn(function (
-    this: IntersectionObserver,
-    _callback: IntersectionObserverCallback
-  ) {
-    return {
-      observe: vi.fn(),
-      disconnect: vi.fn(),
-      unobserve: vi.fn(),
-      root: null,
-      rootMargin: '',
-      thresholds: [],
-      takeRecords: () => [],
-    };
-  }) as unknown as typeof IntersectionObserver;
+  stubIntersectionObserver();
 });
 
 describe('i18n Integration - English Mode', () => {
@@ -126,7 +68,9 @@ describe('i18n Integration - English Mode', () => {
 
   it('should render profile picture with English alt text', () => {
     render(<ScrollHeader />);
-    const img = screen.getByRole('img', { name: new RegExp(testEn.hero.profileAlt, 'i') });
+    const img = screen.getByRole('img', {
+      name: new RegExp(testEn.hero.profileAlt, 'i'),
+    });
     expect(img).toBeInTheDocument();
   });
 
@@ -154,6 +98,14 @@ describe('i18n Integration - English Mode', () => {
   it('should render resume link text in English', () => {
     render(<Experience />);
     expect(screen.getByText(/View Full Resume/)).toBeInTheDocument();
+  });
+
+  it('should render the skip link in English', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testEn.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
   });
 
   it('should render footer attribution in English', () => {
@@ -195,7 +147,9 @@ describe('i18n Integration - Hebrew Mode', () => {
 
   it('should render profile picture with Hebrew alt text', () => {
     render(<ScrollHeader />);
-    const img = screen.getByRole('img', { name: new RegExp(testHe.hero.profileAlt) });
+    const img = screen.getByRole('img', {
+      name: new RegExp(testHe.hero.profileAlt),
+    });
     expect(img).toBeInTheDocument();
   });
 
@@ -244,6 +198,14 @@ describe('i18n Integration - Hebrew Mode', () => {
     render(<Projects />);
     const section = screen.getByRole('region', { name: /פרויקטים נבחרים/ });
     expect(section).toHaveTextContent(/Vidra/);
+  });
+
+  it('should render the skip link in Hebrew', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testHe.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
   });
 
   it('should render footer attribution in Hebrew', () => {
@@ -317,6 +279,14 @@ describe('i18n Integration - Russian Mode', () => {
     expect(heading).toHaveTextContent('Проекты');
   });
 
+  it('should render the skip link in Russian', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testRu.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
+  });
+
   it('should render footer attribution in Russian', () => {
     render(<Footer />);
     expect(screen.getByText(/Написано в/)).toBeInTheDocument();
@@ -325,15 +295,15 @@ describe('i18n Integration - Russian Mode', () => {
 
   it('should preserve company link to test-company in Russian About', () => {
     render(<About />);
-    const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+    const link = screen.getByRole('link', {
+      name: /test-company\.example\.com/i,
+    });
     expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('should preserve company URLs in Russian Experience', () => {
     render(<Experience />);
-    const links = screen.getAllByRole('link').filter(
-      (l) => l.getAttribute('target') === '_blank'
-    );
+    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('target') === '_blank');
     const hrefs = links.map((l) => l.getAttribute('href'));
     expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
     expect(hrefs).toContain('https://cafe-societe.example.com/');
@@ -341,7 +311,9 @@ describe('i18n Integration - Russian Mode', () => {
 
   it('should preserve technology tags in Russian Experience (not translated)', () => {
     render(<Experience />);
-    const techLists = screen.getAllByRole('list', { name: /Используемые технологии/ });
+    const techLists = screen.getAllByRole('list', {
+      name: /Используемые технологии/,
+    });
     expect(techLists).toHaveLength(3);
     expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
     expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
@@ -434,6 +406,14 @@ describe('i18n Integration - Estonian Mode', () => {
     expect(heading).toHaveTextContent('Projektid');
   });
 
+  it('should render the skip link in Estonian', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testEt.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
+  });
+
   it('should render footer attribution in Estonian', () => {
     render(<Footer />);
     expect(screen.getByText(/Kirjutatud redaktoris/)).toBeInTheDocument();
@@ -442,15 +422,15 @@ describe('i18n Integration - Estonian Mode', () => {
 
   it('should preserve company link to test-company in Estonian About', () => {
     render(<About />);
-    const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+    const link = screen.getByRole('link', {
+      name: /test-company\.example\.com/i,
+    });
     expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('should preserve company URLs in Estonian Experience', () => {
     render(<Experience />);
-    const links = screen.getAllByRole('link').filter(
-      (l) => l.getAttribute('target') === '_blank'
-    );
+    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('target') === '_blank');
     const hrefs = links.map((l) => l.getAttribute('href'));
     expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
     expect(hrefs).toContain('https://cafe-societe.example.com/');
@@ -458,7 +438,9 @@ describe('i18n Integration - Estonian Mode', () => {
 
   it('should preserve technology tags in Estonian Experience (not translated)', () => {
     render(<Experience />);
-    const techLists = screen.getAllByRole('list', { name: /Kasutatud tehnoloogiad/ });
+    const techLists = screen.getAllByRole('list', {
+      name: /Kasutatud tehnoloogiad/,
+    });
     expect(techLists).toHaveLength(3);
     expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
     expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
@@ -568,16 +550,16 @@ describe('i18n Regression - Structural integrity across languages', () => {
   it('should preserve company link in Hebrew About', async () => {
     await i18n.changeLanguage('he');
     render(<About />);
-    const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+    const link = screen.getByRole('link', {
+      name: /test-company\.example\.com/i,
+    });
     expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('should preserve company URLs in Hebrew Experience', async () => {
     await i18n.changeLanguage('he');
     render(<Experience />);
-    const links = screen.getAllByRole('link').filter(
-      (l) => l.getAttribute('target') === '_blank'
-    );
+    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('target') === '_blank');
     const hrefs = links.map((l) => l.getAttribute('href'));
     expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
     expect(hrefs).toContain('https://cafe-societe.example.com/');
@@ -586,17 +568,41 @@ describe('i18n Regression - Structural integrity across languages', () => {
   it('should preserve resume link href in Hebrew Experience', async () => {
     await i18n.changeLanguage('he');
     render(<Experience />);
-    const resumeLink = screen.getByRole('link', { name: /לצפייה בקורות החיים המלאים/ });
+    const resumeLink = screen.getByRole('link', {
+      name: /לצפייה בקורות החיים המלאים/,
+    });
     expect(resumeLink).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
   });
 
   it('should preserve technology tags in Hebrew Experience (not translated)', async () => {
     await i18n.changeLanguage('he');
     render(<Experience />);
-    const techLists = screen.getAllByRole('list', { name: /טכנולוגיות בשימוש/ });
+    const techLists = screen.getAllByRole('list', {
+      name: /טכנולוגיות בשימוש/,
+    });
     expect(techLists).toHaveLength(3);
     expect(within(techLists[0]).getByText('C++')).toBeInTheDocument();
     expect(within(techLists[0]).getByText('Rust')).toBeInTheDocument();
+  });
+
+  it('should mark the English technology names as such inside the Hebrew page', async () => {
+    await i18n.changeLanguage('he');
+    render(<Experience />);
+    const techLists = screen.getAllByRole('list', {
+      name: /טכנולוגיות בשימוש/,
+    });
+    expect(within(techLists[0]).getByText('C++')).toHaveAttribute('lang', 'en');
+  });
+
+  it('should keep the English repo name at the head of the link name in Hebrew', async () => {
+    await i18n.changeLanguage('he');
+    render(<Projects />);
+    // The old aria-label made the whole name one Hebrew string, so the repo
+    // name lost its lang="en" and was announced with Hebrew phonetics.
+    const link = screen.getByRole('link', {
+      name: `vidra-core ${testHe.projects.onGitHub} ${testHe.projects.opensInNewTab}`,
+    });
+    expect(within(link).getByText('vidra-core')).toHaveAttribute('lang', 'en');
   });
 
   it('should preserve project URLs in Hebrew Projects', async () => {
@@ -609,7 +615,9 @@ describe('i18n Regression - Structural integrity across languages', () => {
   it('should preserve footer tool links in Hebrew', async () => {
     await i18n.changeLanguage('he');
     render(<Footer />);
-    const vscodeLink = screen.getByRole('link', { name: /visual studio code/i });
+    const vscodeLink = screen.getByRole('link', {
+      name: /visual studio code/i,
+    });
     expect(vscodeLink).toHaveAttribute('href', 'https://code.visualstudio.com/');
     const tailwindLink = screen.getByRole('link', { name: /tailwind css/i });
     expect(tailwindLink).toHaveAttribute('href', 'https://tailwindcss.com/');
@@ -653,72 +661,192 @@ describe('i18n Regression - Structural integrity across languages', () => {
   });
 });
 
-describe('i18n Regression - RTL design classes', () => {
-  it('should use logical border property (border-s) on social links in ScrollHeader', () => {
-    render(<ScrollHeader />);
-    const { container } = render(<ScrollHeader />);
-    const socialContainer = container.querySelector('.sm\\:border-s');
-    expect(socialContainer).toBeInTheDocument();
+// Technology names come from src/data/projects.ts, which is never translated:
+// every locale shows the same English strings, each marked lang="en" so a
+// Hebrew, Russian or Estonian screen reader switches voice for them instead of
+// reading "PostgreSQL" in the page language.
+describe('i18n Integration - Project technology lists', () => {
+  const LOCALES = [
+    ['en', testEn],
+    ['he', testHe],
+    ['ru', testRu],
+    ['et', testEt],
+  ] as const;
+
+  LOCALES.forEach(([code, messages]) => {
+    it(`should list each project's technologies untranslated in ${code}`, async () => {
+      await i18n.changeLanguage(code);
+      render(<Projects />);
+
+      const techLists = screen.getAllByRole('list', {
+        name: messages.projects.techAriaLabel,
+      });
+      expect(techLists).toHaveLength(messages.projects.items.length);
+
+      messages.projects.items.forEach((item) => {
+        const metadata = projectEntries.find((entry) => entry.id === item.id);
+        expect(metadata, `no metadata for ${item.id}`).toBeDefined();
+
+        // Scope to the card, so each list is checked against its own project
+        // rather than against whatever happens to be at the same index.
+        const card = screen.getByRole('heading', { level: 3, name: item.title }).closest('div')!;
+        const techList = within(card).getByRole('list', {
+          name: messages.projects.techAriaLabel,
+        });
+
+        expect(within(techList).getAllByRole('listitem')).toHaveLength(
+          metadata!.technologies.length
+        );
+        metadata!.technologies.forEach((technology) => {
+          expect(within(techList).getByText(technology)).toHaveAttribute('lang', 'en');
+        });
+      });
+    });
+  });
+});
+
+// The block above switches language and then renders. A visitor does the
+// opposite: the tree is already mounted and i18next swaps every string inside
+// it in place — the path that can drop a node or strand an href, and the one
+// the cipher animation runs on.
+describe('i18n Regression - Structure survives a switch on a mounted tree', () => {
+  const hrefs = () =>
+    screen
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'))
+      .sort();
+
+  it('should keep every project card, technology list and repo href through a switch', async () => {
+    render(<Projects />);
+
+    const englishHrefs = hrefs();
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
+    expect(screen.getAllByRole('list', { name: testEn.projects.techAriaLabel })).toHaveLength(4);
+
+    await i18n.changeLanguage('he');
+
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
+    expect(screen.getAllByRole('list', { name: testHe.projects.techAriaLabel })).toHaveLength(4);
+    expect(hrefs()).toEqual(englishHrefs);
+    // The technology names are not translated, so they are the same nodes on
+    // both sides of the switch.
+    projectEntries[0].technologies.forEach((technology) => {
+      expect(screen.getAllByText(technology).length).toBeGreaterThan(0);
+    });
   });
 
-  it('should use logical padding (ps-) on social links in ScrollHeader', () => {
-    const { container } = render(<ScrollHeader />);
-    const socialContainer = container.querySelector('.ps-2');
-    expect(socialContainer).toBeInTheDocument();
+  it('should keep every footer social and tool link through a switch', async () => {
+    render(<Footer />);
+
+    const englishHrefs = hrefs();
+    expect(englishHrefs.length).toBeGreaterThanOrEqual(7);
+
+    await i18n.changeLanguage('he');
+
+    expect(hrefs()).toEqual(englishHrefs);
+    // Still four social links and three tool links, now under Hebrew names.
+    expect(screen.getByRole('link', { name: /github/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /linkedin/i })).toBeInTheDocument();
+    // Anchored: the secure-email label contains the plain one.
+    expect(
+      screen.getByRole('link', { name: new RegExp(`^${testHe.social.email}$`) })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: new RegExp(testHe.social.secureEmail) })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /visual studio code/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /tailwind css/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Inter' })).toBeInTheDocument();
   });
 
-  it('should apply rtl:rotate-180 on resume arrow icon', () => {
-    const { container } = render(<Experience />);
-    const rtlRotated = container.querySelector('.rtl\\:rotate-180');
-    expect(rtlRotated).toBeInTheDocument();
+  it('should keep the About paragraph count and company link through a switch', async () => {
+    render(<About />);
+
+    const section = () => screen.getByRole('region', { name: /.+/ });
+    expect(section().querySelectorAll('p')).toHaveLength(3);
+    const englishHref = screen
+      .getByRole('link', { name: /test-company\.example\.com/i })
+      .getAttribute('href');
+
+    await i18n.changeLanguage('he');
+
+    expect(section().querySelectorAll('p')).toHaveLength(3);
+    expect(screen.getByRole('link', { name: /test-company\.example\.com/i })).toHaveAttribute(
+      'href',
+      englishHref
+    );
   });
 
-  it('should apply ms-1 (logical margin) on experience arrow icons', () => {
-    const { container } = render(<Experience />);
-    const arrows = container.querySelectorAll('.ms-1');
-    expect(arrows.length).toBeGreaterThan(0);
+  it('should keep the Experience entries and company hrefs through a switch', async () => {
+    render(<Experience />);
+
+    const jobItems = () =>
+      screen
+        .getByRole('region', { name: /.+/ })
+        .querySelector('ol')!
+        .querySelectorAll(':scope > li');
+
+    expect(jobItems()).toHaveLength(3);
+    const englishHrefs = hrefs();
+
+    await i18n.changeLanguage('he');
+
+    expect(jobItems()).toHaveLength(3);
+    expect(hrefs()).toEqual(englishHrefs);
   });
 });
 
 describe('i18n Integration - PGP Key Icon Labels', () => {
   it('should render PGP key button with English label', () => {
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testEn.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen
+      .getByText(testEn.hero.name, { selector: 'section p' })
+      .closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'PGP Key' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Hebrew label', async () => {
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen
+      .getByText(testHe.hero.name, { selector: 'section p' })
+      .closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'מפתח PGP' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Russian label', async () => {
     await i18n.changeLanguage('ru');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testRu.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen
+      .getByText(testRu.hero.name, { selector: 'section p' })
+      .closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'Ключ PGP' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Estonian label', async () => {
     await i18n.changeLanguage('et');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testEt.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen
+      .getByText(testEt.hero.name, { selector: 'section p' })
+      .closest('section');
     expect(within(heroSection!).getByRole('button', { name: 'PGP-võti' })).toBeInTheDocument();
   });
 
   it('should render email icon label in Hebrew', async () => {
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen
+      .getByText(testHe.hero.name, { selector: 'section p' })
+      .closest('section');
     expect(within(heroSection!).getByRole('link', { name: 'אימייל' })).toBeInTheDocument();
   });
 
   it('should render secure email icon label in Hebrew', async () => {
     await i18n.changeLanguage('he');
     render(<ScrollHeader />);
-    const heroSection = screen.getByText(testHe.hero.name, { selector: 'section p' }).closest('section');
+    const heroSection = screen
+      .getByText(testHe.hero.name, { selector: 'section p' })
+      .closest('section');
     expect(within(heroSection!).getByRole('link', { name: 'אימייל מאובטח' })).toBeInTheDocument();
   });
 });

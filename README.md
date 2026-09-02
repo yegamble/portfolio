@@ -27,7 +27,8 @@ The site is designed around a few principles:
 
 - Sticky responsive header that condenses into a compact identity bar after scroll
 - Animated cipher-style text transitions during language changes
-- Locale persistence via cookie-based middleware redirects
+- Locale routing via proxy (middleware) redirects: cookie, then `Accept-Language` negotiation, then English
+- Statically prerendered locale routes served from cache at the edge
 - English, Hebrew, Russian, and Estonian translations backed by `i18next`
 - RTL-aware layout handling for Hebrew
 - About, Experience, and Projects sections driven by structured content
@@ -47,7 +48,7 @@ The site is designed around a few principles:
 | Deployment | Wrangler |
 | Unit tests | Vitest + Testing Library + JSDOM |
 | End-to-end tests | Cypress |
-| Layout and animation verification | Playwright |
+| Accessibility, layout, and animation verification | Playwright + axe-core |
 | Language | TypeScript |
 | Package manager | pnpm 10 |
 
@@ -55,16 +56,18 @@ The site is designed around a few principles:
 
 ```text
 src/
-  app/              App Router layouts, pages, metadata, robots, sitemap
+  app/              App Router: [locale]/ is the root layout, plus the global
+                    404, metadata, robots, and sitemap
   components/       UI building blocks and interactive client components
   data/             Structured experience and project data
   hooks/            Custom animation and layout hooks
-  lib/              i18n, cipher character sets, shared helpers
+  lib/              locale primitives, i18n, cipher character sets, helpers
+  proxy.ts          Locale redirect and cookie (must live under src/)
 
 public/locales/     Translation files for en / he / ru / et
 __tests__/          Unit and integration coverage
 cypress/            Browser-level user journeys
-playwright/         Performance and layout-stability checks
+playwright/         Accessibility, performance, and layout-stability checks
 .github/workflows/  CI pipeline and deploy workflow
 wrangler.jsonc      Cloudflare Workers configuration
 open-next.config.ts OpenNext Cloudflare adapter configuration
@@ -74,7 +77,11 @@ open-next.config.ts OpenNext Cloudflare adapter configuration
 
 ### Internationalization that affects routing, metadata, and layout
 
-Locales are part of the URL structure (`/en`, `/he`, `/ru`, `/et`), not just client-side state. Middleware redirects the root path to the preferred locale, persists the choice in a cookie, and injects locale context into the request pipeline. The document direction also switches correctly for Hebrew.
+Locales are part of the URL structure (`/en`, `/he`, `/ru`, `/et`), not just client-side state. `src/proxy.ts` (Next 16's name for middleware) redirects a locale-less path to the visitor's preferred locale — a stored cookie first, then an `Accept-Language` negotiation with q-values, then English.
+
+The cookie records what the visitor *chose*, and a locale in a URL is not a choice. It has exactly two writers: that locale-less redirect, and an explicit language change in the browser. An already-localized path is served as it is, so following an `/en` link from a CV shows English without overwriting a stored `he` — and HTML responses never carry `Set-Cookie`, which is what would stop a CDN caching them.
+
+The locale segment's layout is the application's root layout: it owns `<html lang dir>` and derives everything from the route param rather than a per-request header, which is what lets all four locales prerender at build time and be served from cache on Cloudflare instead of re-rendering React per request. The document direction also switches correctly for Hebrew, and 404s render their own localized document with a translated title.
 
 ### Motion that is designed, measured, and constrained
 
@@ -83,6 +90,16 @@ The cipher transition is not just a visual flourish. The implementation includes
 ### Security and SEO are part of the app surface
 
 The project ships with strict response headers, structured data, robots and sitemap generation, and localized canonical metadata. This is portfolio code written with the same care expected in production applications.
+
+Response headers come from two places, because they reach different responses:
+
+- `src/lib/security-headers.ts` holds the list once. `next.config.ts` applies it to everything the Next server answers, and `src/proxy.ts` re-applies it to the `/` → `/en` redirect, which short-circuits before that layer — HSTS preload requires the redirect itself to carry `Strict-Transport-Security`.
+- `public/_headers` covers Cloudflare's static assets, which the ASSETS binding serves before the Worker runs. Hashed build output (`/_next/static/*`, including `next/font` woff2 files) is `immutable` for a year; hand-managed images and PWA icons get a week with a day of `stale-while-revalidate`; `/favicon.ico` gets a day.
+
+Two CSP decisions are deliberate:
+
+- `script-src` keeps `'unsafe-inline'`. The locale routes are prerendered, and their HTML carries Next's inline bootstrap plus the two JSON-LD blocks. A nonce has to be minted per request, which is exactly what would make those routes dynamic — trading a real caching win for a directive that `'strict-dynamic'` cannot rescue while the bootstrap is inline.
+- `'unsafe-eval'` is added only when `NODE_ENV` is `development`, for the dev overlay and Fast Refresh. Production ships `'wasm-unsafe-eval'` instead, which is all openpgp's argon2 WASM needs and does not permit `eval()`. `static.cloudflareinsights.com` is allow-listed because the zone injects the Web Analytics beacon into the response itself.
 
 ### Optional secure contact workflow
 
@@ -111,25 +128,27 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The middleware will redirect `/` to the active locale route, so expect local development to land on `/en` by default unless the locale cookie says otherwise.
+The proxy will redirect `/` to the active locale route, so expect local development to land on `/en` by default unless the locale cookie — or your browser's `Accept-Language` header — says otherwise.
 
 ## Environment variables
 
 ### Application variables
 
-For local development, prefer `.env.local`.
+`.env.example` is the checked-in production build configuration: every value in it is public,
+and CI copies it to `.env` (`cp .env.example .env`) before building, so it has to stay in sync
+with what the app needs at build time. For local development, copy it to `.env.local` and
+override values there — `.env` and `.env*.local` are git-ignored.
 
 | Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_CIPHER_TRANSITION` | Enables the text scramble transition during language changes |
-| `NEXT_PUBLIC_I18N_ENABLED` | Controls whether the language selector is shown |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Public contact email used in social links |
 | `NEXT_PUBLIC_SECURE_CONTACT_EMAIL` | Secure contact email used in social links |
 | `NEXT_PUBLIC_PGP_PUBLIC_KEY` | Optional PGP public key shown in the modal |
 
 ### Deploy-time Cloudflare variables
 
-The CI deploy job expects these GitHub Actions secrets:
+The `deploy` and `rollback` jobs expect these GitHub Actions secrets. They belong in the `Production` environment (see [Repository settings this pipeline assumes](#repository-settings-this-pipeline-assumes)) rather than at repository scope:
 
 | Secret | Purpose |
 | --- | --- |
@@ -153,12 +172,16 @@ If you later add route mappings or custom domains to the Worker configuration, a
 | `pnpm start` | Runs the production Next.js server |
 | `pnpm lint` | Runs ESLint |
 | `pnpm typecheck` | Runs TypeScript without emitting output |
+| `pnpm format` | Runs Prettier and writes the fixes |
+| `pnpm format:check` | Runs Prettier as a check — CI fails on this, so run it before pushing |
 | `pnpm test` | Runs the Vitest suite |
+| `pnpm test:coverage` | Runs Vitest with the coverage thresholds in `vitest.config.ts`. This is what CI runs, so a change can pass `pnpm test` and still fail the pipeline |
 | `pnpm test:e2e` | Runs Cypress end-to-end tests |
-| `pnpm test:playwright` | Runs Playwright layout and performance checks |
+| `pnpm test:playwright` | Runs Playwright accessibility, layout, and performance checks against `next dev`. Prefix with `CI=1` to reproduce the pipeline, which measures a production build (`next start`) |
 | `pnpm build:worker` | Generates the Cloudflare Worker build with OpenNext |
 | `pnpm preview` | Builds and previews the Cloudflare Worker locally |
 | `pnpm deploy` | Builds and deploys the Worker to Cloudflare |
+| `node scripts/process-images.mjs` | Regenerates the avatar WebP sources, the favicon, the Apple touch icon and the PWA icons. Not part of any build — the output is committed. Run it on macOS: `src/app/icon.svg` sets its glyph in `system-ui`, so the rasterizer resolves the font against the host |
 
 ## Quality bar
 
@@ -166,15 +189,37 @@ This repository is tested at multiple levels:
 
 - Unit and integration tests validate components, hooks, data modules, metadata generation, and i18n behavior
 - Cypress covers major user-facing flows such as navigation, hero rendering, responsiveness, and the PGP modal
-- Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics
+- Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics. The `layout` project (`playwright/layout-stability.spec.ts` and `playwright/a11y.spec.ts`, 16 tests) gates the deploy; the `perf` project reports without blocking
+- axe-core (`playwright/a11y.spec.ts`) runs over `/en` and `/he` at desktop and phone widths, asserting zero WCAG 2.0/2.1/2.2 A and AA violations. It runs inside the `layout` project, so it is deploy-gating
 
-The CI pipeline enforces this sequence on every pull request:
+## Continuous integration
 
-1. Lint and typecheck
-2. Unit tests
-3. Production build
-4. Cypress end-to-end tests
-5. Cloudflare deploy on `main`
+`.github/workflows/ci.yml` runs on every pull request and on every push to `main`:
+
+```text
+lint-and-typecheck ───────────────────┐
+unit-tests ───────────────────────────┤
+                                      ├──► deploy (push to main only)
+build ──┬── e2e (Cypress) ────────────┤
+        ├── playwright (layout + axe) ┘
+        └── playwright-perf (advisory, does not gate the deploy)
+```
+
+| Job | Gate |
+| --- | --- |
+| `lint-and-typecheck` | `pnpm lint`, `pnpm typecheck`, `pnpm format:check` |
+| `unit-tests` | `pnpm test:coverage` (thresholds live in `vitest.config.ts`; the summary is published to the run page), then `pnpm audit --prod` — blocking at `critical`, plus a non-blocking full report |
+| `build` | `pnpm build` against `.env.example`, uploaded as an artifact, then `pnpm build:worker` — the one place in the pipeline that exercises `open-next.config.ts`, `wrangler.jsonc` and `@opennextjs/cloudflare` before the deploy job builds with them for real |
+| `e2e` | Cypress against `pnpm start` serving that artifact |
+| `playwright` | The `layout` project — layout-stability geometry **and** the axe accessibility specs — against `next start` serving that artifact, not `next dev`, whose frame budget is a different number entirely. Both are deterministic, so this one blocks |
+| `playwright-perf` | Frame rate, long tasks and animation shape, on a runner of its own. `continue-on-error`, because the budgets were tuned on a laptop and have never been observed on a 4-vCPU runner |
+| `deploy` | `pnpm run deploy`, then a smoke test against the live site |
+
+The browser jobs consume the `build` artifact instead of compiling their own, so all three exercise a production build of the same commit. It is not literally the deployed bytes — `pnpm run deploy` rebuilds through `opennextjs-cloudflare build` — but it is the same source at the same settings, which is what these assertions are about. Every job carries a timeout, every action is pinned to a commit SHA, and the workflow's `GITHUB_TOKEN` is read-only — the deploy authenticates to Cloudflare with its own secrets. A pull request run is cancelled when a newer commit arrives; runs on `main` queue rather than cancel, a rollback dispatch gets a *workflow*-level concurrency group of its own so it never queues behind the run that shipped the bad version, and `deploy` and `rollback` share a *job*-level `production-deploy` lock so two of them can never touch production at once (see [Rolling back](#rolling-back) for what that costs during an in-flight deploy).
+
+Dependencies are updated weekly by Dependabot (`.github/dependabot.yml`). `next`, `eslint-config-next`, `@opennextjs/*` and `wrangler` arrive in a single pull request, because a version bump to any one of them alone cannot pass CI.
+
+The audit gate blocks on `critical` rather than `high` deliberately: the advisories open today are all transitive under `next > styled-jsx > @babel/core`, with no published version to move to. A `high` gate would fail every run without anyone being able to fix it, which trains people to ignore it.
 
 ## Deployment
 
@@ -182,11 +227,32 @@ The app is configured for Cloudflare Workers using OpenNext.
 
 Key files:
 
-- `wrangler.jsonc`
+- `wrangler.jsonc` — the Worker's `workers_dev` setting and route bindings are managed in the Cloudflare dashboard, not in this file
 - `open-next.config.ts`
 - `.github/workflows/ci.yml`
 
-Production deploys run automatically from `main` after the full CI pipeline succeeds.
+Production deploys run automatically from `main` once the full pipeline succeeds. The deploy job:
+
+1. Builds and deploys with `pnpm run deploy`
+2. Records the Worker's `Current Version ID` in the run summary and as a job output — that id is the only handle a rollback accepts
+3. Smoke-tests the live site with retries (`.github/scripts/smoke.sh`, shared with the rollback job): `/en` answers 200 carrying `Strict-Transport-Security` and `Content-Security-Policy`, `/he` renders `dir="rtl"`, and `/` answers 307 to `/en`
+
+### Rolling back
+
+Run the **CI** workflow manually from `main` in the Actions tab (`Run workflow`) with `rollback_version_id` set to the version id of a known-good deploy. Every deploy prints its id in the job summary, and `pnpm exec wrangler versions list` lists them. Only the rollback job runs — the rest of the pipeline is skipped — and it finishes by running the same smoke test, so a rollback that did not restore a healthy site reports as failed rather than as done.
+
+Two concurrency groups are in play, and they answer different questions. The *workflow*-level group keeps a rollback dispatch out of the queue behind the pipeline run that shipped the bad version, and stops the next push to `main` cancelling it while it waits. The *job*-level `production-deploy` lock is deliberately shared with `deploy` (`cancel-in-progress: false`), because two runs must never write to production at once — so a rollback dispatched while a deploy is mid-flight still waits for that deploy to finish, up to its 20-minute timeout. That is the intended trade: serialized writes, at the cost of a wait during the one incident where a deploy is already running.
+
+The job refuses to run from any ref other than `main`: the `Production` environment has no protection rules yet and the Cloudflare secrets are repository-scoped, so that check is what stands between an arbitrary branch and production credentials.
+
+### Repository settings this pipeline assumes
+
+These live in GitHub settings rather than in the repository, so they are the owner's to apply:
+
+- Add `e2e` and `playwright` to the required status checks on `main`. The existing `lint-and-typecheck`, `unit-tests` and `build` keep their names and keep reporting, so nothing already required breaks. Do **not** add `playwright-perf` — it is deliberately advisory until its wall-clock budgets have been observed on a runner.
+- Include administrators (`enforce_admins`), and require at least one approving review with `require_last_push_approval`
+- Move `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` out of repository secrets and into the `Production` environment, with a deployment branch policy limited to `main`, so a workflow running on any other branch cannot read them
+- Enable Dependabot alerts. Without them `.github/dependabot.yml` opens version-update pull requests but never security ones
 
 ## Repo structure and ownership signals
 

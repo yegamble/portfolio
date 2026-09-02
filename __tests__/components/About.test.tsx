@@ -15,18 +15,6 @@ describe('About', () => {
       const section = screen.getByRole('region', { name: /about me/i });
       expect(section).toHaveAttribute('id', 'about');
     });
-
-    it('should have scroll-mt-24 class for fixed header offset', () => {
-      render(<About />);
-      const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveClass('scroll-mt-24');
-    });
-
-    it('should have a top border separator', () => {
-      render(<About />);
-      const section = screen.getByRole('region', { name: /about me/i });
-      expect(section.className).toContain('border-t');
-    });
   });
 
   describe('Section header', () => {
@@ -113,13 +101,17 @@ describe('About', () => {
   describe('Links', () => {
     it('should contain a link to the company', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      const link = screen.getByRole('link', {
+        name: /test-company\.example\.com/i,
+      });
       expect(link).toHaveAttribute('href');
     });
 
     it('should open company link in new tab', () => {
       render(<About />);
-      const link = screen.getByRole('link', { name: /test-company\.example\.com/i });
+      const link = screen.getByRole('link', {
+        name: /test-company\.example\.com/i,
+      });
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });

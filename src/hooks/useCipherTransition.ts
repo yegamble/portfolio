@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
+import { isCoarsePointerOrNarrow, prefersReducedMotion } from '@/lib/media';
 
 interface CipherTransitionResult {
   displayChars: string[];
@@ -90,21 +91,13 @@ function calculateResolveTimes(maxLen: number, profile: AnimationProfile): numbe
   for (let i = 0; i < maxLen; i++) {
     const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
     const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
-    resolveTimes[i] =
-      profile.scrambleDuration + progress * profile.revealStagger + randomJitter;
+    resolveTimes[i] = profile.scrambleDuration + progress * profile.revealStagger + randomJitter;
   }
   return resolveTimes;
 }
 
 function getAnimationProfile(): AnimationProfile {
-  if (typeof window === 'undefined') {
-    return DESKTOP_PROFILE;
-  }
-
-  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-  const isNarrowViewport = window.matchMedia('(max-width: 768px)').matches;
-
-  return isCoarsePointer || isNarrowViewport ? MOBILE_PROFILE : DESKTOP_PROFILE;
+  return isCoarsePointerOrNarrow() ? MOBILE_PROFILE : DESKTOP_PROFILE;
 }
 
 function generateFrameChars(
@@ -125,7 +118,7 @@ function generateFrameChars(
     } else {
       allResolved = false;
       if (targetChar && isScramblable(targetChar)) {
-        chars[i] = getRandomCipherChar();
+        chars[i] = getRandomCipherChar(targetChar);
       } else {
         chars[i] = targetChar;
       }
@@ -164,33 +157,25 @@ function useCipherLoop(
   useEffect(() => {
     // Build the per-frame writers inside the effect so the DOM mutation (ref
     // mode) stays out of render-phase code.
-    const commitFrame = (chars: string[]) => {
-      if (setChars) {
-        setChars(chars);
-        return;
-      }
-      const el = elementRef?.current;
-      if (!el) return;
-      // Word-slot mode: hidden ghost words own the layout; only the overlay
-      // text changes per frame, so the frame write can never cause reflow.
-      const overlays = el.querySelectorAll<HTMLElement>('.cipher-word');
-      if (overlays.length === 0) {
-        el.textContent = chars.join('');
-        return;
-      }
-      overlays.forEach((overlay) => {
-        const start = Number(overlay.dataset.start);
-        const end = Number(overlay.dataset.end);
-        overlay.textContent = chars.slice(start, end).join('');
-      });
-    };
     const commitFinal = (value: string) => {
       if (setChars) {
         setChars(Array.from(value));
         return;
       }
       const el = elementRef?.current;
-      if (el) el.textContent = value;
+      if (!el) return;
+      // A teardown caused by a text change runs AFTER React has committed the
+      // incoming render, which reuses this same span for the new text's word
+      // slots. Blanking it here would destroy DOM the new render owns, and the
+      // next animation would find no overlays and fall back to writing
+      // textContent — unpinned, so every frame reflows the page. The stamp
+      // CipherText puts on the span tells the two apart: it still reads this
+      // effect's text only when nothing newer has rendered into it, i.e. a real
+      // unmount or a disable. (Bare spans with no stamp keep the old
+      // behaviour.)
+      const stamp = el.dataset.cipherText;
+      if (stamp !== undefined && stamp !== value) return;
+      el.textContent = value;
     };
     // Char mode defers the reduced-motion settle one RAF so React commits the
     // resolved text once; ref mode writes the DOM synchronously.
@@ -201,11 +186,7 @@ function useCipherLoop(
       return;
     }
 
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion()) {
       prevTextRef.current = text;
       if (deferReducedMotion) {
         // Update in the next frame so React commits the resolved text once.
@@ -231,6 +212,58 @@ function useCipherLoop(
     const profile = getAnimationProfile();
     const resolveTimes = calculateResolveTimes(maxLen, profile);
 
+    // Overlay metadata is parsed once per mounted element rather than on every
+    // write: a language switch drives ~30 frames across 200-400 overlays, and
+    // re-running querySelectorAll plus dataset parsing on each of them was the
+    // bulk of the per-frame cost.
+    let cachedRoot: HTMLElement | null = null;
+    let cachedOverlays: { el: HTMLElement; start: number; end: number; target: string }[] = [];
+
+    const readOverlays = (el: HTMLElement) => {
+      // isConnected guards the case where React swapped the overlays out from
+      // under the same root element; a stale cache would write into detached
+      // nodes and the scramble would freeze.
+      if (el === cachedRoot && cachedOverlays.length > 0 && cachedOverlays[0].el.isConnected) {
+        return cachedOverlays;
+      }
+      cachedRoot = el;
+      cachedOverlays = Array.from(el.querySelectorAll<HTMLElement>('.cipher-word')).map(
+        (overlay) => {
+          const start = Number(overlay.dataset.start);
+          const end = Number(overlay.dataset.end);
+          return { el: overlay, start, end, target: newChars.slice(start, end).join('') };
+        }
+      );
+      return cachedOverlays;
+    };
+
+    /** Writes one frame. Returns false when there was nowhere to write it yet. */
+    const commitFrame = (chars: string[]): boolean => {
+      if (setChars) {
+        setChars(chars);
+        return true;
+      }
+      const el = elementRef?.current;
+      // The overlay span mounts on the render that flips isAnimating, so the
+      // first tick can run before it exists.
+      if (!el) return false;
+      // Word-slot mode: hidden ghost words own the layout; only the overlay
+      // text changes per frame, so the frame write can never cause reflow.
+      const overlays = readOverlays(el);
+      if (overlays.length === 0) {
+        el.textContent = chars.join('');
+        return true;
+      }
+      for (const overlay of overlays) {
+        const slice = chars.slice(overlay.start, overlay.end).join('');
+        overlay.el.textContent = slice;
+        // Per-word decrypt feedback: a word that has landed on its target stops
+        // being dimmed while its neighbours keep cycling.
+        overlay.el.classList.toggle('cipher-resolved', slice === overlay.target);
+      }
+      return true;
+    };
+
     let startTime: number | null = null;
     let lastUpdateTime = 0;
     let started = false;
@@ -249,14 +282,9 @@ function useCipherLoop(
       const timeSinceLastUpdate = currentTime - lastUpdateTime;
       if (timeSinceLastUpdate >= profile.updateInterval) {
         const elapsed = currentTime - startTime;
-        const { chars, allResolved } = generateFrameChars(
-          maxLen,
-          newChars,
-          resolveTimes,
-          elapsed
-        );
+        const { chars, allResolved } = generateFrameChars(maxLen, newChars, resolveTimes, elapsed);
 
-        commitFrame(chars);
+        const wrote = commitFrame(chars);
 
         if (allResolved) {
           setIsAnimating(false);
@@ -265,7 +293,12 @@ function useCipherLoop(
           return false; // done — unregister from scheduler
         }
 
-        lastUpdateTime = currentTime;
+        // A frame that found no target (the overlay span has not mounted yet)
+        // must not advance the clock: otherwise the first scramble lands a full
+        // updateInterval late and the finished translation is painted first.
+        if (wrote) {
+          lastUpdateTime = currentTime;
+        }
       }
 
       return true; // keep running
@@ -296,9 +329,7 @@ function useCipherLoop(
 // ---------------------------------------------------------------------------
 
 function useCipherAnimationLoop(text: string, isEnabled: boolean) {
-  const [displayChars, setDisplayChars] = useState<string[]>(() =>
-    Array.from(text)
-  );
+  const [displayChars, setDisplayChars] = useState<string[]>(() => Array.from(text));
 
   const { isAnimating } = useCipherLoop(text, isEnabled, setDisplayChars, undefined);
 
@@ -354,7 +385,10 @@ export function useCipherTransition(
   }
 
   if (useRefMode) {
-    return { displayChars: Array.from(text), isAnimating: refResult.isAnimating };
+    return {
+      displayChars: Array.from(text),
+      isAnimating: refResult.isAnimating,
+    };
   }
 
   return charResult;

@@ -1,6 +1,7 @@
 {
   "nav": {
     "ariaLabel": "Peanavigatsioon",
+    "skipToContent": "Liigu sisu juurde",
     "about": "Minust",
     "experience": "Kogemus",
     "projects": "Projektid"
@@ -55,7 +56,9 @@
     "heading": "Projektid",
     "ariaLabel": "Valitud projektid",
     "techAriaLabel": "Kasutatud tehnoloogiad",
-    "viewOnGitHub": "Ava {{name}} GitHubis",
+    "onGitHub": "GitHubis",
+    "opensInNewTab": "(avaneb uuel vahelehel)",
+    "pagination": "Projektide navigeerimine",
     "viewRepos": "Vaata koodihoidlaid",
     "items": [
       {
@@ -97,6 +100,7 @@
   },
   "pgp": {
     "title": "Avalik PGP-võti",
+    "keyRegion": "PGP-võtme tekst",
     "fingerprint": "Sõrmejälg",
     "userId": "Kasutajatunnus",
     "algorithm": "Algoritm",
@@ -104,8 +108,10 @@
     "keyId": "Võtme ID",
     "copyKey": "Kopeeri võti",
     "copied": "Kopeeritud!",
+    "copyFailed": "Kopeerimine ebaõnnestus",
     "close": "Sulge",
     "loading": "Võtme andmete laadimine...",
+    "loaded": "Võtme andmed laaditud",
     "error": "Võtme andmeid ei õnnestunud lugeda",
     "verifyNotice": "Enne kasutamist kontrolli sõrmejälge usaldusväärse kanali kaudu."
   },
@@ -115,7 +121,7 @@
   },
   "meta": {
     "title": "Yosef Gamble | Vanemtarkvaraarendaja — Go, TypeScript, AWS",
-    "description": "Yosef Gamble — vanemtarkvaraarendaja New Yorgis ja Aucklandis. Go (Golang), TypeScripti ja AWS-i spetsialist. Kinnisvaraportaalid, videovoogedastusplatvormid ja skaleeruvad pilvesüsteemid.",
+    "description": "Yosef Gamble — vanemtarkvaraarendaja New Yorgis ja Aucklandis. Go, TypeScripti ja AWS-i spetsialist: kinnisvaraportaalid, videovoogedastus, pilvesüsteemid.",
     "ogDescription": "Vanemtarkvaraarendaja New Yorgis ja Aucklandis. Go, TypeScript, AWS. Kinnisvaraportaalid, videovoogedastus ja skaleeruvad pilvesüsteemid."
   },
   "notFound": {

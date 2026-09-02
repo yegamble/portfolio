@@ -5,7 +5,15 @@ const eslintConfig = [
   ...nextConfig,
   prettier,
   {
-    ignores: ['.next/', 'out/', 'build/', 'test-results/', 'playwright-report/'],
+    ignores: [
+      '.next/',
+      '.open-next/',
+      'out/',
+      'build/',
+      'coverage/',
+      'test-results/',
+      'playwright-report/',
+    ],
   },
 ];
 

@@ -24,7 +24,10 @@ describe('Experience Data validation', () => {
       }
 
       // Validate technologies
-      expect(entry.technologies, 'Entry technologies should be defined and a non-empty array').toBeDefined();
+      expect(
+        entry.technologies,
+        'Entry technologies should be defined and a non-empty array'
+      ).toBeDefined();
       expect(Array.isArray(entry.technologies)).toBe(true);
       expect(entry.technologies.length).toBeGreaterThan(0);
       entry.technologies.forEach((tech) => {

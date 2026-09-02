@@ -1,0 +1,21 @@
+# Lockfiles and generated data
+pnpm-lock.yaml
+
+# Build and test output
+.next/
+.open-next/
+coverage/
+test-results/
+
+# Prose and agent rules — reflowing these adds noise to every diff
+*.md
+docs/plans/
+.claude/
+
+# Translations: keep the JSON exactly as translators wrote it
+public/locales/
+__tests__/fixtures/translations/
+
+# Editor / tooling caches
+.idea/
+.codegraph/

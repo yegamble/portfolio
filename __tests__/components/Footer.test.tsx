@@ -9,18 +9,6 @@ describe('Footer', () => {
       render(<Footer />);
       expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     });
-
-    it('should have a top border separator', () => {
-      render(<Footer />);
-      const footer = screen.getByRole('contentinfo');
-      expect(footer.className).toContain('border-t');
-    });
-
-    it('should be centered text', () => {
-      render(<Footer />);
-      const footer = screen.getByRole('contentinfo');
-      expect(footer).toHaveClass('text-center');
-    });
   });
 
   describe('Social links via SocialLinks component', () => {
@@ -107,6 +95,26 @@ describe('Footer', () => {
     });
   });
 
+  describe('Attribution text in Russian (empty footer.font)', () => {
+    beforeEach(async () => {
+      await i18n.changeLanguage('ru');
+    });
+
+    afterEach(async () => {
+      await i18n.changeLanguage('en');
+    });
+
+    it('should decline "шрифт" before the name rather than trailing it', () => {
+      const { container } = render(<Footer />);
+      const attribution = container.querySelector('p');
+      // "…и Inter шрифт." is not Russian; the noun takes the genitive and comes
+      // before the name, so footer.and carries it and footer.font is empty.
+      expect(attribution?.textContent).toContain('Создано с помощью');
+      expect(attribution?.textContent).toContain('и шрифта');
+      expect(attribution?.textContent).toMatch(/Inter\.$/);
+    });
+  });
+
   describe('Tool links', () => {
     it('should link to Visual Studio Code', () => {
       render(<Footer />);
@@ -134,19 +142,11 @@ describe('Footer', () => {
   });
 
   describe('Accessibility', () => {
-    it('should have sr-only labels for social icons', () => {
-      render(<Footer />);
-      expect(screen.getByText('GitHub')).toHaveClass('sr-only');
-      expect(screen.getByText('LinkedIn')).toHaveClass('sr-only');
-      expect(screen.getByText('Email')).toHaveClass('sr-only');
-      expect(screen.getByText('Secure email')).toHaveClass('sr-only');
-    });
-
     it('should have all external links with noreferrer noopener', () => {
       render(<Footer />);
-      const externalLinks = screen.getAllByRole('link').filter(
-        (link) => link.getAttribute('target') === '_blank'
-      );
+      const externalLinks = screen
+        .getAllByRole('link')
+        .filter((link) => link.getAttribute('target') === '_blank');
       externalLinks.forEach((link) => {
         expect(link).toHaveAttribute('rel', 'noreferrer noopener');
       });

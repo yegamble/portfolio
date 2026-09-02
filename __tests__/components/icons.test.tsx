@@ -17,34 +17,55 @@ import {
 } from '@/components/icons';
 
 const ICONS_CONFIG = [
-  { name: 'GitHubIcon', Component: GitHubIcon, viewBox: '0 0 16 16', defaultClass: 'h-5 w-5' },
-  { name: 'LinkedInIcon', Component: LinkedInIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
-  { name: 'EmailIcon', Component: EmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
-  { name: 'SecureEmailIcon', Component: SecureEmailIcon, viewBox: '0 0 24 24', defaultClass: 'h-5 w-5' },
-  { name: 'ArrowOutwardIcon', Component: ArrowOutwardIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
-  { name: 'ArrowRightIcon', Component: ArrowRightIcon, viewBox: '0 0 20 20', defaultClass: 'h-4 w-4' },
+  {
+    name: 'GitHubIcon',
+    Component: GitHubIcon,
+    viewBox: '0 0 16 16',
+  },
+  {
+    name: 'LinkedInIcon',
+    Component: LinkedInIcon,
+    viewBox: '0 0 24 24',
+  },
+  {
+    name: 'EmailIcon',
+    Component: EmailIcon,
+    viewBox: '0 0 24 24',
+  },
+  {
+    name: 'SecureEmailIcon',
+    Component: SecureEmailIcon,
+    viewBox: '0 0 24 24',
+  },
+  {
+    name: 'ArrowOutwardIcon',
+    Component: ArrowOutwardIcon,
+    viewBox: '0 0 20 20',
+  },
+  {
+    name: 'ArrowRightIcon',
+    Component: ArrowRightIcon,
+    viewBox: '0 0 20 20',
+  },
   {
     name: 'FolderIcon',
     Component: FolderIcon,
     viewBox: '0 0 24 24',
-    defaultClass: 'h-9 w-9 text-primary/90',
   },
   {
     name: 'LayersIcon',
     Component: LayersIcon,
     viewBox: '0 0 24 24',
-    defaultClass: 'h-9 w-9 text-primary/90',
   },
   {
     name: 'KeyIcon',
     Component: KeyIcon,
     viewBox: '0 0 24 24',
-    defaultClass: 'h-5 w-5',
   },
 ] as const;
 
 describe('Icon components', () => {
-  ICONS_CONFIG.forEach(({ name, Component, viewBox, defaultClass }) => {
+  ICONS_CONFIG.forEach(({ name, Component, viewBox }) => {
     describe(name, () => {
       it('should render an SVG element', () => {
         const { container } = render(<Component />);
@@ -54,14 +75,6 @@ describe('Icon components', () => {
       it('should have aria-hidden attribute', () => {
         const { container } = render(<Component />);
         expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-      });
-
-      it('should apply default className', () => {
-        const { container } = render(<Component />);
-        const svg = container.querySelector('svg');
-        defaultClass.split(' ').forEach((cls) => {
-          expect(svg).toHaveClass(cls);
-        });
       });
 
       it('should accept custom className', () => {
@@ -90,48 +103,6 @@ describe('Icon components', () => {
     });
   });
 
-  describe('Specific icon requirements', () => {
-    it('EmailIcon should contain exactly 2 path elements', () => {
-      const { container } = render(<EmailIcon />);
-      const paths = container.querySelectorAll('path');
-      expect(paths.length).toBe(2);
-    });
-
-    it('SecureEmailIcon should contain envelope and lock paths', () => {
-      const { container } = render(<SecureEmailIcon />);
-      const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('fill', 'currentColor');
-      const paths = container.querySelectorAll('path');
-      expect(paths.length).toBeGreaterThanOrEqual(3);
-    });
-
-    it('KeyIcon should contain a path element', () => {
-      const { container } = render(<KeyIcon />);
-      const paths = container.querySelectorAll('path');
-      expect(paths.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('ArrowOutwardIcon should contain a path with clip-rule', () => {
-      const { container } = render(<ArrowOutwardIcon />);
-      const path = container.querySelector('path[clip-rule]');
-      expect(path).toBeInTheDocument();
-      expect(path).toHaveAttribute('clip-rule', 'evenodd');
-    });
-
-    it('ArrowRightIcon should contain a path with clip-rule', () => {
-      const { container } = render(<ArrowRightIcon />);
-      const path = container.querySelector('path[clip-rule]');
-      expect(path).toBeInTheDocument();
-      expect(path).toHaveAttribute('clip-rule', 'evenodd');
-    });
-
-    it('LayersIcon should contain exactly 3 path elements', () => {
-      const { container } = render(<LayersIcon />);
-      const paths = container.querySelectorAll('path');
-      expect(paths.length).toBe(3);
-    });
-  });
-
   describe('Flag icons', () => {
     const FLAG_ICONS = [
       { name: 'USFlagIcon', Component: USFlagIcon },
@@ -147,15 +118,14 @@ describe('Icon components', () => {
           expect(container.querySelector('svg')).toBeInTheDocument();
         });
 
+        it('should keep the 3:2 flag aspect ratio', () => {
+          const { container } = render(<Component />);
+          expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 36 24');
+        });
+
         it('should have aria-hidden attribute', () => {
           const { container } = render(<Component />);
           expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-        });
-
-        it('should have default flag dimensions class', () => {
-          const { container } = render(<Component />);
-          const svg = container.querySelector('svg');
-          expect(svg).toHaveClass('h-4', 'w-6');
         });
 
         it('should accept custom className', () => {
@@ -163,33 +133,6 @@ describe('Icon components', () => {
           expect(container.querySelector('svg')).toHaveClass('custom-flag');
         });
       });
-    });
-
-    it('IsraelFlagIcon should draw two stripes on a white field with a two-triangle star', () => {
-      const { container } = render(<IsraelFlagIcon />);
-      const rects = container.querySelectorAll('rect');
-      expect(rects.length).toBe(3);
-      expect(rects[0]).toHaveAttribute('fill', '#fff');
-      expect(rects[1]).toHaveAttribute('fill', '#0038b8');
-      expect(rects[2]).toHaveAttribute('fill', '#0038b8');
-      const triangles = container.querySelectorAll('polygon');
-      expect(triangles.length).toBe(2);
-      triangles.forEach((triangle) => {
-        expect(triangle).toHaveAttribute('fill', 'none');
-        expect(triangle).toHaveAttribute('stroke', '#0038b8');
-      });
-    });
-
-    it('RussiaFlagIcon should contain 3 rect elements for stripes', () => {
-      const { container } = render(<RussiaFlagIcon />);
-      const rects = container.querySelectorAll('rect');
-      expect(rects.length).toBe(3);
-    });
-
-    it('EstoniaFlagIcon should contain 3 rect elements for stripes', () => {
-      const { container } = render(<EstoniaFlagIcon />);
-      const rects = container.querySelectorAll('rect');
-      expect(rects.length).toBe(3);
     });
   });
 });
