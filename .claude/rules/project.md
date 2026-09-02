@@ -61,6 +61,8 @@ playwright/         # Playwright specs: layout-stability (layout project),
 scripts/            # Asset tooling (process-images.mjs — run by hand on macOS,
                     # output committed; see the header comment)
 .github/workflows   # CI pipeline (ci.yml)
+.github/scripts/    # smoke.sh — post-deploy verification, shared by the deploy
+                    # and rollback jobs
 .github/actions/    # setup/action.yml — the shared pnpm + Node + install
                     # sequence every job runs after its own checkout (a local
                     # composite action cannot check out the repo holding it)
@@ -152,9 +154,12 @@ lint-and-typecheck ───────────────────┐
 unit-tests ───────────────────────────┤
                                       ├──► deploy (push to main only)
 build ──┬── e2e (Cypress) ────────────┤
-        └── playwright (layout, perf) ┘
+        ├── playwright (layout) ──────┘
+        └── playwright-perf (advisory, continue-on-error, NOT in deploy's needs)
 
-rollback — workflow_dispatch with a non-empty rollback_version_id; nothing else runs
+rollback — workflow_dispatch from main with a non-empty rollback_version_id;
+           nothing else runs, and it has its own concurrency group so it never
+           queues behind the pipeline run that shipped the bad version
 ```
 
 - `lint-and-typecheck`: lint, typecheck, `format:check`
@@ -164,17 +169,28 @@ rollback — workflow_dispatch with a non-empty rollback_version_id; nothing els
   transitive under `next > styled-jsx > @babel/core` with nothing to upgrade to, so a
   `high` gate would fail every run for reasons nobody can fix
 - `build`: `cp .env.example .env` then `pnpm build`, uploading `.next` (minus
-  `.next/cache`) as an artifact. `e2e` and `playwright` both download it, so the browser
-  suites measure the artifact that deploys rather than a build of their own
-- `playwright`: `playwright.config.ts` switches `webServer.command` to
-  `next start` when `CI` is set and refuses to reuse an existing server — the
-  perf specs were tuned against the production bundle, and the `perf` project
-  drops to one worker there
+  `.next/cache`) as an artifact. All three browser jobs download it, so they exercise a
+  production build **of the same commit** — not the deployed bytes, since `pnpm run
+  deploy` rebuilds through `opennextjs-cloudflare build`, but the same source at the
+  same settings
+- `playwright` / `playwright-perf`: `playwright.config.ts` switches
+  `webServer.command` to `next start` when `CI` is set and refuses to reuse an existing
+  server. The two projects run as two jobs: `layout` is deterministic geometry and gates
+  the deploy; `perf` is wall-clock budgets tuned on a laptop, so it runs
+  `continue-on-error` on a runner of its own (one worker) and is not in `deploy`'s
+  `needs`. `dependencies: ['layout']` on the perf project therefore applies **only**
+  outside CI, where a single `pnpm test:playwright` runs both projects in one process —
+  in CI it would just re-run the 12 layout specs inside the perf job
 - `deploy`: `environment: Production`, its own `production-deploy` concurrency group
   (`cancel-in-progress: false`, so two merges cannot deploy at once — that is how
-  production went backwards on 2026-08-16), records the Worker's `Current Version ID`,
-  then smoke-tests `/en` (200 + HSTS + CSP), `/he` (`dir="rtl"`) and `/` (307 to `/en`)
-- `rollback`: `pnpm exec wrangler rollback <id> -y`, same environment and lock
+  production went backwards on 2026-08-16), records the Worker's `Current Version ID`
+  (validated against a UUID regex, and exposed as a job output so `gh run view` and the
+  REST API can read it without scraping the log), then runs `.github/scripts/smoke.sh`: `/en` (200 + HSTS + CSP), `/he`
+  (`dir="rtl"`) and `/` (307 to `/en`)
+- `rollback`: `pnpm exec wrangler rollback <id> -y`, same environment and lock, guarded
+  on `github.ref == 'refs/heads/main'` (the Production environment has no protection
+  rules and the secrets are repository-scoped, so the ref check is the guard), then the
+  **same** smoke script — an unverified rollback is a hope
 
 All jobs on `ubuntu-latest` with a `timeout-minutes`, Node from `.nvmrc`, pnpm from the
 `packageManager` pin, `permissions: contents: read` at the top level, and every action
@@ -182,5 +198,5 @@ pinned to a full commit SHA with a version comment.
 
 **A job id is its status check name.** `lint-and-typecheck`, `unit-tests` and `build`
 therefore keep the ids branch protection already requires — splitting the quality work
-into two jobs was not a style choice. `e2e` and `playwright` are new checks and stay
-advisory until the owner adds them to the rule.
+into two jobs was not a style choice. `e2e` and `playwright` are new checks the owner
+should add to the rule; `playwright-perf` must stay out of it.

@@ -197,7 +197,8 @@ lint-and-typecheck ───────────────────┐
 unit-tests ───────────────────────────┤
                                       ├──► deploy (push to main only)
 build ──┬── e2e (Cypress) ────────────┤
-        └── playwright (layout, perf) ┘
+        ├── playwright (layout) ──────┘
+        └── playwright-perf (advisory, does not gate the deploy)
 ```
 
 | Job | Gate |
@@ -206,10 +207,11 @@ build ──┬── e2e (Cypress) ────────────┤
 | `unit-tests` | `pnpm test:coverage` (thresholds live in `vitest.config.ts`; the summary is published to the run page), then `pnpm audit --prod` — blocking at `critical`, plus a non-blocking full report |
 | `build` | `pnpm build` against `.env.example`, uploaded as an artifact |
 | `e2e` | Cypress against `pnpm start` serving that artifact |
-| `playwright` | Layout-stability and animation-performance specs against `next start` serving that artifact — not `next dev`, whose frame budget is a different number entirely |
+| `playwright` | Layout-stability specs against `next start` serving that artifact — not `next dev`, whose frame budget is a different number entirely. Geometry is deterministic, so this one blocks |
+| `playwright-perf` | Frame rate, long tasks and animation shape, on a runner of its own. `continue-on-error`, because the budgets were tuned on a laptop and have never been observed on a 4-vCPU runner |
 | `deploy` | `pnpm run deploy`, then a smoke test against the live site |
 
-Both browser suites consume the `build` artifact instead of compiling their own, so what is measured is what ships. Every job carries a timeout, every action is pinned to a commit SHA, and the workflow's `GITHUB_TOKEN` is read-only — the deploy authenticates to Cloudflare with its own secrets. A pull request run is cancelled when a newer commit arrives; runs on `main` queue rather than cancel, and the deploy job holds a separate `production-deploy` lock, so two merges can never deploy at the same time.
+The browser jobs consume the `build` artifact instead of compiling their own, so all three exercise a production build of the same commit. It is not literally the deployed bytes — `pnpm run deploy` rebuilds through `opennextjs-cloudflare build` — but it is the same source at the same settings, which is what these assertions are about. Every job carries a timeout, every action is pinned to a commit SHA, and the workflow's `GITHUB_TOKEN` is read-only — the deploy authenticates to Cloudflare with its own secrets. A pull request run is cancelled when a newer commit arrives; runs on `main` queue rather than cancel, a rollback dispatch gets a concurrency group of its own so it never queues behind the run that shipped the bad version, and `deploy` and `rollback` share a `production-deploy` lock so two of them can never touch production at once.
 
 Dependencies are updated weekly by Dependabot (`.github/dependabot.yml`). `next`, `eslint-config-next`, `@opennextjs/*` and `wrangler` arrive in a single pull request, because a version bump to any one of them alone cannot pass CI.
 
@@ -229,17 +231,19 @@ Production deploys run automatically from `main` once the full pipeline succeeds
 
 1. Builds and deploys with `pnpm run deploy`
 2. Records the Worker's `Current Version ID` in the run summary and as a job output — that id is the only handle a rollback accepts
-3. Smoke-tests the live site with retries: `/en` answers 200 carrying `Strict-Transport-Security` and `Content-Security-Policy`, `/he` renders `dir="rtl"`, and `/` answers 307 to `/en`
+3. Smoke-tests the live site with retries (`.github/scripts/smoke.sh`, shared with the rollback job): `/en` answers 200 carrying `Strict-Transport-Security` and `Content-Security-Policy`, `/he` renders `dir="rtl"`, and `/` answers 307 to `/en`
 
 ### Rolling back
 
-Run the **CI** workflow manually from the Actions tab (`Run workflow`) with `rollback_version_id` set to the version id of a known-good deploy. Every deploy prints its id in the job summary, and `pnpm exec wrangler versions list` lists them. Only the rollback job runs — the rest of the pipeline is skipped — and it takes the same `production-deploy` lock a deploy does.
+Run the **CI** workflow manually from `main` in the Actions tab (`Run workflow`) with `rollback_version_id` set to the version id of a known-good deploy. Every deploy prints its id in the job summary, and `pnpm exec wrangler versions list` lists them. Only the rollback job runs — the rest of the pipeline is skipped — it takes the same `production-deploy` lock a deploy does, and it finishes by running the same smoke test, so a rollback that did not restore a healthy site reports as failed rather than as done.
+
+The job refuses to run from any ref other than `main`: the `Production` environment has no protection rules yet and the Cloudflare secrets are repository-scoped, so that check is what stands between an arbitrary branch and production credentials.
 
 ### Repository settings this pipeline assumes
 
 These live in GitHub settings rather than in the repository, so they are the owner's to apply:
 
-- Add `e2e` and `playwright` to the required status checks on `main`. The existing `lint-and-typecheck`, `unit-tests` and `build` keep their names and keep reporting, so nothing already required breaks — but the two browser suites are new gates and are advisory until they are required.
+- Add `e2e` and `playwright` to the required status checks on `main`. The existing `lint-and-typecheck`, `unit-tests` and `build` keep their names and keep reporting, so nothing already required breaks. Do **not** add `playwright-perf` — it is deliberately advisory until its wall-clock budgets have been observed on a runner.
 - Include administrators (`enforce_admins`), and require at least one approving review with `require_last_push_approval`
 - Move `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` out of repository secrets and into the `Production` environment, with a deployment branch policy limited to `main`, so a workflow running on any other branch cannot read them
 - Enable Dependabot alerts. Without them `.github/dependabot.yml` opens version-update pull requests but never security ones
