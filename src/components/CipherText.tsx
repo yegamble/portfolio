@@ -146,9 +146,11 @@ function getCharThreshold(): number {
  *   jumps by the delta in one frame (measured: the 1280px hero <h1> 240 ->
  *   180px on en->he, #about copy 633 -> 692px on en->et). When block={true}
  *   that step is replayed as a 300ms ease instead — see the effects below and
- *   src/lib/height-ease.ts. A reader scrolled into the page is additionally
- *   held in place by src/lib/viewport-pin.ts, which now has a gradual drift to
- *   cancel rather than a single jump.
+ *   src/lib/height-ease.ts. A reader scrolled past the block is unaffected
+ *   either way: the browser's own scroll anchoring absorbs a size change above
+ *   the viewport, and src/lib/viewport-pin.ts cancels whatever is left of it
+ *   (measured on a production build, he->en with #experience 80px above the
+ *   fold: one 1px correction, section ends exactly where it started).
  *
  * When block={true}, content is wrapped in a full-width inline-block span so
  * the text behaves as its own paragraph box — that box is what the ease
