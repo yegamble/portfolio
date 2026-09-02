@@ -20,15 +20,16 @@ export default defineConfig({
       retries: 0,
     },
     {
-      // Frame-rate and long-task numbers are wall-clock measurements taken in a
-      // browser that shares the machine with every other worker. Running them
+      // Frame-rate, long-task and animation-shape numbers are wall-clock
+      // measurements taken in a browser that shares the machine with every
+      // other worker. Running them
       // after the layout project rather than alongside it is what actually makes
       // them stable (measured: 3/3 clean alone, 3/6 failing both attempts while
       // the 12 layout tests ran beside them); the retry is then only there for
       // whatever noise is left, and it gives the trace setting above something
       // to capture.
       name: 'perf',
-      testMatch: /cipher-performance\.spec\.ts/,
+      testMatch: /(cipher-performance|height-ease)\.spec\.ts/,
       dependencies: ['layout'],
       retries: process.env.CI ? 2 : 1,
     },

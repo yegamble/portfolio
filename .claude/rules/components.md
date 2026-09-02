@@ -35,7 +35,7 @@ export default function Component({ title, className = '' }: ComponentProps) {
 - Use design tokens from `globals.css`: `text-primary`, `text-text-muted`, `bg-bg-card`, etc.
 - Transitions: `transition-colors`, `transition-transform`, `transition-all` with `duration-500 ease-out`
 - Respect reduced motion: `motion-reduce:duration-0`; an imperative animation has to check `matchMedia('(prefers-reduced-motion: reduce)')` itself
-- Animations that need a measurement (the block-mode `CipherText` height ease) belong in `src/lib/` as a pure element-in/element-out helper — `src/lib/height-ease.ts` — with the component keeping only the measure-and-call glue. Measure in a `useLayoutEffect` (fall back to `useEffect` when there is no `window`, or React warns during SSR), never during render, and take the settled size from a `ResizeObserver` so nothing forces a reflow on the hot path
+- Animations that need a measurement (the block-mode `CipherText` height ease) belong in `src/lib/` as a pure element-in/element-out helper — `src/lib/height-ease.ts` — with the measure-and-call glue in a hook (`src/hooks/useBlockHeightEase.ts`) so the component stays at composition level. Measure in a `useLayoutEffect` (fall back to `useEffect` when there is no `window`, or React warns during SSR), never during render, and take the settled size from a `ResizeObserver` so nothing forces a reflow on the hot path
 - An element carrying imperative inline styles must be the *same DOM node* across every render branch that can produce it — same element type, same position, no key — or React remounts it mid-animation and the styles vanish (see the `block` wrapper in `CipherText`)
 - Hover states on interactive elements: `hover:text-primary`, `hover:border-primary`
 

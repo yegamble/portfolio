@@ -24,14 +24,17 @@ src/app/            # App Router: layout, [locale]/ segment, error/not-found,
                     # sitemap.ts, robots.ts, json-ld.tsx
 src/components/     # React components (one per file, default exports)
   icons/            # SVG icon + flag components (barrel export)
-src/lib/            # i18n config, cipher character sets, contact helpers
-src/hooks/          # useCipherTransition
+src/lib/            # i18n config, cipher character sets, contact helpers,
+                    # viewport-pin.ts (hold the reader's anchor across a
+                    # language switch), height-ease.ts (FLIP height transition)
+src/hooks/          # useCipherTransition, useBlockHeightEase
 src/data/           # Non-translatable content metadata (experience, projects)
 middleware.ts       # Locale redirect + cookie + x-locale header
 public/locales/     # Translation JSON (en/, he/, ru/, et/)
 __tests__/          # Vitest unit tests (mirrors src/) + fixtures/translations/
 cypress/e2e/        # Cypress E2E specs
-playwright/         # Playwright perf/layout-stability specs
+playwright/         # Playwright specs: layout-stability (layout project),
+                    # cipher-performance + height-ease (perf project)
 scripts/            # Asset tooling (process-images.mjs)
 .github/workflows   # CI pipeline (ci.yml)
 ```
