@@ -13,7 +13,8 @@ mQENBGRhAAAAAAEIATestKeyData
 // which persists for the lifetime of the module.
 const REUSE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'ReuseKeyData');
 const UNPARSEABLE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'BrokenKeyData');
-const OTHER_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'OtherKeyData');
+const SWAPPED_FROM_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'SwappedFromKeyData');
+const SWAPPED_TO_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'SwappedToKeyData');
 const LOADING_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'LoadingKeyData');
 const PHASE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'PhaseKeyData');
 const SILENCE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'SilenceKeyData');
@@ -186,22 +187,28 @@ describe('PgpKeyModal', () => {
     const { readKey } = await import('openpgp');
     vi.mocked(readKey).mockClear();
 
+    // Both keys are used by this test alone, so both renders are guaranteed
+    // cache misses. Starting from TEST_ARMORED_KEY made the call count depend
+    // on whether an earlier test had already warmed the memo for it, which is
+    // an assumption about test order — and one that `--sequence.shuffle`
+    // breaks.
     const { unmount } = render(
-      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />
+      <PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={SWAPPED_FROM_ARMORED_KEY} />
     );
     await waitFor(() => {
       expect(screen.getByText('Test User <test@example.com>')).toBeInTheDocument();
     });
+    expect(readKey).toHaveBeenCalledTimes(1);
     unmount();
 
     vi.mocked(readKey).mockResolvedValueOnce(otherKeyData as unknown as Key);
-    render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={OTHER_ARMORED_KEY} />);
+    render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={SWAPPED_TO_ARMORED_KEY} />);
 
     await waitFor(() => {
       expect(screen.getByText('Other User <other@example.com>')).toBeInTheDocument();
     });
     expect(readKey).toHaveBeenCalledTimes(2);
-    expect(readKey).toHaveBeenLastCalledWith({ armoredKey: OTHER_ARMORED_KEY });
+    expect(readKey).toHaveBeenLastCalledWith({ armoredKey: SWAPPED_TO_ARMORED_KEY });
   });
 
   // These drive the button directly: userEvent.setup() installs its own

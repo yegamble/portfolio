@@ -3,9 +3,12 @@ import { projectEntries } from '../../src/data/projects';
 
 // These specs deliberately assert structure — counts, hrefs, non-empty text —
 // rather than the words on the page. A résumé edit or a retranslation is a
-// content change, and it must not be able to fail the pipeline that ships it;
-// the words themselves are asserted against the translation files in
-// __tests__/locales/translation-content.test.ts, where changing them is cheap.
+// content change, and it must not be able to fail the pipeline that ships it.
+// The handful of strings that are load-bearing rather than editorial — the
+// hero locations, the footer attribution read as a sentence, meta description
+// length — are asserted against the translation files themselves in
+// __tests__/locales/translation-content.test.ts. The rest is prose, and prose
+// is not pinned anywhere on purpose.
 const nonEmptyText = ($el: JQuery<HTMLElement>) => {
   expect($el.text().trim(), $el.prop('tagName')).to.not.be.empty;
 };

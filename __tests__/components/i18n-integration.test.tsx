@@ -10,6 +10,8 @@ import Projects from '@/components/Projects';
 import Footer from '@/components/Footer';
 import SkipLink from '@/components/SkipLink';
 
+import { projectEntries } from '@/data/projects';
+
 import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
 import testRu from '../fixtures/translations/ru.json';
@@ -715,6 +717,141 @@ describe('i18n Regression - Structural integrity across languages', () => {
       'href',
       expect.stringContaining('linkedin.com')
     );
+  });
+});
+
+// Technology names come from src/data/projects.ts, which is never translated:
+// every locale shows the same English strings, each marked lang="en" so a
+// Hebrew, Russian or Estonian screen reader switches voice for them instead of
+// reading "PostgreSQL" in the page language.
+describe('i18n Integration - Project technology lists', () => {
+  const LOCALES = [
+    ['en', testEn],
+    ['he', testHe],
+    ['ru', testRu],
+    ['et', testEt],
+  ] as const;
+
+  LOCALES.forEach(([code, messages]) => {
+    it(`should list each project's technologies untranslated in ${code}`, async () => {
+      await i18n.changeLanguage(code);
+      render(<Projects />);
+
+      const techLists = screen.getAllByRole('list', {
+        name: messages.projects.techAriaLabel,
+      });
+      expect(techLists).toHaveLength(messages.projects.items.length);
+
+      messages.projects.items.forEach((item) => {
+        const metadata = projectEntries.find((entry) => entry.id === item.id);
+        expect(metadata, `no metadata for ${item.id}`).toBeDefined();
+
+        // Scope to the card, so each list is checked against its own project
+        // rather than against whatever happens to be at the same index.
+        const card = screen.getByRole('heading', { level: 3, name: item.title }).closest('div')!;
+        const techList = within(card).getByRole('list', {
+          name: messages.projects.techAriaLabel,
+        });
+
+        expect(within(techList).getAllByRole('listitem')).toHaveLength(
+          metadata!.technologies.length
+        );
+        metadata!.technologies.forEach((technology) => {
+          expect(within(techList).getByText(technology)).toHaveAttribute('lang', 'en');
+        });
+      });
+    });
+  });
+});
+
+// The block above switches language and then renders. A visitor does the
+// opposite: the tree is already mounted and i18next swaps every string inside
+// it in place — the path that can drop a node or strand an href, and the one
+// the cipher animation runs on.
+describe('i18n Regression - Structure survives a switch on a mounted tree', () => {
+  const hrefs = () =>
+    screen
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'))
+      .sort();
+
+  it('should keep every project card, technology list and repo href through a switch', async () => {
+    render(<Projects />);
+
+    const englishHrefs = hrefs();
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
+    expect(screen.getAllByRole('list', { name: testEn.projects.techAriaLabel })).toHaveLength(4);
+
+    await i18n.changeLanguage('he');
+
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
+    expect(screen.getAllByRole('list', { name: testHe.projects.techAriaLabel })).toHaveLength(4);
+    expect(hrefs()).toEqual(englishHrefs);
+    // The technology names are not translated, so they are the same nodes on
+    // both sides of the switch.
+    projectEntries[0].technologies.forEach((technology) => {
+      expect(screen.getAllByText(technology).length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should keep every footer social and tool link through a switch', async () => {
+    render(<Footer />);
+
+    const englishHrefs = hrefs();
+    expect(englishHrefs.length).toBeGreaterThanOrEqual(7);
+
+    await i18n.changeLanguage('he');
+
+    expect(hrefs()).toEqual(englishHrefs);
+    // Still four social links and three tool links, now under Hebrew names.
+    expect(screen.getByRole('link', { name: /github/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /linkedin/i })).toBeInTheDocument();
+    // Anchored: the secure-email label contains the plain one.
+    expect(
+      screen.getByRole('link', { name: new RegExp(`^${testHe.social.email}$`) })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: new RegExp(testHe.social.secureEmail) })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /visual studio code/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /tailwind css/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Inter' })).toBeInTheDocument();
+  });
+
+  it('should keep the About paragraph count and company link through a switch', async () => {
+    render(<About />);
+
+    const section = () => screen.getByRole('region', { name: /.+/ });
+    expect(section().querySelectorAll('p')).toHaveLength(3);
+    const englishHref = screen
+      .getByRole('link', { name: /test-company\.example\.com/i })
+      .getAttribute('href');
+
+    await i18n.changeLanguage('he');
+
+    expect(section().querySelectorAll('p')).toHaveLength(3);
+    expect(screen.getByRole('link', { name: /test-company\.example\.com/i })).toHaveAttribute(
+      'href',
+      englishHref
+    );
+  });
+
+  it('should keep the Experience entries and company hrefs through a switch', async () => {
+    render(<Experience />);
+
+    const jobItems = () =>
+      screen
+        .getByRole('region', { name: /.+/ })
+        .querySelector('ol')!
+        .querySelectorAll(':scope > li');
+
+    expect(jobItems()).toHaveLength(3);
+    const englishHrefs = hrefs();
+
+    await i18n.changeLanguage('he');
+
+    expect(jobItems()).toHaveLength(3);
+    expect(hrefs()).toEqual(englishHrefs);
   });
 });
 
