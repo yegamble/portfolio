@@ -124,7 +124,7 @@ function generateFrameChars(
     } else {
       allResolved = false;
       if (targetChar && isScramblable(targetChar)) {
-        chars[i] = getRandomCipherChar();
+        chars[i] = getRandomCipherChar(targetChar);
       } else {
         chars[i] = targetChar;
       }
@@ -163,26 +163,6 @@ function useCipherLoop(
   useEffect(() => {
     // Build the per-frame writers inside the effect so the DOM mutation (ref
     // mode) stays out of render-phase code.
-    const commitFrame = (chars: string[]) => {
-      if (setChars) {
-        setChars(chars);
-        return;
-      }
-      const el = elementRef?.current;
-      if (!el) return;
-      // Word-slot mode: hidden ghost words own the layout; only the overlay
-      // text changes per frame, so the frame write can never cause reflow.
-      const overlays = el.querySelectorAll<HTMLElement>('.cipher-word');
-      if (overlays.length === 0) {
-        el.textContent = chars.join('');
-        return;
-      }
-      overlays.forEach((overlay) => {
-        const start = Number(overlay.dataset.start);
-        const end = Number(overlay.dataset.end);
-        overlay.textContent = chars.slice(start, end).join('');
-      });
-    };
     const commitFinal = (value: string) => {
       if (setChars) {
         setChars(Array.from(value));
@@ -230,6 +210,55 @@ function useCipherLoop(
     const profile = getAnimationProfile();
     const resolveTimes = calculateResolveTimes(maxLen, profile);
 
+    // Overlay metadata is parsed once per mounted element rather than on every
+    // write: a language switch drives ~30 frames across 200-400 overlays, and
+    // re-running querySelectorAll plus dataset parsing on each of them was the
+    // bulk of the per-frame cost.
+    let cachedRoot: HTMLElement | null = null;
+    let cachedOverlays: { el: HTMLElement; start: number; end: number; target: string }[] = [];
+
+    const readOverlays = (el: HTMLElement) => {
+      if (el === cachedRoot && cachedOverlays.length > 0) {
+        return cachedOverlays;
+      }
+      cachedRoot = el;
+      cachedOverlays = Array.from(el.querySelectorAll<HTMLElement>('.cipher-word')).map(
+        (overlay) => {
+          const start = Number(overlay.dataset.start);
+          const end = Number(overlay.dataset.end);
+          return { el: overlay, start, end, target: newChars.slice(start, end).join('') };
+        }
+      );
+      return cachedOverlays;
+    };
+
+    /** Writes one frame. Returns false when there was nowhere to write it yet. */
+    const commitFrame = (chars: string[]): boolean => {
+      if (setChars) {
+        setChars(chars);
+        return true;
+      }
+      const el = elementRef?.current;
+      // The overlay span mounts on the render that flips isAnimating, so the
+      // first tick can run before it exists.
+      if (!el) return false;
+      // Word-slot mode: hidden ghost words own the layout; only the overlay
+      // text changes per frame, so the frame write can never cause reflow.
+      const overlays = readOverlays(el);
+      if (overlays.length === 0) {
+        el.textContent = chars.join('');
+        return true;
+      }
+      for (const overlay of overlays) {
+        const slice = chars.slice(overlay.start, overlay.end).join('');
+        overlay.el.textContent = slice;
+        // Per-word decrypt feedback: a word that has landed on its target stops
+        // being dimmed while its neighbours keep cycling.
+        overlay.el.classList.toggle('cipher-resolved', slice === overlay.target);
+      }
+      return true;
+    };
+
     let startTime: number | null = null;
     let lastUpdateTime = 0;
     let started = false;
@@ -250,7 +279,7 @@ function useCipherLoop(
         const elapsed = currentTime - startTime;
         const { chars, allResolved } = generateFrameChars(maxLen, newChars, resolveTimes, elapsed);
 
-        commitFrame(chars);
+        const wrote = commitFrame(chars);
 
         if (allResolved) {
           setIsAnimating(false);
@@ -259,7 +288,12 @@ function useCipherLoop(
           return false; // done — unregister from scheduler
         }
 
-        lastUpdateTime = currentTime;
+        // A frame that found no target (the overlay span has not mounted yet)
+        // must not advance the clock: otherwise the first scramble lands a full
+        // updateInterval late and the finished translation is painted first.
+        if (wrote) {
+          lastUpdateTime = currentTime;
+        }
       }
 
       return true; // keep running

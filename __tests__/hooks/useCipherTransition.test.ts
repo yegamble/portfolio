@@ -286,6 +286,74 @@ describe('useCipherTransition', () => {
       expect(element.textContent).not.toBe(nextText);
     });
 
+    it('should write into a late-mounted ref on the very next frame, not a full interval later', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const element = document.createElement('span');
+      const elementRef = { current: null as HTMLSpanElement | null };
+
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text, { elementRef }), {
+        initialProps: { text: 'A'.repeat(96) },
+      });
+
+      rerender({ text: 'B'.repeat(96) });
+
+      // First scheduler tick runs before the overlay span exists: nothing is
+      // written, so the update clock must NOT advance — otherwise the first
+      // scramble lands one updateInterval (45ms) later and the reader sees the
+      // finished translation for ~2 painted frames first.
+      act(() => rafCallbacks.shift()?.(100));
+      expect(element.textContent).toBe('');
+
+      elementRef.current = element;
+
+      // 16ms later — well inside one updateInterval — the first frame lands.
+      act(() => rafCallbacks.shift()?.(116));
+
+      expect(element.textContent).toHaveLength(96);
+    });
+
+    it('should flag resolved word overlays so each word gets its own decrypt feedback', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+
+      const rafCallbacks: ((time: number) => void)[] = [];
+      global.requestAnimationFrame = vi.fn((cb) => {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }) as unknown as typeof requestAnimationFrame;
+
+      const element = document.createElement('span');
+      element.innerHTML =
+        '<span class="cipher-word-slot"><span class="cipher-char-layout">HELLO</span><span class="cipher-word" data-start="0" data-end="5">XXXXX</span></span>' +
+        ' ' +
+        '<span class="cipher-word-slot"><span class="cipher-char-layout">WORLD</span><span class="cipher-word" data-start="6" data-end="11">XXXXX</span></span>';
+      const elementRef = { current: element as HTMLSpanElement | null };
+
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text, { elementRef }), {
+        initialProps: { text: 'AAAAA AAAAA' },
+      });
+
+      rerender({ text: 'HELLO WORLD' });
+
+      const overlays = element.querySelectorAll('.cipher-word');
+
+      // Early frame: nothing has resolved yet.
+      act(() => rafCallbacks.shift()?.(100));
+      expect(overlays[0]).not.toHaveClass('cipher-resolved');
+      expect(overlays[1]).not.toHaveClass('cipher-resolved');
+
+      // Late frame: both words match their target and are flagged resolved.
+      act(() => rafCallbacks.shift()?.(5000));
+      expect(overlays[0]).toHaveClass('cipher-resolved');
+      expect(overlays[1]).toHaveClass('cipher-resolved');
+    });
+
     it('should write scramble frames into word-slot overlays without touching the ghost layout', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
 
