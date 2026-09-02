@@ -218,7 +218,10 @@ function useCipherLoop(
     let cachedOverlays: { el: HTMLElement; start: number; end: number; target: string }[] = [];
 
     const readOverlays = (el: HTMLElement) => {
-      if (el === cachedRoot && cachedOverlays.length > 0) {
+      // isConnected guards the case where React swapped the overlays out from
+      // under the same root element; a stale cache would write into detached
+      // nodes and the scramble would freeze.
+      if (el === cachedRoot && cachedOverlays.length > 0 && cachedOverlays[0].el.isConnected) {
         return cachedOverlays;
       }
       cachedRoot = el;
