@@ -16,7 +16,7 @@
  * content below slides over ~300ms while the cipher scramble runs.
  */
 
-export interface EaseHeightOptions {
+interface EaseHeightOptions {
   /** Length of the transition. */
   durationMs?: number;
 }

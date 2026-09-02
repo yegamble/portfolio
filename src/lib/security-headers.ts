@@ -14,7 +14,7 @@
 //
 // Zero imports, like `@/lib/locales`: this is pulled into the edge bundle.
 
-export interface SecurityHeader {
+interface SecurityHeader {
   readonly key: string;
   readonly value: string;
 }
@@ -41,7 +41,7 @@ const scriptSrc = [
   ...(isDevelopment ? ["'unsafe-eval'"] : []),
 ];
 
-export const CONTENT_SECURITY_POLICY = [
+const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   `script-src ${scriptSrc.join(' ')}`,
   "style-src 'self' 'unsafe-inline'",

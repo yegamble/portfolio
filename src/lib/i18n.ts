@@ -26,7 +26,7 @@ export {
   type AppLocale,
 } from '@/lib/locales';
 
-export const localeResources = {
+const localeResources = {
   en: { translation: en },
   he: { translation: he },
   ru: { translation: ru },
