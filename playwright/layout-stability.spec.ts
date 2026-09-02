@@ -240,6 +240,20 @@ test.describe('language toggle layout stability', () => {
     });
   }
 
+  // Resting top for #experience. Chosen because it is where the regression this
+  // guards against was largest: on a production build, sampling the pin's anchor
+  // after the lang flip (which reflows on its own via the html:lang(he) font
+  // stack) left the section at 141 instead of 112.
+  //
+  // NOTE: the config runs these against `next dev`, where React commits the i18n
+  // store synchronously inside the click handler, so the drift the pin sees here
+  // is far smaller than in production — which commits it in a microtask
+  // afterwards and needs a +117px correction at this scroll position. The
+  // assertion holds in both and was verified by hand against `next start`; once
+  // CI runs this suite against a production build it becomes a real guard rather
+  // than a smoke test.
+  const EXPERIENCE_RESTING_TOP = 112;
+
   test('a scrolled reader keeps their place across a Hebrew to English switch', async ({
     page,
   }) => {
@@ -247,14 +261,14 @@ test.describe('language toggle layout stability', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await waitForPortfolioReady(page, '/he');
 
-    await page.evaluate(() => {
+    await page.evaluate((restingTop) => {
       const section = document.querySelector('#experience');
       if (!section) throw new Error('Missing #experience');
       window.scrollTo({
-        top: window.scrollY + section.getBoundingClientRect().top + 80,
+        top: window.scrollY + section.getBoundingClientRect().top - restingTop,
         behavior: 'instant',
       });
-    });
+    }, EXPERIENCE_RESTING_TOP);
     await page.waitForTimeout(150);
 
     const before = await page.evaluate(

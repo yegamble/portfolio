@@ -40,8 +40,19 @@ const ANCHOR_SELECTOR = 'header + section, main section, footer';
  * whole page up or down. We pin the landmark currently under the viewport
  * centre and scroll to cancel its drift for the duration of the transition.
  * Cancels immediately on any user scroll/keypress so it never fights the reader.
+ *
+ * MUST be called before the language mutation, not after: `startTop` is sampled
+ * synchronously, and setting documentElement.lang alone already reflows the page
+ * (globals.css swaps the font stack on `html:lang(he)`, so the still-untranslated
+ * Hebrew text re-wraps in Inter's metrics). Measured on a production build,
+ * he->en with #experience at top 112: the lang flip alone moved it to 141.25, so
+ * sampling afterwards pinned the page 29px away from where the reader left it.
+ *
+ * The window has to outlast the whole cipher animation. The last reflow is the
+ * animating ghost structure unmounting when the scramble finishes (~1.6s after
+ * the click), and the loop only sees it if it is still polling.
  */
-function pinViewportDuringReflow(durationMs = 1500) {
+function pinViewportDuringReflow(durationMs = 2000) {
   if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') {
     return;
   }
@@ -56,8 +67,6 @@ function pinViewportDuringReflow(durationMs = 1500) {
   const startTop = anchor.getBoundingClientRect().top;
   const deadline = performance.now() + durationMs;
   let active = true;
-  let settledFrames = 0;
-  let observedReflow = false;
 
   const stop = () => {
     active = false;
@@ -72,23 +81,21 @@ function pinViewportDuringReflow(durationMs = 1500) {
   const compensate = (now: number) => {
     if (!active) return;
     const drift = anchor.getBoundingClientRect().top - startTop;
+    // Poll for the whole window and scroll only when there is drift to cancel.
+    // Settling early on still frames is not safe here: the reflow arrives in
+    // bursts (a production build commits the i18n store in a microtask after
+    // the handler, and the scramble structure unmounts ~1.6s later), so a loop
+    // that stops after the first quiet frames abandons the later ones. A rect
+    // read per frame for two seconds is far cheaper than the animation it is
+    // riding alongside.
     if (Math.abs(drift) >= 1) {
-      observedReflow = true;
-      settledFrames = 0;
       // behavior:'instant' is required. Per CSSOM View, 'auto' defers to the
       // element's CSS scroll-behavior, which globals.css sets to `smooth`, so
       // each correction would ease over 7-16 frames and the page would visibly
-      // glide back instead of never appearing to move.
+      // glide back instead of never appearing to move. On a production build one
+      // instant correction is all it takes (+117px desktop he->en and en->ru,
+      // +263px mobile en->ru, all in a single frame ~90ms after the click).
       window.scrollBy({ top: drift, behavior: 'instant' });
-    } else if (observedReflow && ++settledFrames >= 2) {
-      // The reflow has been corrected and two consecutive frames measured no
-      // further movement, so stop rather than polling to the deadline. The
-      // counter deliberately only starts once drift has been seen: i18next
-      // resolves asynchronously, so the React commit that reflows the page
-      // lands a few frames after the click and an unconditional early stop
-      // would quit before it.
-      stop();
-      return;
     }
     if (now < deadline) {
       requestAnimationFrame(compensate);
@@ -135,6 +142,10 @@ export default function LanguageSelector() {
         return;
       }
 
+      // Sample the reader's viewport anchor before anything mutates: the lang
+      // flip below reflows the page on its own.
+      pinViewportDuringReflow();
+
       // Flip <html lang/dir> synchronously (before the next paint) so RTL/LTR
       // direction never lags the new text by a frame, then animate the text in
       // place via i18n. We deliberately avoid a Next.js route navigation here:
@@ -153,8 +164,6 @@ export default function LanguageSelector() {
         '',
         `${href}${window.location.search}${window.location.hash}`
       );
-      // Hold the reader's view steady while the new-language text reflows.
-      pinViewportDuringReflow();
     },
     [close, i18n]
   );
