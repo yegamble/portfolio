@@ -1,5 +1,8 @@
 import type { MetadataRoute } from 'next';
-import { DEFAULT_LOCALE, LOCALES, SITE_URL, getLocaleHref } from '@/lib/i18n';
+// `@/lib/locales`, not `@/lib/i18n`: these four are all defined there, and the
+// re-export would pull i18next, react-i18next and all four translation JSONs
+// into this route's bundle for helpers that need none of it.
+import { DEFAULT_LOCALE, LOCALES, SITE_URL, getLocaleHref } from '@/lib/locales';
 
 // A build-time constant, not `new Date()`: request time made every crawl report
 // the page as modified seconds ago, which tells a crawler nothing and trains it
