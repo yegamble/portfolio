@@ -1,5 +1,5 @@
 import { render, screen, within, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 
 vi.mock('openpgp', () => ({
   readKey: vi.fn(() =>
@@ -14,7 +14,13 @@ vi.mock('openpgp', () => ({
 }));
 
 import ScrollHeader from '@/components/ScrollHeader';
-import { stubIntersectionObserver, type IntersectionObserverStub } from '../helpers/observers';
+import {
+  REDUCED_MOTION_QUERY,
+  stubIntersectionObserver,
+  stubMatchMedia,
+  type IntersectionObserverStub,
+  type MatchMediaStub,
+} from '../helpers/observers';
 import testEn from '../fixtures/translations/en.json';
 
 const TEST_NAME = testEn.hero.name;
@@ -254,6 +260,13 @@ describe('ScrollHeader', () => {
   });
 
   describe('Sticky header', () => {
+    let matchMedia: MatchMediaStub | undefined;
+
+    afterEach(() => {
+      matchMedia?.restore();
+      matchMedia = undefined;
+    });
+
     it('should render a header element', () => {
       render(<ScrollHeader />);
       expect(screen.getByRole('banner')).toBeInTheDocument();
@@ -269,7 +282,7 @@ describe('ScrollHeader', () => {
 
     it('should scroll to top when nav name is clicked', async () => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-      window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+      matchMedia = stubMatchMedia();
 
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
@@ -288,7 +301,7 @@ describe('ScrollHeader', () => {
 
     it('should use instant scroll when prefers-reduced-motion is enabled', async () => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-      window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+      matchMedia = stubMatchMedia((query) => query === REDUCED_MOTION_QUERY);
 
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');

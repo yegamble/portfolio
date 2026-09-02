@@ -280,9 +280,12 @@ describe('Scroll Header — Responsive Layout', () => {
         // Header must not be transparent — hero text must not show through during scroll
         cy.get('header').should('not.have.css', 'background-color', 'rgba(0, 0, 0, 0)');
 
-        // Scroll partway so hero text would be behind the header
+        // Scroll partway so hero text would be behind the header. The page sets
+        // `scroll-behavior: smooth`, so the assertion has to wait for the scroll
+        // to arrive rather than for a fixed number of milliseconds — this
+        // retries until it does, and fails loudly if it never does.
         cy.scrollTo(0, 100);
-        cy.wait(100);
+        cy.window().its('scrollY').should('be.closeTo', 100, 1);
         cy.get('header').should('not.have.css', 'background-color', 'rgba(0, 0, 0, 0)');
       });
 
