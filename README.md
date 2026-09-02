@@ -172,9 +172,12 @@ If you later add route mappings or custom domains to the Worker configuration, a
 | `pnpm start` | Runs the production Next.js server |
 | `pnpm lint` | Runs ESLint |
 | `pnpm typecheck` | Runs TypeScript without emitting output |
+| `pnpm format` | Runs Prettier and writes the fixes |
+| `pnpm format:check` | Runs Prettier as a check — CI fails on this, so run it before pushing |
 | `pnpm test` | Runs the Vitest suite |
+| `pnpm test:coverage` | Runs Vitest with the coverage thresholds in `vitest.config.ts`. This is what CI runs, so a change can pass `pnpm test` and still fail the pipeline |
 | `pnpm test:e2e` | Runs Cypress end-to-end tests |
-| `pnpm test:playwright` | Runs Playwright accessibility, layout, and performance checks |
+| `pnpm test:playwright` | Runs Playwright accessibility, layout, and performance checks against `next dev`. Prefix with `CI=1` to reproduce the pipeline, which measures a production build (`next start`) |
 | `pnpm build:worker` | Generates the Cloudflare Worker build with OpenNext |
 | `pnpm preview` | Builds and previews the Cloudflare Worker locally |
 | `pnpm deploy` | Builds and deploys the Worker to Cloudflare |
@@ -212,7 +215,7 @@ build ──┬── e2e (Cypress) ────────────┤
 | `playwright-perf` | Frame rate, long tasks and animation shape, on a runner of its own. `continue-on-error`, because the budgets were tuned on a laptop and have never been observed on a 4-vCPU runner |
 | `deploy` | `pnpm run deploy`, then a smoke test against the live site |
 
-The browser jobs consume the `build` artifact instead of compiling their own, so all three exercise a production build of the same commit. It is not literally the deployed bytes — `pnpm run deploy` rebuilds through `opennextjs-cloudflare build` — but it is the same source at the same settings, which is what these assertions are about. Every job carries a timeout, every action is pinned to a commit SHA, and the workflow's `GITHUB_TOKEN` is read-only — the deploy authenticates to Cloudflare with its own secrets. A pull request run is cancelled when a newer commit arrives; runs on `main` queue rather than cancel, a rollback dispatch gets a concurrency group of its own so it never queues behind the run that shipped the bad version, and `deploy` and `rollback` share a `production-deploy` lock so two of them can never touch production at once.
+The browser jobs consume the `build` artifact instead of compiling their own, so all three exercise a production build of the same commit. It is not literally the deployed bytes — `pnpm run deploy` rebuilds through `opennextjs-cloudflare build` — but it is the same source at the same settings, which is what these assertions are about. Every job carries a timeout, every action is pinned to a commit SHA, and the workflow's `GITHUB_TOKEN` is read-only — the deploy authenticates to Cloudflare with its own secrets. A pull request run is cancelled when a newer commit arrives; runs on `main` queue rather than cancel, a rollback dispatch gets a *workflow*-level concurrency group of its own so it never queues behind the run that shipped the bad version, and `deploy` and `rollback` share a *job*-level `production-deploy` lock so two of them can never touch production at once (see [Rolling back](#rolling-back) for what that costs during an in-flight deploy).
 
 Dependencies are updated weekly by Dependabot (`.github/dependabot.yml`). `next`, `eslint-config-next`, `@opennextjs/*` and `wrangler` arrive in a single pull request, because a version bump to any one of them alone cannot pass CI.
 
@@ -236,7 +239,9 @@ Production deploys run automatically from `main` once the full pipeline succeeds
 
 ### Rolling back
 
-Run the **CI** workflow manually from `main` in the Actions tab (`Run workflow`) with `rollback_version_id` set to the version id of a known-good deploy. Every deploy prints its id in the job summary, and `pnpm exec wrangler versions list` lists them. Only the rollback job runs — the rest of the pipeline is skipped — it takes the same `production-deploy` lock a deploy does, and it finishes by running the same smoke test, so a rollback that did not restore a healthy site reports as failed rather than as done.
+Run the **CI** workflow manually from `main` in the Actions tab (`Run workflow`) with `rollback_version_id` set to the version id of a known-good deploy. Every deploy prints its id in the job summary, and `pnpm exec wrangler versions list` lists them. Only the rollback job runs — the rest of the pipeline is skipped — and it finishes by running the same smoke test, so a rollback that did not restore a healthy site reports as failed rather than as done.
+
+Two concurrency groups are in play, and they answer different questions. The *workflow*-level group keeps a rollback dispatch out of the queue behind the pipeline run that shipped the bad version, and stops the next push to `main` cancelling it while it waits. The *job*-level `production-deploy` lock is deliberately shared with `deploy` (`cancel-in-progress: false`), because two runs must never write to production at once — so a rollback dispatched while a deploy is mid-flight still waits for that deploy to finish, up to its 20-minute timeout. That is the intended trade: serialized writes, at the cost of a wait during the one incident where a deploy is already running.
 
 The job refuses to run from any ref other than `main`: the `Production` environment has no protection rules yet and the Cloudflare secrets are repository-scoped, so that check is what stands between an arbitrary branch and production credentials.
 

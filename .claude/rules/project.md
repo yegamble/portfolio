@@ -22,7 +22,9 @@ Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland
 
 ```
 src/app/            # App Router. [locale]/layout.tsx IS the root layout (owns
-                    # <html>/<body>); there is no src/app/layout.tsx or page.tsx.
+                    # <html>/<body>) and [locale]/page.tsx is the single page
+                    # every locale renders; there is no src/app/layout.tsx or
+                    # src/app/page.tsx.
                     # global-not-found.tsx, global-error.tsx, fonts.ts,
                     # [locale]/error.tsx, sitemap.ts, robots.ts, json-ld.tsx,
                     # manifest.ts (/manifest.webmanifest). Icon files here each
@@ -36,9 +38,10 @@ src/lib/            # locales.ts (import-free locale primitives + SITE_URL, the
                     # besides security-headers.ts), i18n.ts (i18next + JSON,
                     # re-exports locales.ts), security-headers.ts (import-free;
                     # shared by next.config.ts and the proxy), cipher character
-                    # sets, contact helpers, viewport-pin.ts (hold the reader's
-                    # anchor across a language switch), height-ease.ts (FLIP
-                    # height transition)
+                    # sets, contact helpers, media.ts (the reduced-motion and
+                    # phone-profile media queries, asked in one place),
+                    # viewport-pin.ts (hold the reader's anchor across a
+                    # language switch), height-ease.ts (FLIP height transition)
 src/hooks/          # useCipherTransition, useBlockHeightEase
 src/data/           # Non-translatable content metadata (experience, projects)
 src/proxy.ts        # Locale redirect (cookie -> Accept-Language -> en). Writes
@@ -79,12 +82,15 @@ scripts/            # Asset tooling (process-images.mjs — run by hand on macOS
 | `pnpm start` | Serve production build |
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm format` | Prettier, writing fixes |
+| `pnpm format:check` | Prettier, failing instead of writing — **CI gates on this** |
 | `pnpm test` | Vitest (single run) |
 | `pnpm test:watch` | Vitest (watch) |
+| `pnpm test:coverage` | Vitest with the coverage floors in `vitest.config.ts` (96/90/97/97) — **this is what `unit-tests` runs**, not `pnpm test` |
 | `pnpm test:e2e` | Cypress headless (needs a running server) |
 | `pnpm test:e2e:open` | Cypress interactive |
-| `pnpm test:playwright` | Playwright specs |
-| `pnpm build:worker` | OpenNext Cloudflare build |
+| `pnpm test:playwright` | Playwright, both projects, against `next dev`. Set `CI=1` to reproduce what the pipeline measures (`next start`, no server reuse) and `--project=layout` / `--project=perf` to run one |
+| `pnpm build:worker` | OpenNext Cloudflare build — CI runs it in the `build` job |
 | `pnpm deploy` / `pnpm preview` | Cloudflare deploy / local preview |
 
 ## Path Aliases

@@ -12,7 +12,7 @@
 
 Most components use `'use client'` because they depend on `useTranslation()` or browser APIs.
 
-**Server components** (no directive needed): `SectionHeader`, `TechTag` — pure presentational, no hooks.
+**Server components** (no directive needed): `SectionHeader`, `TechTag`, `MainRegion` — pure presentational, no hooks. A component with no directive can still be rendered from a client component (`MainRegion` is, by `[locale]/error.tsx`); it just joins that client bundle.
 
 When creating new components, only add `'use client'` if the component uses hooks, event handlers, or browser APIs.
 
