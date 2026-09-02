@@ -1,8 +1,9 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
+import { cancelHeightEase, easeHeight, isHeightEasing } from '@/lib/height-ease';
 
 interface CipherTextProps {
   children?: string;
@@ -13,6 +14,15 @@ const BLOCK_STYLE = {
   display: 'inline-block',
   width: '100%',
 } as const;
+
+// The block wrapper is emitted as the same element type in the same position in
+// BOTH the animating and non-animating branches below, so React reconciles it to
+// one DOM node that survives the branch swap. That identity is load-bearing: the
+// height ease sets inline styles on this node imperatively and the transition
+// keeps running across the render that flips isAnimating (and the one that flips
+// it back). Introduce a different wrapper — another element type, a conditional
+// parent, a key — in either branch and React will remount it mid-ease, dropping
+// the inline height and snapping the layout back.
 
 const CHAR_STYLE = {
   position: 'absolute',
@@ -86,6 +96,21 @@ function segmentWords(chars: string[]): WordSegment[] {
   return segments;
 }
 
+// The height ease measures the DOM after a commit, which is client-only work.
+// useLayoutEffect warns when React renders on the server, so pick the effect
+// that fits the environment once, at module scope (never per render).
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
+const HEIGHT_EASE_EPSILON_PX = 1;
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
+
 const CHAR_THRESHOLD_DESKTOP = 80;
 const CHAR_THRESHOLD_MOBILE = 40;
 
@@ -111,10 +136,23 @@ function getCharThreshold(): number {
  *   the target text pins layout so scramble frames never reflow the page, and
  *   the hook writes overlay text via the DOM, bypassing React reconciliation
  *
- * When block={true}, wraps content in a full-width inline-block span so the
- * text behaves as its own paragraph box. Layout stability during transitions
- * comes from the ghost layers above (per-char and per-word), which pin the
- * box to the final text's geometry for the whole animation.
+ * Layout stability, in two parts:
+ * - WITHIN a transition, the ghost layers above (per-char and per-word) pin the
+ *   box to the final text's geometry, so no scramble frame ever reflows the
+ *   page. Nothing moves for the whole ~1.4s animation.
+ * - ACROSS a transition, the final geometry itself differs per language: a
+ *   translation that wraps to a different number of lines changes the block's
+ *   height in the single commit that swaps the text, and everything below it
+ *   jumps by the delta in one frame (measured: the 1280px hero <h1> 240 ->
+ *   180px on en->he, #about copy 633 -> 692px on en->et). When block={true}
+ *   that step is replayed as a 300ms ease instead — see the effects below and
+ *   src/lib/height-ease.ts. A reader scrolled into the page is additionally
+ *   held in place by src/lib/viewport-pin.ts, which now has a gradual drift to
+ *   cancel rather than a single jump.
+ *
+ * When block={true}, content is wrapped in a full-width inline-block span so
+ * the text behaves as its own paragraph box — that box is what the ease
+ * animates.
  */
 export default function CipherText({ children, block = false }: CipherTextProps) {
   const text = children || '';
@@ -134,6 +172,59 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     io.observe(el);
     return () => io.disconnect();
   }, [isCipherEnabled]);
+
+  // --- Block mode: ease the wrapper's height across a text swap ---
+  const blockRef = useRef<HTMLSpanElement>(null);
+  // Last height the wrapper settled at, i.e. the one the reader is looking at
+  // when the next translation arrives.
+  const settledHeightRef = useRef<number | null>(null);
+  const canEaseHeight = isCipherEnabled && block;
+
+  useEffect(() => {
+    if (!canEaseHeight) return;
+    const el = blockRef.current;
+    // jsdom and any other environment without ResizeObserver simply never
+    // records a height, so the ease below stays off.
+    if (!el || typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver((entries) => {
+      // Off the hot path on purpose: the observer delivers after layout, so
+      // reading the box here costs nothing, whereas measuring during render or
+      // per animation frame would force a reflow. The ease's own frames are not
+      // a settled height and must not be recorded as one.
+      if (isHeightEasing(el)) return;
+      settledHeightRef.current = entries[entries.length - 1]?.contentRect.height ?? null;
+    });
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      cancelHeightEase(el);
+    };
+  }, [canEaseHeight]);
+
+  useIsomorphicLayoutEffect(() => {
+    if (!canEaseHeight || prefersReducedMotion()) return;
+    const el = blockRef.current;
+    if (!el) return;
+
+    const settled = settledHeightRef.current;
+    // Nothing to ease from on the first commit (or without a ResizeObserver).
+    if (settled === null) return;
+
+    // React has already committed the new text, so the box is at its natural
+    // new height; an ease still in flight is instead at whatever height it had
+    // animated to, and that — not the target it was heading for — is where the
+    // reader's eye is. Cancelling drops the inline height so the next read is
+    // the natural one again.
+    const from = isHeightEasing(el) ? el.getBoundingClientRect().height : settled;
+    cancelHeightEase(el);
+    const to = el.getBoundingClientRect().height;
+    settledHeightRef.current = to;
+
+    if (Math.abs(to - from) <= HEIGHT_EASE_EPSILON_PX) return;
+    easeHeight(el, from, to);
+  }, [text, canEaseHeight]);
 
   // --- Long text: ref for direct DOM updates (bypasses React) ---
   const longTextRef = useRef<HTMLSpanElement>(null);
@@ -194,7 +285,11 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   }
 
   if (!isAnimating && block) {
-    return wrapObserver(<span style={BLOCK_STYLE}>{text}</span>);
+    return wrapObserver(
+      <span ref={blockRef} style={BLOCK_STYLE}>
+        {text}
+      </span>
+    );
   }
 
   // --- Animating: choose rendering path ---
@@ -277,7 +372,11 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   }
 
   if (block) {
-    return wrapObserver(<span style={BLOCK_STYLE}>{animationContent}</span>);
+    return wrapObserver(
+      <span ref={blockRef} style={BLOCK_STYLE}>
+        {animationContent}
+      </span>
+    );
   }
 
   return wrapObserver(animationContent);
