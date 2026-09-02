@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { Inter, Heebo } from 'next/font/google';
+import { fontVariables } from '@/app/fonts';
 import {
   getDirection,
   getLocaleHref,
@@ -17,17 +17,6 @@ import './globals.css';
 // This file replaces the old `not-found.tsx`, which rendered inside Next's
 // `__next_error__` shell and could only fix `<html lang/dir>` from an effect
 // after mount, leaving the document with no <title> at all.
-const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  display: 'swap',
-  variable: '--font-inter',
-});
-
-const heebo = Heebo({
-  subsets: ['hebrew'],
-  display: 'swap',
-  variable: '--font-heebo',
-});
 
 export default async function GlobalNotFound() {
   const cookieStore = await cookies();
@@ -36,11 +25,7 @@ export default async function GlobalNotFound() {
   const t = messages.notFound;
 
   return (
-    <html
-      lang={locale}
-      dir={getDirection(locale)}
-      className={`${inter.variable} ${heebo.variable}`}
-    >
+    <html lang={locale} dir={getDirection(locale)} className={fontVariables}>
       <body className="min-h-screen font-[family-name:var(--font-inter),var(--font-heebo)] antialiased leading-relaxed">
         <title>{`${t.title} | ${messages.meta.title}`}</title>
         <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 px-6">
