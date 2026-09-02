@@ -339,6 +339,12 @@ test.describe('language toggle layout stability', () => {
     }
   });
 
+  // Deliberately doubled with __tests__/components/cipher-integration.test.tsx
+  // › "should never paint the finished translation before the scramble starts".
+  // That one reads the exact markup React commits on the frame the overlays
+  // appear, which is precise but only as true as jsdom is; this one watches a
+  // real animation in a real engine, where a mutation can land between paints
+  // and the MutationObserver is the only witness. Neither subsumes the other.
   test('long-text overlays never mount showing the finished translation', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await waitForPortfolioReady(page);

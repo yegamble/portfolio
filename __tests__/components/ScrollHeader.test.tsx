@@ -14,34 +14,23 @@ vi.mock('openpgp', () => ({
 }));
 
 import ScrollHeader from '@/components/ScrollHeader';
+import { stubIntersectionObserver, type IntersectionObserverStub } from '../helpers/observers';
 import testEn from '../fixtures/translations/en.json';
 
 const TEST_NAME = testEn.hero.name;
 const TEST_TITLE = testEn.hero.title;
 
-let observerCallback: IntersectionObserverCallback;
-const mockObserve = vi.fn();
-const mockDisconnect = vi.fn();
+let sentinel: IntersectionObserverStub;
+
+/** Report the hero sentinel as on- or off-screen, i.e. scroll past it or back. */
+function scrollPastHero(isPastHero: boolean) {
+  act(() => {
+    sentinel.emit(!isPastHero);
+  });
+}
 
 beforeEach(() => {
-  mockObserve.mockClear();
-  mockDisconnect.mockClear();
-
-  window.IntersectionObserver = vi.fn(function (
-    this: IntersectionObserver,
-    callback: IntersectionObserverCallback
-  ) {
-    observerCallback = callback;
-    return {
-      observe: mockObserve,
-      disconnect: mockDisconnect,
-      unobserve: vi.fn(),
-      root: null,
-      rootMargin: '',
-      thresholds: [],
-      takeRecords: () => [],
-    };
-  }) as unknown as typeof IntersectionObserver;
+  sentinel = stubIntersectionObserver();
 });
 
 describe('ScrollHeader', () => {
@@ -185,12 +174,7 @@ describe('ScrollHeader', () => {
     it('should show nav name when scrolled past hero', () => {
       render(<ScrollHeader />);
 
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: false } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
+      scrollPastHero(true);
 
       const header = screen.getByRole('banner');
       const navNameContainer = header.querySelector('[aria-hidden]');
@@ -200,23 +184,13 @@ describe('ScrollHeader', () => {
     it('should toggle back to hidden when scrolling back to top', () => {
       render(<ScrollHeader />);
 
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: false } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
+      scrollPastHero(true);
 
       const header = screen.getByRole('banner');
       let navNameContainer = header.querySelector('[aria-hidden]');
       expect(navNameContainer).toHaveAttribute('aria-hidden', 'false');
 
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: true } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
+      scrollPastHero(false);
 
       navNameContainer = header.querySelector('[aria-hidden]');
       expect(navNameContainer).toHaveAttribute('aria-hidden', 'true');
@@ -228,12 +202,7 @@ describe('ScrollHeader', () => {
       const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
       expect(navNameLink).toHaveAttribute('tabIndex', '-1');
 
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: false } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
+      scrollPastHero(true);
 
       expect(navNameLink).toHaveAttribute('tabIndex', '0');
     });
@@ -255,12 +224,7 @@ describe('ScrollHeader', () => {
     it('should expose the brand link named by its visible text once scrolled', () => {
       render(<ScrollHeader />);
 
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: false } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
+      scrollPastHero(true);
 
       const header = screen.getByRole('banner');
       const brandLink = within(header).getByRole('link', {
@@ -275,17 +239,17 @@ describe('ScrollHeader', () => {
 
     it('should set up IntersectionObserver on mount', () => {
       render(<ScrollHeader />);
-      expect(window.IntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
+      expect(sentinel.ctor).toHaveBeenCalledWith(expect.any(Function), {
         threshold: 0,
         rootMargin: '-64px 0px 0px 0px',
       });
-      expect(mockObserve).toHaveBeenCalled();
+      expect(sentinel.observe).toHaveBeenCalled();
     });
 
     it('should disconnect observer on unmount', () => {
       const { unmount } = render(<ScrollHeader />);
       unmount();
-      expect(mockDisconnect).toHaveBeenCalled();
+      expect(sentinel.disconnect).toHaveBeenCalled();
     });
   });
 

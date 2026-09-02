@@ -1,25 +1,18 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('@/data/experience', () => ({
-  experienceEntries: [
-    {
-      id: 'edge-corp',
-      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
-      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
-    },
-    {
-      id: 'cafe-societe',
-      companyUrl: 'https://cafe-societe.example.com/',
-      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
-    },
-    {
-      id: 'open-src',
-      companyUrl: null,
-      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
-    },
-  ],
-}));
+// The shared fixture, with one deliberate change: this suite covers the
+// unlinked-company branch, so the third entry has no companyUrl. Spelling the
+// difference out beats another copy of the array that silently drifts.
+vi.mock('@/data/experience', async () => {
+  const { testExperienceEntries } = await import('../fixtures/test-data');
+
+  return {
+    experienceEntries: testExperienceEntries.map((entry) =>
+      entry.id === 'open-src' ? { ...entry, companyUrl: null } : entry
+    ),
+  };
+});
 
 import Experience from '@/components/Experience';
 import i18n from '@/lib/i18n';

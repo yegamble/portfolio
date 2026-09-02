@@ -1,6 +1,14 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CipherText from '@/components/CipherText';
+import {
+  stubIntersectionObserver,
+  stubMatchMedia,
+  stubResizeObserver,
+  type IntersectionObserverStub,
+  type MatchMediaStub,
+  type ResizeObserverStub,
+} from '../helpers/observers';
 
 const mockResult = { displayChars: [] as string[], isAnimating: false };
 vi.mock('@/hooks/useCipherTransition', () => ({
@@ -13,44 +21,22 @@ vi.mock('@/hooks/useCipherTransition', () => ({
 }));
 
 describe('CipherText', () => {
-  let observeMock: ReturnType<typeof vi.fn>;
-  let disconnectMock: ReturnType<typeof vi.fn>;
+  let viewport: IntersectionObserverStub;
+  let matchMedia: MatchMediaStub;
 
   beforeEach(() => {
     mockResult.displayChars = [];
     mockResult.isAnimating = false;
 
-    observeMock = vi.fn();
-    disconnectMock = vi.fn();
-    global.IntersectionObserver = vi.fn(function (
-      this: IntersectionObserver,
-      _callback: IntersectionObserverCallback
-    ) {
-      return {
-        observe: observeMock,
-        unobserve: vi.fn(),
-        disconnect: disconnectMock,
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        takeRecords: () => [],
-      };
-    }) as unknown as typeof IntersectionObserver;
-
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    viewport = stubIntersectionObserver();
+    // Desktop: the long-text threshold is 80 characters rather than 40.
+    matchMedia = stubMatchMedia();
   });
 
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_CIPHER_TRANSITION;
+    viewport.restore();
+    matchMedia.restore();
   });
 
   describe('rendering', () => {
@@ -253,8 +239,8 @@ describe('CipherText', () => {
 
       render(<CipherText>Hello</CipherText>);
 
-      expect(global.IntersectionObserver).toHaveBeenCalled();
-      expect(observeMock).toHaveBeenCalled();
+      expect(viewport.ctor).toHaveBeenCalled();
+      expect(viewport.observe).toHaveBeenCalled();
     });
 
     it('should disconnect IntersectionObserver on unmount', () => {
@@ -263,7 +249,7 @@ describe('CipherText', () => {
       const { unmount } = render(<CipherText>Hello</CipherText>);
       unmount();
 
-      expect(disconnectMock).toHaveBeenCalled();
+      expect(viewport.disconnect).toHaveBeenCalled();
     });
   });
 
@@ -336,6 +322,26 @@ describe('CipherText', () => {
       render(<CipherText>{longText}</CipherText>);
 
       expect(screen.getByText(longText)).toBeInTheDocument();
+    });
+
+    it('should render one slot for a long word with nowhere to break', () => {
+      // 100 characters and no whitespace: segmentWords produces a single
+      // segment, so one ghost and one overlay have to cover the whole string.
+      // The multi-word case above passes whether or not that boundary is right.
+      const longWord = 'A'.repeat(100);
+      mockResult.displayChars = Array.from(longWord);
+      mockResult.isAnimating = true;
+
+      const { container } = render(<CipherText>{longWord}</CipherText>);
+
+      const slots = container.querySelectorAll('.cipher-word-slot');
+      expect(slots).toHaveLength(1);
+      expect(slots[0].querySelector('.cipher-char-layout')).toHaveTextContent(longWord);
+
+      const overlay = slots[0].querySelector('.cipher-word');
+      expect(overlay).toHaveAttribute('data-start', '0');
+      expect(overlay).toHaveAttribute('data-end', String(longWord.length));
+      expect(container.querySelectorAll('.cipher-char-slot')).toHaveLength(0);
     });
 
     it('should still create per-char spans for short text during animation', () => {
@@ -436,9 +442,7 @@ describe('CipherText', () => {
     });
   });
   describe('block-mode height ease', () => {
-    let resizeCallbacks: ResizeObserverCallback[];
-    let intersectionCallbacks: IntersectionObserverCallback[];
-    let originalResizeObserver: typeof ResizeObserver | undefined;
+    let resize: ResizeObserverStub;
 
     /**
      * jsdom reports a zero rect for everything, so the wrapper's height is
@@ -453,20 +457,11 @@ describe('CipherText', () => {
     }
 
     function reportSettledHeight(height: number) {
-      const entry = {
-        borderBoxSize: [{ blockSize: height, inlineSize: 0 }],
-        contentRect: { height },
-      } as unknown as ResizeObserverEntry;
-      resizeCallbacks.forEach((callback) => callback([entry], {} as ResizeObserver));
+      resize.emit(height);
     }
 
     function reportVisibility(isIntersecting: boolean) {
-      intersectionCallbacks.forEach((callback) =>
-        callback(
-          [{ isIntersecting } as IntersectionObserverEntry],
-          {} as unknown as IntersectionObserver
-        )
-      );
+      viewport.emit(isIntersecting);
     }
 
     function blockWrapper(container: HTMLElement) {
@@ -477,33 +472,7 @@ describe('CipherText', () => {
 
     beforeEach(() => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
-      resizeCallbacks = [];
-      intersectionCallbacks = [];
-
-      originalResizeObserver = global.ResizeObserver;
-      global.ResizeObserver = vi.fn(function (
-        this: ResizeObserver,
-        callback: ResizeObserverCallback
-      ) {
-        resizeCallbacks.push(callback);
-        return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
-      }) as unknown as typeof ResizeObserver;
-
-      global.IntersectionObserver = vi.fn(function (
-        this: IntersectionObserver,
-        callback: IntersectionObserverCallback
-      ) {
-        intersectionCallbacks.push(callback);
-        return {
-          observe: observeMock,
-          unobserve: vi.fn(),
-          disconnect: disconnectMock,
-          root: null,
-          rootMargin: '',
-          thresholds: [],
-          takeRecords: () => [],
-        };
-      }) as unknown as typeof IntersectionObserver;
+      resize = stubResizeObserver();
 
       // jsdom has a CSS namespace but no CSS.supports, and the ease refuses to
       // run without `overflow-y: clip` support.
@@ -512,7 +481,7 @@ describe('CipherText', () => {
 
     afterEach(() => {
       delete (globalThis.CSS as unknown as { supports?: () => boolean }).supports;
-      global.ResizeObserver = originalResizeObserver as typeof ResizeObserver;
+      resize.restore();
     });
 
     it('should ease the block wrapper when the text changes', () => {
@@ -564,7 +533,7 @@ describe('CipherText', () => {
 
       rerender(<CipherText>Beta</CipherText>);
 
-      expect(global.ResizeObserver).not.toHaveBeenCalled();
+      expect(resize.ctor).not.toHaveBeenCalled();
     });
   });
 });

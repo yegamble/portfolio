@@ -1,14 +1,20 @@
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useBlockHeightEase } from '@/hooks/useBlockHeightEase';
+import {
+  REDUCED_MOTION_QUERY,
+  stubMatchMedia,
+  stubResizeObserver,
+  type MatchMediaStub,
+  type ResizeObserverStub,
+} from '../helpers/observers';
 
 describe('useBlockHeightEase', () => {
   let element: HTMLElement;
   let elementRef: { current: HTMLElement | null };
   let isVisibleRef: { current: boolean };
-  let resizeCallbacks: ResizeObserverCallback[];
-  let disconnectMock: ReturnType<typeof vi.fn>;
-  let originalResizeObserver: typeof ResizeObserver | undefined;
+  let resize: ResizeObserverStub;
+  let matchMedia: MatchMediaStub;
 
   /**
    * jsdom reports a zero rect for everything, so the box's height is scripted.
@@ -34,7 +40,7 @@ describe('useBlockHeightEase', () => {
       borderBoxSize: borderBox ? [{ blockSize: height, inlineSize: 0 }] : undefined,
       contentRect: { height },
     } as unknown as ResizeObserverEntry;
-    resizeCallbacks.forEach((callback) => callback([entry], {} as ResizeObserver));
+    resize.callbacks.forEach((callback) => callback([entry], {} as ResizeObserver));
   }
 
   function endHeightTransition() {
@@ -54,37 +60,19 @@ describe('useBlockHeightEase', () => {
     document.body.append(element);
     elementRef = { current: element };
     isVisibleRef = { current: true };
-    resizeCallbacks = [];
-    disconnectMock = vi.fn();
-
-    originalResizeObserver = global.ResizeObserver;
-    global.ResizeObserver = vi.fn(function (
-      this: ResizeObserver,
-      callback: ResizeObserverCallback
-    ) {
-      resizeCallbacks.push(callback);
-      return { observe: vi.fn(), unobserve: vi.fn(), disconnect: disconnectMock };
-    }) as unknown as typeof ResizeObserver;
+    resize = stubResizeObserver();
 
     // jsdom has a CSS namespace but no CSS.supports, and the ease refuses to run
     // without `overflow-y: clip` support.
     (globalThis.CSS as unknown as { supports?: () => boolean }).supports = () => true;
 
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    matchMedia = stubMatchMedia();
   });
 
   afterEach(() => {
     delete (globalThis.CSS as unknown as { supports?: () => boolean }).supports;
-    global.ResizeObserver = originalResizeObserver as typeof ResizeObserver;
+    resize.restore();
+    matchMedia.restore();
     document.body.innerHTML = '';
   });
 
@@ -189,7 +177,7 @@ describe('useBlockHeightEase', () => {
       borderBoxSize: [{ blockSize: 240, inlineSize: 0 }],
       contentRect: { height: 200 },
     } as unknown as ResizeObserverEntry;
-    resizeCallbacks.forEach((callback) => callback([entry], {} as ResizeObserver));
+    resize.callbacks.forEach((callback) => callback([entry], {} as ResizeObserver));
 
     const inlineHeightAtRead = stubHeights(180);
     rerender({ text: 'Beta' });
@@ -241,16 +229,8 @@ describe('useBlockHeightEase', () => {
   });
 
   it('should skip the ease when the reader prefers reduced motion', () => {
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: query === '(prefers-reduced-motion: reduce)',
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    // The afterEach above restores the real (absent) global either way.
+    stubMatchMedia((query) => query === REDUCED_MOTION_QUERY);
 
     const { rerender } = renderEase();
 
@@ -302,7 +282,7 @@ describe('useBlockHeightEase', () => {
 
     unmount();
 
-    expect(disconnectMock).toHaveBeenCalled();
+    expect(resize.disconnect).toHaveBeenCalled();
     expect(element.style.height).toBe('');
     expect(element.style.transition).toBe('');
   });

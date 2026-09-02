@@ -44,40 +44,25 @@ vi.mock('@/data/projects', () => ({
 }));
 
 // Every scroll-behaviour decision reads this query, so the specs drive it
-// directly rather than through a global jsdom stub.
+// directly rather than leaving it to whatever jsdom answers.
 function mockReducedMotion(matches: boolean) {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: query === '(prefers-reduced-motion: reduce)' ? matches : false,
-    media: query,
-    onchange: null,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+  return stubMatchMedia((query) => query === REDUCED_MOTION_QUERY && matches);
 }
 
-// IntersectionObserver mock
+// The carousel tracks the visible card with an IntersectionObserver, which
+// jsdom does not implement; nothing here delivers an entry, so the default
+// (first card active) is what the dots are asserted against.
 beforeEach(() => {
-  window.IntersectionObserver = vi.fn(function (
-    this: IntersectionObserver,
-    _callback: IntersectionObserverCallback
-  ) {
-    return {
-      observe: vi.fn(),
-      disconnect: vi.fn(),
-      unobserve: vi.fn(),
-      root: null,
-      rootMargin: '',
-      thresholds: [],
-      takeRecords: () => [],
-    };
-  }) as unknown as typeof IntersectionObserver;
+  stubIntersectionObserver();
 });
 
 import i18n from '@/lib/i18n';
 import Projects from '@/components/Projects';
+import {
+  REDUCED_MOTION_QUERY,
+  stubIntersectionObserver,
+  stubMatchMedia,
+} from '../helpers/observers';
 
 // Snapshot the fixture bundle BEFORE any test mutates it: `afterEach` used to
 // read the bundle it was restoring, so it wrote the mutated one back.
@@ -186,11 +171,12 @@ describe('Projects', () => {
   describe('Carousel dots', () => {
     const dot = (name: RegExp) => screen.getByRole('button', { name });
 
-    const originalMatchMedia = window.matchMedia;
     const originalScrollIntoView = Element.prototype.scrollIntoView;
+    let matchMedia: ReturnType<typeof mockReducedMotion> | undefined;
 
     afterEach(() => {
-      window.matchMedia = originalMatchMedia;
+      matchMedia?.restore();
+      matchMedia = undefined;
       Element.prototype.scrollIntoView = originalScrollIntoView;
     });
 
@@ -229,7 +215,7 @@ describe('Projects', () => {
       const user = userEvent.setup();
       const scrollIntoView = vi.fn();
       Element.prototype.scrollIntoView = scrollIntoView;
-      mockReducedMotion(false);
+      matchMedia = mockReducedMotion(false);
 
       render(<Projects />);
       await user.click(dot(/project gamma/i));
@@ -245,7 +231,7 @@ describe('Projects', () => {
       const user = userEvent.setup();
       const scrollIntoView = vi.fn();
       Element.prototype.scrollIntoView = scrollIntoView;
-      mockReducedMotion(true);
+      matchMedia = mockReducedMotion(true);
 
       render(<Projects />);
       await user.click(dot(/project gamma/i));

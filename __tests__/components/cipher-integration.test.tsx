@@ -5,27 +5,19 @@ import ScrollHeader from '@/components/ScrollHeader';
 import About from '@/components/About';
 import Experience from '@/components/Experience';
 
+import {
+  stubIntersectionObserver,
+  stubMatchMedia,
+  type MatchMediaStub,
+} from '../helpers/observers';
+
 import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
 
-vi.mock('@/data/experience', () => ({
-  experienceEntries: [
-    {
-      id: 'edge-corp',
-      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
-      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
-    },
-    {
-      id: 'cafe-societe',
-      companyUrl: 'https://cafe-societe.example.com/',
-      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
-    },
-    {
-      id: 'open-src',
-      companyUrl: '#',
-      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
-    },
-  ],
+// Async factory: a vi.mock factory is hoisted above the imports, so it has to
+// pull the fixture in itself rather than close over a top-level binding.
+vi.mock('@/data/experience', async () => ({
+  experienceEntries: (await import('../fixtures/test-data')).testExperienceEntries,
 }));
 
 beforeEach(async () => {
@@ -33,20 +25,7 @@ beforeEach(async () => {
   document.documentElement.lang = 'en';
   document.documentElement.dir = 'ltr';
 
-  window.IntersectionObserver = vi.fn(function (
-    this: IntersectionObserver,
-    _callback: IntersectionObserverCallback
-  ) {
-    return {
-      observe: vi.fn(),
-      disconnect: vi.fn(),
-      unobserve: vi.fn(),
-      root: null,
-      rootMargin: '',
-      thresholds: [],
-      takeRecords: () => [],
-    };
-  }) as unknown as typeof IntersectionObserver;
+  stubIntersectionObserver();
 });
 
 describe('Cipher Integration - DOM structure consistency across languages', () => {
@@ -132,8 +111,13 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
  * every render), a matchMedia to answer the reduced-motion and mobile-profile
  * queries, and a frame clock, since the shared scheduler in
  * src/hooks/useCipherTransition.ts advances only when requestAnimationFrame
- * fires. Same pattern as __tests__/hooks/useCipherTransition.test.ts, one level
- * up: whole sections rather than a single hook.
+ * fires.
+ *
+ * The frame clock is where this differs from
+ * __tests__/hooks/useCipherTransition.test.ts: that suite's stub counts calls
+ * and throws the callbacks away, which is enough to assert that a frame was
+ * requested but never runs one. Here the callbacks are queued and replayed on a
+ * scripted clock, so the animation actually advances and finishes.
  */
 describe('Cipher Integration - the animated language switch', () => {
   const FRAME_MS = 16;
@@ -141,9 +125,21 @@ describe('Cipher Integration - the animated language switch', () => {
 
   const originalRequestAnimationFrame = global.requestAnimationFrame;
   const originalCancelAnimationFrame = global.cancelAnimationFrame;
-  const originalMatchMedia = window.matchMedia;
 
   let frames: FrameRequestCallback[] = [];
+  let matchMedia: MatchMediaStub;
+  let randomState = 0;
+
+  // A seeded generator rather than a pinned constant. Math.random() === 0.42 on
+  // every call gives every character the same cipher glyph and every character
+  // the same reveal jitter, which hides anything that only goes wrong when the
+  // glyphs differ — a slot sized to the wrong one, a resolve check comparing
+  // the wrong pair. This is just as reproducible and actually varies.
+  // (Numerical Recipes' LCG, mod 2^32.)
+  function seededRandom(): number {
+    randomState = (randomState * 1664525 + 1013904223) >>> 0;
+    return randomState / 0x1_0000_0000;
+  }
 
   beforeEach(() => {
     process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
@@ -153,20 +149,12 @@ describe('Cipher Integration - the animated language switch', () => {
       frames.push(callback)) as unknown as typeof requestAnimationFrame;
     global.cancelAnimationFrame = vi.fn() as unknown as typeof cancelAnimationFrame;
 
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })) as unknown as typeof window.matchMedia;
+    // Desktop, full motion: the hook refuses to animate under
+    // prefers-reduced-motion and picks a shorter profile on a coarse pointer.
+    matchMedia = stubMatchMedia();
 
-    // Pinned so the glyph each frame lands on, and the per-character jitter
-    // around the reveal wave, are the same on every run.
-    vi.spyOn(Math, 'random').mockReturnValue(0.42);
+    randomState = 0x5eed;
+    vi.spyOn(Math, 'random').mockImplementation(seededRandom);
   });
 
   afterEach(async () => {
@@ -180,7 +168,7 @@ describe('Cipher Integration - the animated language switch', () => {
     delete process.env.NEXT_PUBLIC_CIPHER_TRANSITION;
     global.requestAnimationFrame = originalRequestAnimationFrame;
     global.cancelAnimationFrame = originalCancelAnimationFrame;
-    window.matchMedia = originalMatchMedia;
+    matchMedia.restore();
     vi.restoreAllMocks();
   });
 
@@ -222,8 +210,10 @@ describe('Cipher Integration - the animated language switch', () => {
     const mid = runFrames(0, 2 * FRAME_MS);
     expect(scrambleNodeCount()).toBeGreaterThan(0);
 
-    // ...and the finished Hebrew paragraph is already the only text in the
-    // accessibility tree, so the copy is never unreadable to a screen reader.
+    // ...and the finished Hebrew paragraph is already there, while the layer
+    // carrying the glyphs is aria-hidden — so a screen reader reads the
+    // translation rather than a wall of cipher characters. The English
+    // paragraph it replaced is gone in the same commit.
     const section = screen.getByRole('region', {
       name: testHe.about.ariaLabel,
     });
@@ -270,6 +260,12 @@ describe('Cipher Integration - the animated language switch', () => {
     );
   });
 
+  // The browser-side half of this claim is
+  // playwright/layout-stability.spec.ts › "long-text overlays never mount
+  // showing the finished translation", which watches real mutations over a real
+  // animation. Two layers on purpose: that one can only observe what a
+  // MutationObserver happens to catch between paints, while this one inspects
+  // the exact markup React commits on the frame the overlays appear.
   it('should never paint the finished translation before the scramble starts', async () => {
     render(<About />);
 

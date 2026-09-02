@@ -18,6 +18,13 @@ import { expect, test, type Page } from '@playwright/test';
  * missing aria-label) is marked experimental by axe and therefore excluded from
  * a tag-based run like this one; __tests__/components/ScrollHeader.test.tsx
  * asserts that case directly.
+ *
+ * One consequence of asserting zero violations against a tag list rather than a
+ * fixed rule set: a minor @axe-core/playwright bump can add a rule and turn a
+ * page that passed yesterday into a failed deploy. That is the trade this file
+ * makes deliberately — a new rule finding something is a real finding — and the
+ * lockfile is what keeps it from happening unannounced: the version only moves
+ * through a Dependabot PR that has to go green first.
  */
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -31,9 +38,10 @@ const VIEWPORTS = [
 
 async function waitForPageReady(page: Page, path: string) {
   await page.goto(path);
-  await page.waitForLoadState('networkidle');
-  // A face still swapping can change a text box's size, and contrast is
-  // sampled from what is painted.
+  // No networkidle wait: document.fonts.ready already covers the requests that
+  // can change what axe measures (a face still swapping changes a text box's
+  // size, and contrast is sampled from what is painted), and networkidle on top
+  // of it only adds half a second of quiet-period per page.
   await page.evaluate(async () => {
     if ('fonts' in document) await document.fonts.ready;
   });

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
+import { REDUCED_MOTION_QUERY, stubMatchMedia } from '../helpers/observers';
 
 describe('useCipherTransition', () => {
   beforeEach(() => {
@@ -10,16 +11,9 @@ describe('useCipherTransition', () => {
       return rafId;
     }) as unknown as typeof requestAnimationFrame;
     global.cancelAnimationFrame = vi.fn();
-    global.matchMedia = vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    // Desktop, full motion. vi.restoreAllMocks() in the afterEach below puts
+    // the original global back.
+    stubMatchMedia();
   });
 
   afterEach(() => {
@@ -103,16 +97,7 @@ describe('useCipherTransition', () => {
 
   describe('prefers-reduced-motion', () => {
     it('should skip animation when user prefers reduced motion (disabled mode)', () => {
-      global.matchMedia = vi.fn().mockImplementation((query) => ({
-        matches: query === '(prefers-reduced-motion: reduce)',
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }));
+      stubMatchMedia((query) => query === REDUCED_MOTION_QUERY);
 
       const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
         initialProps: { text: 'Hello' },
@@ -126,16 +111,7 @@ describe('useCipherTransition', () => {
 
     it('should schedule rAF for reduced-motion path when animation is enabled', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
-      global.matchMedia = vi.fn().mockImplementation((query) => ({
-        matches: query === '(prefers-reduced-motion: reduce)',
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }));
+      stubMatchMedia((query) => query === REDUCED_MOTION_QUERY);
 
       const { rerender } = renderHook(({ text }) => useCipherTransition(text), {
         initialProps: { text: 'Hello' },

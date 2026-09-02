@@ -12,6 +12,8 @@ import SkipLink from '@/components/SkipLink';
 
 import { projectEntries } from '@/data/projects';
 
+import { stubIntersectionObserver } from '../helpers/observers';
+
 import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
 import testRu from '../fixtures/translations/ru.json';
@@ -29,62 +31,14 @@ vi.mock('openpgp', () => ({
   ),
 }));
 
-vi.mock('@/data/experience', () => ({
-  experienceEntries: [
-    {
-      id: 'edge-corp',
-      companyUrl: 'https://example.com/edge-corp?q=test&lang=en#section',
-      technologies: ['C++', 'Rust', 'Go', 'PostgreSQL', 'Redis', 'gRPC'],
-    },
-    {
-      id: 'cafe-societe',
-      companyUrl: 'https://cafe-societe.example.com/',
-      technologies: ['TypeScript', 'React', 'Node.js', 'GraphQL', 'Stripe'],
-    },
-    {
-      id: 'open-src',
-      companyUrl: '#',
-      technologies: ['Python', 'Kotlin', 'Swift', 'Unicode', 'CI/CD'],
-    },
-  ],
+// Async factories: a vi.mock factory is hoisted above the imports, so it has to
+// pull the fixture in itself rather than close over a top-level binding.
+vi.mock('@/data/experience', async () => ({
+  experienceEntries: (await import('../fixtures/test-data')).testExperienceEntries,
 }));
 
-vi.mock('@/data/projects', () => ({
-  projectEntries: [
-    {
-      id: 'vidra',
-      repos: [
-        { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
-        { name: 'vidra-user', url: '#' },
-      ],
-      technologies: ['Go', 'ActivityPub', 'Docker'],
-      icon: 'layers',
-    },
-    {
-      id: 'aurialis',
-      repos: [{ name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' }],
-      technologies: ['Next.js', 'TypeScript'],
-      icon: 'layers',
-    },
-    {
-      id: 'goimg',
-      repos: [
-        { name: 'goimg-user', url: '#' },
-        { name: 'goimg-datalayer', url: '#' },
-      ],
-      technologies: ['Go', 'PostgreSQL'],
-      icon: 'folder',
-    },
-    {
-      id: 'iota-token-creator',
-      repos: [
-        { name: 'iota-token-creator-web', url: '#' },
-        { name: 'iota-token-creator-api', url: '#' },
-      ],
-      technologies: ['Next.js', 'Go'],
-      icon: 'folder',
-    },
-  ],
+vi.mock('@/data/projects', async () => ({
+  projectEntries: (await import('../fixtures/test-data')).testProjectEntries,
 }));
 
 beforeEach(async () => {
@@ -92,20 +46,7 @@ beforeEach(async () => {
   document.documentElement.lang = 'en';
   document.documentElement.dir = 'ltr';
 
-  window.IntersectionObserver = vi.fn(function (
-    this: IntersectionObserver,
-    _callback: IntersectionObserverCallback
-  ) {
-    return {
-      observe: vi.fn(),
-      disconnect: vi.fn(),
-      unobserve: vi.fn(),
-      root: null,
-      rootMargin: '',
-      thresholds: [],
-      takeRecords: () => [],
-    };
-  }) as unknown as typeof IntersectionObserver;
+  stubIntersectionObserver();
 });
 
 describe('i18n Integration - English Mode', () => {

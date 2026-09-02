@@ -9,8 +9,10 @@ import { projectEntries } from '../../src/data/projects';
 // length — are asserted against the translation files themselves in
 // __tests__/locales/translation-content.test.ts. The rest is prose, and prose
 // is not pinned anywhere on purpose.
-const nonEmptyText = ($el: JQuery<HTMLElement>) => {
-  expect($el.text().trim(), $el.prop('tagName')).to.not.be.empty;
+const nonEmptyText = ($el: JQuery<HTMLElement>, index: number) => {
+  // The index matters: "one of the three nav links is empty" is not a report
+  // anybody can act on.
+  expect($el.text().trim(), `${$el.prop('tagName')} #${index}`).to.not.be.empty;
 };
 
 describe('Portfolio Site', () => {
