@@ -318,3 +318,44 @@ describe('Hebrew locale', () => {
     cy.get('section').first().should('not.contain.text', 'Tel Aviv');
   });
 });
+
+describe('Locale routing and 404s', () => {
+  it('should answer an unknown path under /en with an English 404 that has a title', () => {
+    cy.request({ url: '/en/does-not-exist', failOnStatusCode: false })
+      .its('status')
+      .should('eq', 404);
+
+    cy.visit('/en/does-not-exist', { failOnStatusCode: false });
+    cy.get('html').should('have.attr', 'lang', 'en').and('have.attr', 'dir', 'ltr');
+    cy.title().should('contain', 'Page Not Found');
+    cy.contains('404').should('be.visible');
+  });
+
+  it('should answer an unknown path under /he with a right-to-left Hebrew 404', () => {
+    cy.visit('/he/does-not-exist', { failOnStatusCode: false });
+    cy.get('html').should('have.attr', 'lang', 'he').and('have.attr', 'dir', 'rtl');
+    cy.title().should('not.be.empty');
+  });
+
+  it('should redirect a locale-less path to the language the browser asks for', () => {
+    cy.clearCookies();
+    cy.request({
+      url: '/',
+      headers: { 'Accept-Language': 'he-IL,he;q=0.9,en;q=0.5' },
+      followRedirect: false,
+    }).then((response) => {
+      expect(response.status).to.eq(307);
+      expect(response.headers.location).to.eq('/he');
+      expect(response.headers.vary).to.contain('Accept-Language');
+    });
+  });
+
+  it('should not set a cookie on a localized HTML response', () => {
+    // The cookie records a choice, and a locale in a URL is not one — an /en
+    // link must not overwrite a stored `he`, and Set-Cookie would also stop a
+    // CDN caching the prerendered page.
+    cy.request('/en').then((response) => {
+      expect(response.headers).to.not.have.property('set-cookie');
+    });
+  });
+});

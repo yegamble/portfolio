@@ -105,6 +105,7 @@ Note: `src/proxy.ts` redirects `/` to the locale route (`/en` by default, or wha
 - Scroll header behavior (IntersectionObserver)
 - Responsive layout across mobile (375), tablet (768), desktop (1280) viewports
 - Social links, footer attribution
+- Locale routing and 404s (via `cy.request`, so status codes and headers are asserted directly): the `Accept-Language` redirect, the absence of `Set-Cookie` on `/en`, and the localized `global-not-found` document for `/en/does-not-exist` and `/he/does-not-exist`
 
 ### Best Practices — E2E
 
