@@ -1,5 +1,6 @@
 'use client';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('@/data/projects', () => ({
@@ -42,6 +43,21 @@ vi.mock('@/data/projects', () => ({
     },
   ],
 }));
+
+// Every scroll-behaviour decision reads this query, so the specs drive it
+// directly rather than through a global jsdom stub.
+function mockReducedMotion(matches: boolean) {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: query === '(prefers-reduced-motion: reduce)' ? matches : false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as unknown as typeof window.matchMedia;
+}
 
 // IntersectionObserver mock
 beforeEach(() => {
@@ -198,8 +214,91 @@ describe('Projects', () => {
 
     it('should render dot indicators for carousel', () => {
       render(<Projects />);
-      const dots = screen.getAllByRole('button', { name: /projects \d+/i });
+      const dots = within(screen.getByRole('group', { name: /selected projects/i })).getAllByRole(
+        'button'
+      );
       expect(dots).toHaveLength(4);
+    });
+  });
+
+  describe('Carousel dots', () => {
+    const dot = (name: RegExp) => screen.getByRole('button', { name });
+
+    const originalMatchMedia = window.matchMedia;
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+
+    afterEach(() => {
+      window.matchMedia = originalMatchMedia;
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    });
+
+    it('should name each dot after the card it scrolls to', () => {
+      render(<Projects />);
+      expect(dot(/project alpha/i)).toBeInTheDocument();
+      expect(dot(/project beta/i)).toBeInTheDocument();
+      expect(dot(/project gamma/i)).toBeInTheDocument();
+      expect(dot(/project delta/i)).toBeInTheDocument();
+    });
+
+    it('should group the dots under the section name', () => {
+      render(<Projects />);
+      const group = screen.getByRole('group', { name: /selected projects/i });
+      expect(within(group).getAllByRole('button')).toHaveLength(4);
+    });
+
+    it('should give each dot a 24px target around the 8px dot', () => {
+      render(<Projects />);
+      const button = dot(/project alpha/i);
+      expect(button).toHaveClass('h-6', 'w-6', 'flex', 'items-center', 'justify-center');
+
+      const inner = button.querySelector('span');
+      expect(inner).toHaveClass('h-2', 'w-2');
+      expect(inner).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('should mark the visible card with aria-current', () => {
+      render(<Projects />);
+      expect(dot(/project alpha/i)).toHaveAttribute('aria-current', 'true');
+      expect(dot(/project beta/i)).not.toHaveAttribute('aria-current');
+    });
+
+    it('should hold inactive dots at a contrast-passing slate', () => {
+      render(<Projects />);
+      // bg-slate-500 clears 3:1 against the page background; bg-slate-600 did not.
+      expect(dot(/project beta/i).querySelector('span')).toHaveClass('bg-slate-500');
+      expect(dot(/project alpha/i).querySelector('span')).toHaveClass('bg-primary');
+    });
+
+    it('should scroll the chosen card into view smoothly by default', async () => {
+      const user = userEvent.setup();
+      const scrollIntoView = vi.fn();
+      Element.prototype.scrollIntoView = scrollIntoView;
+      mockReducedMotion(false);
+
+      render(<Projects />);
+      await user.click(dot(/project gamma/i));
+
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    });
+
+    it('should jump instead of animating when the reader asks for reduced motion', async () => {
+      const user = userEvent.setup();
+      const scrollIntoView = vi.fn();
+      Element.prototype.scrollIntoView = scrollIntoView;
+      mockReducedMotion(true);
+
+      render(<Projects />);
+      await user.click(dot(/project gamma/i));
+
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'auto',
+        block: 'nearest',
+        inline: 'center',
+      });
     });
   });
 
