@@ -10,11 +10,10 @@ import {
   getLocaleMessages,
   isAppLocale,
   LOCALES,
+  SITE_URL,
   type AppLocale,
 } from '@/lib/i18n';
 import '../globals.css';
-
-const SITE_URL = 'https://yosefgamble.com';
 
 // This is the application's root layout: it owns <html>/<body>. Everything the
 // document needs comes from the `locale` route param, so the four locale routes

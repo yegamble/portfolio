@@ -1,8 +1,7 @@
-import { getLocaleHref, LOCALES, type AppLocale } from '@/lib/i18n';
+import { getLocaleHref, LOCALES, SITE_URL, type AppLocale } from '@/lib/i18n';
 
 const SCHEMA_ORG = 'https://schema.org';
 const PERSON_NAME = 'Yosef Gamble';
-const PERSON_URL = 'https://yosefgamble.com';
 const JSON_LD_TYPE = 'application/ld+json';
 const CITY_TYPE = 'City';
 const COLLEGE_OR_UNIVERSITY_TYPE = 'CollegeOrUniversity';
@@ -19,13 +18,13 @@ function buildPersonSchema(locale: AppLocale) {
     [TYPE_KEY]: 'Person',
     name: PERSON_NAME,
     jobTitle: 'Senior Software Engineer',
-    url: PERSON_URL,
+    url: SITE_URL,
     // The portrait, not the 1200x630 Open Graph banner: `image` on a Person is
     // read as a photo of the person, and a wide banner crops badly wherever it
     // is surfaced.
-    image: `${PERSON_URL}/images/profile.jpg`,
+    image: `${SITE_URL}/images/profile.jpg`,
     // The localized route is the page that actually describes this person.
-    mainEntityOfPage: `${PERSON_URL}${getLocaleHref(locale)}`,
+    mainEntityOfPage: `${SITE_URL}${getLocaleHref(locale)}`,
     sameAs: ['https://github.com/yegamble', 'https://linkedin.com/in/yosefgamble'],
     knowsAbout: [
       'Go',
@@ -56,7 +55,7 @@ const websiteSchema = {
   [CONTEXT_KEY]: SCHEMA_ORG,
   [TYPE_KEY]: 'WebSite',
   name: PERSON_NAME,
-  url: PERSON_URL,
+  url: SITE_URL,
   // Every locale is a first-class route with its own hreflang alternate, so the
   // site itself is available in all four languages.
   inLanguage: [...LOCALES],

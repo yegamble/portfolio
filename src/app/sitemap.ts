@@ -1,7 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { DEFAULT_LOCALE, LOCALES, getLocaleHref } from '@/lib/i18n';
-
-const SITE_URL = 'https://yosefgamble.com';
+import { DEFAULT_LOCALE, LOCALES, SITE_URL, getLocaleHref } from '@/lib/i18n';
 
 // A build-time constant, not `new Date()`: request time made every crawl report
 // the page as modified seconds ago, which tells a crawler nothing and trains it

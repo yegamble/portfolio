@@ -4,6 +4,14 @@
 // scope) keeps ~120 KB of unused translation payload out of the edge bundle. `src/lib/i18n.ts` re-exports everything here, so `@/lib/i18n`
 // imports keep working.
 
+/**
+ * Canonical origin. Every absolute URL the site emits — canonical links,
+ * hreflang alternates, Open Graph, JSON-LD, robots and the sitemap — is built
+ * from this, so there is one place to change if the domain ever moves. No
+ * trailing slash: callers concatenate paths that start with one.
+ */
+export const SITE_URL = 'https://yosefgamble.com';
+
 export const LOCALES = ['en', 'he', 'ru', 'et'] as const;
 export type AppLocale = (typeof LOCALES)[number];
 

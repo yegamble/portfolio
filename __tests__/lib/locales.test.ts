@@ -11,12 +11,20 @@ import {
   LOCALES,
   negotiateLocale,
   readCookieLocale,
+  SITE_URL,
 } from '@/lib/locales';
 
 describe('locale constants', () => {
   it('lists every supported locale with English as the default', () => {
     expect(LOCALES).toEqual(['en', 'he', 'ru', 'et']);
     expect(DEFAULT_LOCALE).toBe('en');
+  });
+
+  // Every absolute URL the site emits concatenates a path onto this, so a
+  // trailing slash would produce `https://yosefgamble.com//en`.
+  it('exposes the canonical origin without a trailing slash', () => {
+    expect(SITE_URL).toBe('https://yosefgamble.com');
+    expect(SITE_URL.endsWith('/')).toBe(false);
   });
 
   it('names the locale cookie and gives it a one-year lifetime', () => {
