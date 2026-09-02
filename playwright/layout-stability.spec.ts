@@ -416,6 +416,147 @@ test.describe('language toggle layout stability', () => {
   });
 });
 
+/**
+ * Sample one element's height across a language switch, every animation frame,
+ * starting from the click itself. The click is issued from page script for the
+ * same reason switchLanguageInPage does it: locator.click() scrolls its target
+ * into view, and the trigger lives in a sticky header.
+ */
+async function sampleHeightThroughSwitch(
+  page: Page,
+  selector: string,
+  locale: string,
+  durationMs: number
+) {
+  await page.evaluate(() => {
+    document.querySelector<HTMLButtonElement>('header button[aria-expanded]')?.click();
+  });
+  await page.locator(`header a[hreflang="${locale}"]`).waitFor({ state: 'attached' });
+
+  return page.evaluate(
+    async ({ selector: target, code, durationMs: duration }) => {
+      const element = document.querySelector(target);
+      if (!(element instanceof HTMLElement)) throw new Error(`Missing target: ${target}`);
+
+      const readings: { elapsed: number; height: number }[] = [];
+      const startedAt = performance.now();
+      let running = true;
+      const sample = () => {
+        readings.push({
+          elapsed: performance.now() - startedAt,
+          height: element.getBoundingClientRect().height,
+        });
+        if (running) requestAnimationFrame(sample);
+      };
+
+      document.querySelector<HTMLAnchorElement>(`header a[hreflang="${code}"]`)?.click();
+      sample();
+      await new Promise((resolve) => window.setTimeout(resolve, duration));
+      running = false;
+      return readings;
+    },
+    { selector, code: locale, durationMs }
+  );
+}
+
+/**
+ * A block-mode CipherText wrapper eases its height (see src/lib/height-ease.ts),
+ * so the step from one language's line count to another's is spread over ~300ms
+ * of intermediate heights instead of landing in a single frame. The assertions
+ * are the three things that separate an ease from a snap: intermediate values
+ * exist, they only ever move towards the target, and they get there promptly.
+ *
+ * The ease begins at the height the reader was looking at when the new text was
+ * committed, which is the sample furthest from where the height settles — not
+ * necessarily the first one. Switching to Hebrew reflows twice: the selector
+ * flips documentElement.lang synchronously, which re-wraps the still-English
+ * text in Heebo's metrics (180 -> 240 here), and only then does the translation
+ * commit and the ease carry that height down to the Hebrew one.
+ */
+function expectEasedHeightChange(
+  readings: { elapsed: number; height: number }[],
+  expected: { from: number; to: number }
+) {
+  const endHeight = readings[readings.length - 1].height;
+
+  let startIndex = 0;
+  readings.forEach((reading, index) => {
+    if (Math.abs(reading.height - endHeight) > Math.abs(readings[startIndex].height - endHeight)) {
+      startIndex = index;
+    }
+  });
+
+  const eased = readings.slice(startIndex);
+  const heights = eased.map((reading) => reading.height);
+  const startHeight = heights[0];
+
+  // Documented so the numbers this guards stay visible; the tolerance absorbs
+  // font-rendering differences between the dev server and a production build.
+  expect(startHeight, 'height the ease starts from').toBeGreaterThan(expected.from - 12);
+  expect(startHeight, 'height the ease starts from').toBeLessThan(expected.from + 12);
+  expect(endHeight, 'settled height').toBeGreaterThan(expected.to - 12);
+  expect(endHeight, 'settled height').toBeLessThan(expected.to + 12);
+
+  const low = Math.min(startHeight, endHeight);
+  const high = Math.max(startHeight, endHeight);
+  const intermediates = new Set(
+    heights.filter((height) => height > low + 0.5 && height < high - 0.5).map((h) => h.toFixed(2))
+  );
+  expect(
+    intermediates.size,
+    `expected the height to pass through intermediate values, saw ${heights.join(', ')}`
+  ).toBeGreaterThanOrEqual(3);
+
+  const direction = Math.sign(endHeight - startHeight);
+  for (let index = 1; index < heights.length; index++) {
+    const delta = heights[index] - heights[index - 1];
+    if (Math.abs(delta) <= 0.5) continue;
+    expect(
+      Math.sign(delta),
+      `height reversed at ${Math.round(eased[index].elapsed)}ms (${heights.join(', ')})`
+    ).toBe(direction);
+  }
+
+  const lastUnsettled = eased.reduce(
+    (latest, reading) => (Math.abs(reading.height - endHeight) > 1 ? reading.elapsed : latest),
+    eased[0].elapsed
+  );
+  expect(
+    Math.round(lastUnsettled - eased[0].elapsed),
+    'time to settle on the final height'
+  ).toBeLessThanOrEqual(600);
+}
+
+test.describe('block height eases across a language switch', () => {
+  test('the desktop hero tagline slides from the English height to the Hebrew one', async ({
+    page,
+  }) => {
+    test.slow();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await waitForPortfolioReady(page);
+
+    const readings = await sampleHeightThroughSwitch(page, LAYOUT_TARGETS.heroTagline, 'he', 900);
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'he');
+
+    expectEasedHeightChange(readings, { from: 240, to: 180 });
+  });
+
+  test('the mobile hero tagline slides from the English height to the Estonian one', async ({
+    page,
+  }) => {
+    test.slow();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await waitForPortfolioReady(page);
+
+    const readings = await sampleHeightThroughSwitch(page, LAYOUT_TARGETS.heroTagline, 'et', 900);
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'et');
+
+    expectEasedHeightChange(readings, { from: 270, to: 225 });
+  });
+});
+
 test.describe('mobile viewport stability', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
