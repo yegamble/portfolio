@@ -1,4 +1,4 @@
-// Locale primitives with zero imports. `middleware.ts` runs in the edge bundle
+// Locale primitives with zero imports. `src/middleware.ts` runs in the edge bundle
 // and only needs these helpers; keeping them out of `src/lib/i18n.ts` (which
 // pulls in i18next, react-i18next and all four translation JSONs at module
 // scope) keeps ~120 KB of unused translation payload out of the middleware

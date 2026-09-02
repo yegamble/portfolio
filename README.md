@@ -61,7 +61,8 @@ src/
   components/       UI building blocks and interactive client components
   data/             Structured experience and project data
   hooks/            Custom animation and layout hooks
-  lib/              i18n, cipher character sets, shared helpers
+  lib/              locale primitives, i18n, cipher character sets, helpers
+  middleware.ts     Locale redirect and cookie (must live under src/)
 
 public/locales/     Translation files for en / he / ru / et
 __tests__/          Unit and integration coverage
