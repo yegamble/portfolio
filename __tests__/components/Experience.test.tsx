@@ -109,7 +109,7 @@ describe('Experience', () => {
     it('should render links only for entries with valid company URLs', () => {
       render(<Experience />);
       const edgeLink = screen.getByRole('link', {
-        name: /principal engineer.*at edge corp/i,
+        name: /principal engineer & architect · edge corp/i,
       });
       expect(edgeLink).toHaveAttribute(
         'href',
@@ -117,13 +117,13 @@ describe('Experience', () => {
       );
 
       const cafeLink = screen.getByRole('link', {
-        name: /full-stack developer at cafe societe/i,
+        name: /full-stack developer · cafe societe/i,
       });
       expect(cafeLink).toHaveAttribute('href', 'https://cafe-societe.example.com/');
 
       expect(
         screen.queryByRole('link', {
-          name: /intern to mid-level engineer at open-source foundation/i,
+          name: /intern to mid-level engineer · open-source foundation/i,
         })
       ).not.toBeInTheDocument();
     });
@@ -131,22 +131,35 @@ describe('Experience', () => {
     it('should open company links in new tabs', () => {
       render(<Experience />);
       const link = screen.getByRole('link', {
-        name: /principal engineer.*at edge corp/i,
+        name: /principal engineer & architect · edge corp/i,
       });
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });
 
-    it('should have descriptive aria-labels on company links', () => {
+    it('should name company links from their visible text, not an aria-label', () => {
       render(<Experience />);
-      expect(
-        screen.getByRole('link', {
-          name: /principal engineer.*at edge corp \(opens in a new tab\)/i,
-        })
-      ).toBeInTheDocument();
+      const link = screen.getByRole('link', {
+        name: /principal engineer & architect · edge corp/i,
+      });
+      // WCAG 2.5.3: a speech-input user says what they can see, so the visible
+      // text has to be the name — and an aria-label here would have carried the
+      // English word "at" into every locale.
+      expect(link).not.toHaveAttribute('aria-label');
+      expect(link.textContent).not.toMatch(/ at /);
+    });
+
+    it('should warn about the new tab in the link text rather than in English', () => {
+      render(<Experience />);
+      const link = screen.getByRole('link', {
+        name: /principal engineer & architect · edge corp \(opens in a new tab\)/i,
+      });
+      const notice = within(link).getByText(/\(opens in a new tab\)/i);
+      expect(notice).toHaveClass('sr-only');
+
       expect(
         screen.queryByRole('link', {
-          name: /intern to mid-level engineer at open-source foundation \(opens in a new tab\)/i,
+          name: /intern to mid-level engineer · open-source foundation/i,
         })
       ).not.toBeInTheDocument();
     });
@@ -237,10 +250,13 @@ describe('Experience', () => {
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
 
-    it('should have descriptive aria-label on resume link', () => {
+    it('should name the resume link from its visible text plus a new-tab notice', () => {
       render(<Experience />);
-      const link = screen.getByRole('link', { name: /view full resume/i });
-      expect(link).toBeInTheDocument();
+      const link = screen.getByRole('link', {
+        name: /view full resume \(opens in a new tab\)/i,
+      });
+      expect(link).not.toHaveAttribute('aria-label');
+      expect(within(link).getByText(/\(opens in a new tab\)/i)).toHaveClass('sr-only');
     });
 
     it('should contain arrow right icon', () => {
@@ -318,17 +334,17 @@ describe('Experience', () => {
         render(<Experience />);
         expect(
           screen.getByRole('link', {
-            name: /principal engineer.*at edge corp/i,
+            name: /principal engineer & architect · edge corp/i,
           })
         ).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
         expect(
           screen.getByRole('link', {
-            name: /full-stack developer at cafe societe/i,
+            name: /full-stack developer · cafe societe/i,
           })
         ).toHaveAttribute('href', 'https://cafe-societe.example.com/');
         expect(
           screen.queryByRole('link', {
-            name: /intern to mid-level engineer at open-source foundation/i,
+            name: /intern to mid-level engineer · open-source foundation/i,
           })
         ).not.toBeInTheDocument();
       } finally {

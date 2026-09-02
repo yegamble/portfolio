@@ -66,17 +66,21 @@ export default function Experience() {
                 <div className="sm:col-span-9">
                   <h3 className="text-lg font-medium leading-snug text-text-primary">
                     {hasExternalCompanyUrl(meta.companyUrl) ? (
+                      // The visible title/company text is the accessible name
+                      // (WCAG 2.5.3): an aria-label here would both replace it
+                      // and bake the English word "at" into every locale, and
+                      // it would rename the <h3> that wraps it too.
                       <a
                         className="group/link inline-flex items-baseline font-medium leading-tight text-text-primary transition-colors hover:text-primary"
                         href={meta.companyUrl}
                         target="_blank"
                         rel="noreferrer noopener"
-                        aria-label={`${job.title} at ${job.company} ${t('experience.opensInNewTab')}`}
                       >
                         <span>
                           <CipherText>{`${job.title} · ${job.company}`}</CipherText>
                         </span>
-                        <ArrowOutwardIcon className="ms-1 inline-block h-4 w-4 shrink-0 translate-y-px transition-transform group-hover/link:-translate-y-1 group-hover/link:translate-x-1 rtl:group-hover/link:-translate-x-1" />
+                        <ArrowOutwardIcon className="ms-1 inline-block h-4 w-4 shrink-0 translate-y-px transition-transform group-hover/link:-translate-y-1 group-hover/link:translate-x-1 rtl:group-hover/link:-translate-x-1" />{' '}
+                        <span className="sr-only">{t('experience.opensInNewTab')}</span>
                       </a>
                     ) : (
                       <span className="inline-flex items-baseline font-medium leading-tight text-text-primary">
@@ -109,12 +113,12 @@ export default function Experience() {
           href="https://www.linkedin.com/in/yosefgamble/"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={t('experience.viewResume')}
         >
           <span className="border-b border-transparent pb-px transition-all group-hover:border-primary">
             <CipherText>{t('experience.viewResume')}</CipherText>
           </span>
-          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />{' '}
+          <span className="sr-only">{t('experience.opensInNewTab')}</span>
         </a>
       </div>
     </section>
