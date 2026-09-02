@@ -5,17 +5,34 @@ const PORT = 3100;
 export default defineConfig({
   testDir: './playwright',
   fullyParallel: true,
-  // The frame-rate and long-task specs are wall-clock measurements taken inside
-  // a browser that shares the machine with the other workers, so a busy run can
-  // starve one of them. A retry separates that contention noise from a real
-  // regression, which fails every attempt — and it makes the trace setting below
-  // (on-first-retry) actually produce something.
-  retries: process.env.CI ? 2 : 1,
   reporter: 'list',
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'on-first-retry',
   },
+  projects: [
+    {
+      // Deliberately no retries. These assert geometry, which is deterministic;
+      // a retry would let a real layout regression that only reproduces
+      // sometimes pass as "flaky".
+      name: 'layout',
+      testMatch: /layout-stability\.spec\.ts/,
+      retries: 0,
+    },
+    {
+      // Frame-rate and long-task numbers are wall-clock measurements taken in a
+      // browser that shares the machine with every other worker. Running them
+      // after the layout project rather than alongside it is what actually makes
+      // them stable (measured: 3/3 clean alone, 3/6 failing both attempts while
+      // the 12 layout tests ran beside them); the retry is then only there for
+      // whatever noise is left, and it gives the trace setting above something
+      // to capture.
+      name: 'perf',
+      testMatch: /cipher-performance\.spec\.ts/,
+      dependencies: ['layout'],
+      retries: process.env.CI ? 2 : 1,
+    },
+  ],
   webServer: {
     command:
       `NEXT_PUBLIC_CIPHER_TRANSITION=true ` +

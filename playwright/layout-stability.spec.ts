@@ -31,8 +31,41 @@ async function waitForPortfolioReady(page: Page, path = '/') {
   await page.goto(path);
   await page.waitForLoadState('networkidle');
   await page.evaluate(async () => {
-    if ('fonts' in document) {
-      await document.fonts.ready;
+    if (!('fonts' in document)) return;
+    await document.fonts.ready;
+
+    // fonts.ready only settles the faces the CURRENT page actually uses. Heebo
+    // is pulled in by `html:lang(he) body` in globals.css, so nothing requests
+    // it until the very switch these specs measure — and a face finishing
+    // mid-sample re-wraps a line and trips the layout envelope. Warm every
+    // Heebo face up front (matched by name rather than by a literal family
+    // string, since next/font may hash the family) and re-await.
+    const pending = Array.from(document.fonts).filter((face) => face.family.includes('Heebo'));
+    await Promise.all(pending.map((face) => face.load().catch(() => undefined)));
+    await document.fonts.ready;
+  });
+}
+
+/**
+ * The brand block grows in over 500ms (`transition-all duration-500`) when the
+ * sticky header flips to its scrolled state, and a visibility check resolves as
+ * soon as it has a box — long before max-width has finished growing. Measuring
+ * then reads a mid-transition clientWidth, which turns the "is the name
+ * truncated?" assertion into a coin flip (observed clientWidth 51 and 113 on
+ * the way to its settled width). Wait for the transition itself to finish.
+ */
+async function waitForHeaderTransition(page: Page) {
+  const brand = page.locator('header [aria-hidden="false"]').first();
+  await brand.waitFor({ state: 'visible' });
+  await page.evaluate(async () => {
+    const element = document.querySelector('header [aria-hidden="false"]');
+    if (!element) return;
+    // The transition object may not exist for a frame after the class flips.
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const running = element.getAnimations({ subtree: true });
+      if (running.length === 0) return;
+      await Promise.all(running.map((animation) => animation.finished.catch(() => undefined)));
     }
   });
 }
@@ -160,6 +193,8 @@ test.describe('language toggle layout stability', () => {
     await page.evaluate(() => {
       window.scrollTo({ top: 260, behavior: 'instant' });
     });
+
+    await waitForHeaderTransition(page);
 
     const brand = page.locator('header [aria-hidden="false"]').first();
     await expect(brand).toBeVisible();
@@ -340,14 +375,20 @@ test.describe('language toggle layout stability', () => {
     });
 
     await switchLanguageInPage(page, 'he');
-    await page.waitForTimeout(1200);
+
+    // Wait on the structure actually mounting rather than guessing a duration:
+    // a slow frame can push the React commit past a fixed timeout and leave the
+    // observer with nothing to report, which would fail as a false negative.
+    await page.waitForFunction(
+      () => (window as unknown as { __wordsSeen: number }).__wordsSeen > 20
+    );
+    await page.waitForTimeout(400);
 
     const counts = await page.evaluate(() => {
       const counters = window as unknown as { __flashes: number; __wordsSeen: number };
       return { flashes: counters.__flashes, wordsSeen: counters.__wordsSeen };
     });
 
-    expect(counts.wordsSeen, 'no word overlays were observed at all').toBeGreaterThan(20);
     expect(
       counts.flashes,
       `${counts.flashes} of ${counts.wordsSeen} word overlays mounted showing the final word`
