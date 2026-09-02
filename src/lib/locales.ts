@@ -56,12 +56,6 @@ export function getPreferredLocale(cookieLocale?: string | null): AppLocale {
   return isAppLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
 }
 
-export function readCookieLocale(): AppLocale {
-  if (typeof document === 'undefined') return DEFAULT_LOCALE;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${LOCALE_COOKIE_NAME}=([^;]*)`));
-  return getPreferredLocale(match ? decodeURIComponent(match[1]) : undefined);
-}
-
 /**
  * Pick the visitor's best supported language from an `Accept-Language` header.
  *

@@ -33,6 +33,16 @@ import LocaleLayout, {
   viewport,
 } from '@/app/[locale]/layout';
 
+import en from '../../public/locales/en/translation.json';
+import he from '../../public/locales/he/translation.json';
+import ru from '../../public/locales/ru/translation.json';
+import et from '../../public/locales/et/translation.json';
+
+// The production bundles, not the test fixtures in __tests__/setup.ts: page
+// metadata is one of the two things that read them directly (the fallback pages
+// are the other), and the fixtures deliberately carry no `meta` section.
+const MESSAGES = { en, he, ru, et } as const;
+
 describe('LocaleLayout', () => {
   beforeEach(() => {
     notFoundMock.mockReset();
@@ -120,6 +130,37 @@ describe('LocaleLayout', () => {
     expect(metadata.alternates?.canonical).toBe('https://yosefgamble.com/et');
     expect(metadata.openGraph?.url).toBe('https://yosefgamble.com/et');
     expect(metadata.openGraph?.locale).toBe('et_EE');
+  });
+
+  it('takes the title and both descriptions from the locale being rendered', async () => {
+    for (const locale of ['en', 'he', 'ru', 'et'] as const) {
+      const metadata = await generateMetadata({
+        params: Promise.resolve({ locale }),
+      });
+      const { meta } = MESSAGES[locale];
+
+      expect(metadata.title, locale).toBe(meta.title);
+      expect(metadata.description, locale).toBe(meta.description);
+      // The search snippet and the social card are written separately: the card
+      // has less room, so ogDescription is its own string.
+      expect(metadata.openGraph?.description, locale).toBe(meta.ogDescription);
+      expect(metadata.twitter?.description, locale).toBe(meta.ogDescription);
+      expect(metadata.openGraph?.title, locale).toBe(meta.title);
+      expect(metadata.twitter?.title, locale).toBe(meta.title);
+    }
+  });
+
+  // The assertion above would also hold if every locale returned English, since
+  // it reads the expectation from the same place the code does.
+  it('gives each locale a title and description of its own', async () => {
+    const metadata = await Promise.all(
+      (['en', 'he', 'ru', 'et'] as const).map((locale) =>
+        generateMetadata({ params: Promise.resolve({ locale }) })
+      )
+    );
+
+    expect(new Set(metadata.map((entry) => entry.title)).size).toBe(4);
+    expect(new Set(metadata.map((entry) => entry.description)).size).toBe(4);
   });
 
   it('lists every locale plus x-default in the hreflang alternates', async () => {

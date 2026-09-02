@@ -1,4 +1,4 @@
-import { afterEach, describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   DEFAULT_LOCALE,
   getDirection,
@@ -10,7 +10,6 @@ import {
   LOCALE_COOKIE_NAME,
   LOCALES,
   negotiateLocale,
-  readCookieLocale,
   SITE_URL,
 } from '@/lib/locales';
 
@@ -118,26 +117,6 @@ describe('getPreferredLocale', () => {
     expect(getPreferredLocale('fr')).toBe('en');
     expect(getPreferredLocale(null)).toBe('en');
     expect(getPreferredLocale(undefined)).toBe('en');
-  });
-});
-
-describe('readCookieLocale', () => {
-  afterEach(() => {
-    document.cookie = `${LOCALE_COOKIE_NAME}=; Path=/; Max-Age=0`;
-  });
-
-  it('reads a stored locale from document.cookie', () => {
-    document.cookie = `${LOCALE_COOKIE_NAME}=ru; Path=/`;
-    expect(readCookieLocale()).toBe('ru');
-  });
-
-  it('falls back to the default locale when the cookie is absent', () => {
-    expect(readCookieLocale()).toBe('en');
-  });
-
-  it('falls back to the default locale when the cookie is unsupported', () => {
-    document.cookie = `${LOCALE_COOKIE_NAME}=fr; Path=/`;
-    expect(readCookieLocale()).toBe('en');
   });
 });
 

@@ -22,7 +22,6 @@ export {
   LOCALE_COOKIE_NAME,
   LOCALES,
   negotiateLocale,
-  readCookieLocale,
   SITE_URL,
   type AppLocale,
 } from '@/lib/locales';

@@ -19,6 +19,8 @@ const PHASE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'PhaseKeyData'
 const SILENCE_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'SilenceKeyData');
 const CACHED_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'CachedKeyData');
 const ALERT_ARMORED_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'AlertKeyData');
+const ESCAPED_SOURCE_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'EscapedKeyData');
+const BASE64_SOURCE_KEY = TEST_ARMORED_KEY.replace('TestKeyData', 'Base64KeyData');
 
 const mockKeyData = {
   getFingerprint: () => 'abcd1234efgh5678ijkl9012mnop3456qrst7890',
@@ -338,6 +340,70 @@ describe('PgpKeyModal', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Could not parse key details');
+    });
+  });
+
+  // NEXT_PUBLIC_PGP_PUBLIC_KEY travels through .env files, Cloudflare's
+  // dashboard and CI secrets, and each of them mangles a multi-line value
+  // differently. The modal normalises what it is handed before parsing it, and
+  // the key block is what a visitor copies, so the decoding has to survive as
+  // far as the DOM.
+  describe('the armored key it is handed', () => {
+    function keyBlockText(): string {
+      return screen.getByRole('region', { name: 'PGP key text' }).textContent ?? '';
+    }
+
+    it('should turn the literal backslash-n of a quoted env var into real newlines', async () => {
+      const { readKey } = await import('openpgp');
+      vi.mocked(readKey).mockClear();
+
+      const escaped = ESCAPED_SOURCE_KEY.replace(/\n/g, '\\n');
+      expect(escaped).not.toContain('\n');
+
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={escaped} />);
+
+      await waitFor(() => {
+        expect(readKey).toHaveBeenCalledWith({ armoredKey: ESCAPED_SOURCE_KEY });
+      });
+      // A single-line key block is not a usable key: the header, the payload
+      // and the footer have to sit on their own lines to be copied out.
+      expect(keyBlockText()).toContain('\n');
+      expect(keyBlockText()).not.toContain('\\n');
+    });
+
+    it('should decode a base64-armored key before parsing and showing it', async () => {
+      const { readKey } = await import('openpgp');
+      vi.mocked(readKey).mockClear();
+
+      const encoded = btoa(BASE64_SOURCE_KEY);
+
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={encoded} />);
+
+      await waitFor(() => {
+        expect(readKey).toHaveBeenCalledWith({ armoredKey: BASE64_SOURCE_KEY });
+      });
+      expect(keyBlockText()).toContain('BEGIN PGP PUBLIC KEY BLOCK');
+      expect(keyBlockText()).not.toContain(encoded);
+    });
+
+    it('should show a value that is neither armored nor base64 as it stands', async () => {
+      const { readKey } = await import('openpgp');
+      vi.mocked(readKey).mockClear();
+      vi.mocked(readKey).mockRejectedValueOnce(new Error('not a key'));
+
+      // Not base64 (`!` is outside the alphabet) and not an armored block, so
+      // atob throws and there is nothing to decode. Showing the raw value is
+      // what lets someone see that the deployment handed the page a
+      // placeholder rather than a key.
+      const misconfigured = 'set-me-in-the-dashboard!';
+
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={misconfigured} />);
+
+      await waitFor(() => {
+        expect(readKey).toHaveBeenCalledWith({ armoredKey: misconfigured });
+      });
+      expect(keyBlockText()).toBe(misconfigured);
+      expect(await screen.findByRole('alert')).toHaveTextContent('Could not parse key details');
     });
   });
 
