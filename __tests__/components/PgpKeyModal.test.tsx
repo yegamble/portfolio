@@ -130,8 +130,24 @@ describe('PgpKeyModal', () => {
     const copyButton = screen.getByRole('button', { name: /copy key/i });
     await user.click(copyButton);
     await waitFor(() => {
-      expect(screen.getByText('Copied!')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('Copied!');
     });
+  });
+
+  it('should keep the copy button label static so the outcome renames nothing', async () => {
+    const user = userEvent.setup({ writeToClipboard: false });
+    render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
+
+    // The live region exists up front; a region mounted alongside its first
+    // message is not announced.
+    expect(screen.getByRole('status')).toHaveTextContent('');
+
+    await user.click(screen.getByRole('button', { name: 'Copy Key' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Copied!');
+    });
+    expect(screen.getByRole('button', { name: 'Copy Key' })).toBeInTheDocument();
   });
 
   it('should display verify notice', async () => {
@@ -188,12 +204,12 @@ describe('PgpKeyModal', () => {
       mockWriteText.mockRejectedValueOnce(new Error('Document is not focused'));
       render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
 
-      screen.getByRole('button', { name: /copy key/i }).click();
+      screen.getByRole('button', { name: 'Copy Key' }).click();
 
       await waitFor(() => {
-        expect(screen.getByText('Copy failed')).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
       });
-      expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
+      expect(screen.getByRole('status')).not.toHaveTextContent('Copied!');
     });
 
     it('should tell the user when the browser exposes no Clipboard API at all', async () => {
@@ -203,28 +219,28 @@ describe('PgpKeyModal', () => {
       });
       render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
 
-      screen.getByRole('button', { name: /copy key/i }).click();
+      screen.getByRole('button', { name: 'Copy Key' }).click();
 
       await waitFor(() => {
-        expect(screen.getByText('Copy failed')).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
       });
     });
 
-    it('should announce the outcome rather than leaving a stale accessible name', async () => {
+    it('should announce the outcome politely rather than renaming the button', async () => {
       mockWriteText.mockRejectedValueOnce(new Error('Document is not focused'));
       render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
 
-      const copyButton = screen.getByRole('button', { name: 'Copy Key' });
-      expect(copyButton).toHaveAttribute('aria-live', 'polite');
+      expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite');
 
-      copyButton.click();
+      screen.getByRole('button', { name: 'Copy Key' }).click();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Copy failed' })).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
       });
+      expect(screen.getByRole('button', { name: 'Copy Key' })).toBeInTheDocument();
     });
 
-    it('should return the button to its idle label once the feedback window closes', async () => {
+    it('should clear the status once the feedback window closes', async () => {
       vi.useFakeTimers();
       try {
         mockWriteText.mockRejectedValueOnce(new Error('Document is not focused'));
@@ -233,12 +249,12 @@ describe('PgpKeyModal', () => {
         await act(async () => {
           screen.getByRole('button', { name: 'Copy Key' }).click();
         });
-        expect(screen.getByText('Copy failed')).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent('Copy failed');
 
         await act(async () => {
           vi.advanceTimersByTime(2000);
         });
-        expect(screen.getByRole('button', { name: 'Copy Key' })).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent('');
       } finally {
         vi.useRealTimers();
       }

@@ -119,7 +119,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
         )
       );
     }
-  }, [isOpen, loading, error, keyInfo, copied, copyFailed]);
+  }, [isOpen, loading, error, keyInfo]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -262,20 +262,28 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </pre>
         </div>
 
-        {/* No aria-label: the visible text is the accessible name (WCAG 2.5.3),
-            and aria-live announces the outcome to a screen reader, which would
-            otherwise see the button as unchanged. */}
-        <button
-          onClick={handleCopy}
-          aria-live="polite"
-          className={`rounded px-4 py-2 text-sm font-medium transition-colors ${
-            copyFailed
-              ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-              : 'bg-primary/10 text-primary hover:bg-primary/20'
-          }`}
-        >
-          {copyFailed ? t('pgp.copyFailed') : copied ? t('pgp.copied') : t('pgp.copyKey')}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* The label stays put: swapping it would rename the control mid-use
+              and, being the accessible name, would be announced as a new button
+              rather than as the outcome of pressing this one. */}
+          <button
+            onClick={handleCopy}
+            className="rounded bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            {t('pgp.copyKey')}
+          </button>
+
+          {/* Outside the button so the announcement never becomes part of its
+              accessible name. Rendered even when empty, or the live region
+              would not exist yet at the moment it has something to say. */}
+          <p
+            role="status"
+            aria-live="polite"
+            className={`text-sm ${copyFailed ? 'text-red-400' : 'text-primary'}`}
+          >
+            {copyFailed ? t('pgp.copyFailed') : copied ? t('pgp.copied') : ''}
+          </p>
+        </div>
       </div>
     </div>
   );
