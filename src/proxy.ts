@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { applySecurityHeaders } from '@/lib/security-headers';
 import {
   DEFAULT_LOCALE,
   getLocaleHref,
@@ -53,6 +54,11 @@ export function proxy(request: NextRequest) {
     // The target is derived from the cookie and the header, so a shared cache
     // must not hand one visitor's redirect to the next.
     response.headers.set('Vary', 'Accept-Language, Cookie');
+    // This redirect short-circuits before `next.config.ts` `headers()` runs, so
+    // without this the bare domain — the URL people actually type, and the one
+    // the HSTS preload list probes — would answer with no
+    // Strict-Transport-Security at all.
+    applySecurityHeaders(response);
 
     return response;
   }

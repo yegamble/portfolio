@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { proxy } from '@/proxy';
 import { NextRequest } from 'next/server';
+import { SECURITY_HEADERS } from '@/lib/security-headers';
 
 describe('proxy (locale routing)', () => {
   describe('bypass', () => {
@@ -148,6 +149,38 @@ describe('proxy (locale routing)', () => {
 
       expect(res.headers.get('x-middleware-request-x-locale')).toBe('en');
       expect(res.headers.get('set-cookie')).toBeNull();
+    });
+  });
+
+  describe('redirect security headers', () => {
+    // The proxy short-circuits before next.config's headers() layer, so the
+    // bare domain — the URL people type, and the one the HSTS preload list
+    // probes — would otherwise answer with Location, Set-Cookie and Vary only.
+    it('should carry the full security header set on the redirect', () => {
+      const req = new NextRequest('https://yosefgamble.com/');
+      const res = proxy(req);
+
+      expect(res.status).toBe(307);
+      SECURITY_HEADERS.forEach(({ key, value }) => {
+        expect(res.headers.get(key)).toBe(value);
+      });
+    });
+
+    it('should send Strict-Transport-Security, which HSTS preload requires here', () => {
+      const res = proxy(new NextRequest('https://yosefgamble.com/'));
+
+      expect(res.headers.get('strict-transport-security')).toBe(
+        'max-age=63072000; includeSubDomains; preload'
+      );
+    });
+
+    it('should not weaken the redirect headers for a nested path', () => {
+      const res = proxy(new NextRequest('https://yosefgamble.com/about?x=1'));
+
+      expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(res.headers.get('x-frame-options')).toBe('DENY');
+      expect(res.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
+      expect(res.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
     });
   });
 

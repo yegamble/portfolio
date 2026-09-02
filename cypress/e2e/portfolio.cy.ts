@@ -350,6 +350,20 @@ describe('Locale routing and 404s', () => {
     });
   });
 
+  it('should send the security headers on the bare-domain redirect too', () => {
+    // The proxy answers `/` before next.config's headers() layer runs, and the
+    // HSTS preload list probes exactly this response.
+    cy.clearCookies();
+    cy.request({ url: '/', followRedirect: false }).then((response) => {
+      expect(response.status).to.eq(307);
+      expect(response.headers).to.have.property('strict-transport-security');
+      expect(response.headers['strict-transport-security']).to.contain('preload');
+      expect(response.headers['x-content-type-options']).to.eq('nosniff');
+      expect(response.headers['x-frame-options']).to.eq('DENY');
+      expect(response.headers['referrer-policy']).to.eq('strict-origin-when-cross-origin');
+    });
+  });
+
   it('should not set a cookie on a localized HTML response', () => {
     // The cookie records a choice, and a locale in a URL is not one — an /en
     // link must not overwrite a stored `he`, and Set-Cookie would also stop a
