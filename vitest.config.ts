@@ -11,5 +11,16 @@ export default defineConfig({
     setupFiles: './__tests__/setup.ts',
     include: ['__tests__/**/*.test.{ts,tsx}'],
     css: false,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**', 'middleware.ts'],
+      reporter: ['text-summary', 'json-summary'],
+      thresholds: {
+        lines: 88,
+        branches: 80,
+        functions: 90,
+        statements: 88,
+      },
+    },
   },
 });
