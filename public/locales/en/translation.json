@@ -104,6 +104,7 @@
     "keyId": "Key ID",
     "copyKey": "Copy Key",
     "copied": "Copied!",
+    "copyFailed": "Copy failed",
     "close": "Close",
     "loading": "Loading key details...",
     "error": "Could not parse key details",

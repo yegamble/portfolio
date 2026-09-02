@@ -104,6 +104,7 @@
     "keyId": "Võtme ID",
     "copyKey": "Kopeeri võti",
     "copied": "Kopeeritud!",
+    "copyFailed": "Kopeerimine ebaõnnestus",
     "close": "Sulge",
     "loading": "Võtme andmete laadimine...",
     "error": "Võtme andmeid ei õnnestunud lugeda",

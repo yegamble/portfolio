@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Key } from 'openpgp';
@@ -179,6 +179,70 @@ describe('PgpKeyModal', () => {
     });
     expect(readKey).toHaveBeenCalledTimes(2);
     expect(readKey).toHaveBeenLastCalledWith({ armoredKey: OTHER_ARMORED_KEY });
+  });
+
+  // These drive the button directly: userEvent.setup() installs its own
+  // navigator.clipboard stub, which would shadow the mock under test.
+  describe('when the clipboard write fails', () => {
+    it('should tell the user instead of rejecting unhandled', async () => {
+      mockWriteText.mockRejectedValueOnce(new Error('Document is not focused'));
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
+
+      screen.getByRole('button', { name: /copy key/i }).click();
+
+      await waitFor(() => {
+        expect(screen.getByText('Copy failed')).toBeInTheDocument();
+      });
+      expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
+    });
+
+    it('should tell the user when the browser exposes no Clipboard API at all', async () => {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: undefined,
+        configurable: true,
+      });
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
+
+      screen.getByRole('button', { name: /copy key/i }).click();
+
+      await waitFor(() => {
+        expect(screen.getByText('Copy failed')).toBeInTheDocument();
+      });
+    });
+
+    it('should announce the outcome rather than leaving a stale accessible name', async () => {
+      mockWriteText.mockRejectedValueOnce(new Error('Document is not focused'));
+      render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
+
+      const copyButton = screen.getByRole('button', { name: 'Copy Key' });
+      expect(copyButton).toHaveAttribute('aria-live', 'polite');
+
+      copyButton.click();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Copy failed' })).toBeInTheDocument();
+      });
+    });
+
+    it('should return the button to its idle label once the feedback window closes', async () => {
+      vi.useFakeTimers();
+      try {
+        mockWriteText.mockRejectedValueOnce(new Error('Document is not focused'));
+        render(<PgpKeyModal isOpen={true} onClose={mockOnClose} armoredKey={TEST_ARMORED_KEY} />);
+
+        await act(async () => {
+          screen.getByRole('button', { name: 'Copy Key' }).click();
+        });
+        expect(screen.getByText('Copy failed')).toBeInTheDocument();
+
+        await act(async () => {
+          vi.advanceTimersByTime(2000);
+        });
+        expect(screen.getByRole('button', { name: 'Copy Key' })).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   it('should display error message when key parsing fails', async () => {

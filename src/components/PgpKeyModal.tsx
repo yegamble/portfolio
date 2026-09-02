@@ -42,9 +42,11 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const focusableElementsRef = useRef<HTMLElement[]>([]);
+  const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const decodedKey = useMemo(() => decodeArmoredKey(armoredKey), [armoredKey]);
 
@@ -53,6 +55,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
       setKeyInfo(null);
       setError(false);
       setCopied(false);
+      setCopyFailed(false);
       previousFocusRef.current?.focus();
       return;
     }
@@ -116,7 +119,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
         )
       );
     }
-  }, [isOpen, loading, error, keyInfo, copied]);
+  }, [isOpen, loading, error, keyInfo, copied, copyFailed]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -143,10 +146,41 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // The reset timer outlives a click, so it has to be cancellable: reopening the
+  // modal or unmounting mid-window would otherwise leave it running.
+  useEffect(
+    () => () => {
+      if (copyResetRef.current !== null) {
+        clearTimeout(copyResetRef.current);
+      }
+    },
+    []
+  );
+
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(decodedKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (copyResetRef.current !== null) {
+      clearTimeout(copyResetRef.current);
+    }
+
+    try {
+      // navigator.clipboard is absent outside secure contexts, and writeText
+      // rejects when the document lacks permission or focus. Either way the key
+      // is still selectable in the <pre> above, so say so rather than throwing.
+      if (navigator.clipboard === undefined) {
+        throw new Error('Clipboard API unavailable');
+      }
+      await navigator.clipboard.writeText(decodedKey);
+      setCopied(true);
+      setCopyFailed(false);
+    } catch {
+      setCopied(false);
+      setCopyFailed(true);
+    }
+
+    copyResetRef.current = setTimeout(() => {
+      setCopied(false);
+      setCopyFailed(false);
+    }, 2000);
   }, [decodedKey]);
 
   const handleBackdropClick = useCallback(
@@ -228,12 +262,19 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </pre>
         </div>
 
+        {/* No aria-label: the visible text is the accessible name (WCAG 2.5.3),
+            and aria-live announces the outcome to a screen reader, which would
+            otherwise see the button as unchanged. */}
         <button
           onClick={handleCopy}
-          className="rounded bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
-          aria-label={t('pgp.copyKey')}
+          aria-live="polite"
+          className={`rounded px-4 py-2 text-sm font-medium transition-colors ${
+            copyFailed
+              ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+              : 'bg-primary/10 text-primary hover:bg-primary/20'
+          }`}
         >
-          {copied ? t('pgp.copied') : t('pgp.copyKey')}
+          {copyFailed ? t('pgp.copyFailed') : copied ? t('pgp.copied') : t('pgp.copyKey')}
         </button>
       </div>
     </div>
