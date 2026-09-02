@@ -71,5 +71,13 @@ export default function SectionName() {
 - `sr-only` class for screen-reader-only text (social link labels)
 - External links: `target="_blank" rel="noreferrer noopener"`
 - `tabIndex={isScrolled ? 0 : -1}` for conditional focusability
-- Never let an `aria-label` replace a control's visible text — put the description in the button's own content behind `sr-only` so the accessible name contains the visible label (WCAG 2.5.3)
+- Never let an `aria-label` replace a control's visible text — put the description in the control's own content behind `sr-only` so the accessible name contains the visible label (WCAG 2.5.3). This covers the new-tab notice on external links (`Experience`) and the language trigger's label (`LanguageSelector`); an aria-label is only for a control with no visible text of its own (an icon button, a carousel dot)
+- Never bake a word of English into a label that every locale renders — the description belongs in a translation key, not in a template string
 - A menu that unmounts on selection must hand focus back to its trigger, and an in-place change with no navigation needs a `role="status" aria-live="polite"` region to announce it (see `LanguageSelector`)
+- Anything that resolves after the view is already on screen has to be announced, not merely rendered: `role="status"` for progress and success, `role="alert"` for failure (see `PgpKeyModal`). Keep the region outside the control it describes, and mount it empty rather than alongside its first message
+- `SkipLink` is the first child of the body and the first tab stop; a new landmark that a keyboard user has to reach past the sticky header belongs behind it. `<main>` carries `id="main"` and `tabIndex={-1}` so following the link moves focus, not just the viewport
+- Interactive targets are at least 24×24px (WCAG 2.5.8). A small visual (an 8px carousel dot) goes inside a `h-6 w-6 flex items-center justify-center` button with the visual marked `aria-hidden`
+- Non-text UI (dots, borders, icons that carry meaning) needs 3:1 against its background: `bg-slate-500` clears it on `bg-dark`, `bg-slate-600` does not
+- Content that stays English on every locale — the technology tags and repo names sourced from `src/data/*` — carries `lang="en"` so a screen reader does not read it with the surrounding language's phonetics (WCAG 3.1.2)
+- Hiding a control means hiding the control: put `aria-hidden` and `inert` on the interactive element itself, not on a wrapper inside it, or the element stays in the accessibility tree (see the collapsed brand link in `ScrollHeader`)
+- A scroll container with nothing focusable inside is unreachable from the keyboard on WebKit — give it `tabIndex={0}` and a `role`/`aria-label` (see the key block in `PgpKeyModal`)
