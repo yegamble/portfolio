@@ -284,12 +284,12 @@ describe('Estonian locale', () => {
         cy.contains('Yosef Gamble').should('be.visible');
         cy.contains('Vanemtarkvaraarendaja').should('be.visible');
       });
-    cy.get('button[aria-label="Vali keel"]').should('contain.text', 'ET');
+    cy.get('header button[aria-expanded]').should('contain.text', 'ET');
   });
 
   it('should switch from English to Estonian via the language selector', () => {
     cy.visit('/en');
-    cy.get('button[aria-label="Select language"]').click();
+    cy.get('header button[aria-expanded]').click();
     cy.contains('a', 'Eesti').click();
     cy.get('html').should('have.attr', 'lang', 'et');
     cy.location('pathname').should('eq', '/et');

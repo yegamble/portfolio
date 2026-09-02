@@ -1,16 +1,30 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  act,
+  fireEvent,
+  createEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import i18n from '@/lib/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/en/projects',
-  useSearchParams: () => new URLSearchParams('tab=featured'),
 }));
 
 beforeEach(async () => {
   await i18n.changeLanguage('en');
+  window.history.replaceState({}, '', '/en/projects');
+  document.documentElement.lang = 'en';
+  document.documentElement.dir = 'ltr';
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('LanguageSelector', () => {
@@ -21,6 +35,16 @@ describe('LanguageSelector', () => {
     expect(trigger).toBeInTheDocument();
     expect(trigger).toHaveTextContent('EN');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('names the trigger with its own visible text so speech input can target it', () => {
+    render(<LanguageSelector />);
+
+    const trigger = screen.getByRole('button', { name: /select language/i });
+    // WCAG 2.5.3: the accessible name must contain the visible label ("EN"),
+    // which a bare aria-label of "Select language" did not.
+    expect(trigger).toHaveAccessibleName(/select language:\s*EN/i);
+    expect(trigger).not.toHaveAttribute('aria-label');
   });
 
   it('does not render the language navigation initially', () => {
@@ -56,7 +80,7 @@ describe('LanguageSelector', () => {
     );
   });
 
-  it('builds locale-aware hrefs that preserve the current path and query string', async () => {
+  it('builds locale-aware hrefs from the current pathname alone', async () => {
     const user = userEvent.setup();
     render(<LanguageSelector />);
 
@@ -65,19 +89,19 @@ describe('LanguageSelector', () => {
     const menu = screen.getByRole('navigation', { name: /select language/i });
     expect(within(menu).getByRole('link', { name: /english/i })).toHaveAttribute(
       'href',
-      '/en/projects?tab=featured'
+      '/en/projects'
     );
     expect(within(menu).getByRole('link', { name: /עברית/i })).toHaveAttribute(
       'href',
-      '/he/projects?tab=featured'
+      '/he/projects'
     );
     expect(within(menu).getByRole('link', { name: /русский/i })).toHaveAttribute(
       'href',
-      '/ru/projects?tab=featured'
+      '/ru/projects'
     );
     expect(within(menu).getByRole('link', { name: /eesti/i })).toHaveAttribute(
       'href',
-      '/et/projects?tab=featured'
+      '/et/projects'
     );
   });
 
@@ -119,5 +143,204 @@ describe('LanguageSelector', () => {
 
     expect(screen.getByRole('button', { name: /выбрать язык/i })).toHaveTextContent('RU');
     expect(screen.queryByRole('navigation', { name: /выбрать язык/i })).not.toBeInTheDocument();
+  });
+
+  it('flips the document language and direction synchronously on selection', async () => {
+    const user = userEvent.setup();
+    render(<LanguageSelector />);
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    await user.click(screen.getByRole('link', { name: /עברית/i }));
+
+    expect(document.documentElement.lang).toBe('he');
+    expect(document.documentElement.dir).toBe('rtl');
+  });
+
+  it('replaces the URL with the localized pathname, preserving query and hash', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, '', '/en/projects?tab=featured#contact');
+    const replaceState = vi.spyOn(window.history, 'replaceState');
+
+    render(<LanguageSelector />);
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    await user.click(screen.getByRole('link', { name: /русский/i }));
+
+    expect(replaceState).toHaveBeenCalled();
+    expect(replaceState.mock.calls[0][2]).toBe('/ru/projects?tab=featured#contact');
+  });
+
+  it('announces the new language in a polite live region', async () => {
+    const user = userEvent.setup();
+    render(<LanguageSelector />);
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(status).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    await user.click(screen.getByRole('link', { name: /eesti/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('Praegune keel: Eesti')
+    );
+  });
+
+  it('lets modifier and middle clicks fall through to the browser', async () => {
+    const user = userEvent.setup();
+    render(<LanguageSelector />);
+
+    await user.click(screen.getByRole('button', { name: /select language/i }));
+    const link = screen.getByRole('link', { name: /русский/i });
+
+    const modifierClick = createEvent.click(link, { ctrlKey: true });
+    fireEvent(link, modifierClick);
+    expect(modifierClick.defaultPrevented).toBe(false);
+
+    const middleClick = createEvent.click(link, { button: 1 });
+    fireEvent(link, middleClick);
+    expect(middleClick.defaultPrevented).toBe(false);
+
+    expect(i18n.language).toBe('en');
+  });
+
+  describe('keyboard support', () => {
+    it('moves focus into the menu when it is opened from the keyboard', async () => {
+      const user = userEvent.setup();
+      render(<LanguageSelector />);
+
+      screen.getByRole('button', { name: /select language/i }).focus();
+      await user.keyboard('{ArrowDown}');
+
+      expect(screen.getByRole('link', { name: /english/i })).toHaveFocus();
+    });
+
+    it('moves focus between items with the arrow keys, wrapping at the ends', async () => {
+      const user = userEvent.setup();
+      render(<LanguageSelector />);
+
+      screen.getByRole('button', { name: /select language/i }).focus();
+      await user.keyboard('{ArrowDown}');
+
+      await user.keyboard('{ArrowDown}');
+      expect(screen.getByRole('link', { name: /עברית/i })).toHaveFocus();
+
+      await user.keyboard('{ArrowUp}');
+      expect(screen.getByRole('link', { name: /english/i })).toHaveFocus();
+
+      await user.keyboard('{ArrowUp}');
+      expect(screen.getByRole('link', { name: /eesti/i })).toHaveFocus();
+    });
+
+    it('jumps to the first and last item with Home and End', async () => {
+      const user = userEvent.setup();
+      render(<LanguageSelector />);
+
+      screen.getByRole('button', { name: /select language/i }).focus();
+      await user.keyboard('{ArrowDown}');
+
+      await user.keyboard('{End}');
+      expect(screen.getByRole('link', { name: /eesti/i })).toHaveFocus();
+
+      await user.keyboard('{Home}');
+      expect(screen.getByRole('link', { name: /english/i })).toHaveFocus();
+    });
+
+    it('returns focus to the trigger after selecting with the keyboard', async () => {
+      const user = userEvent.setup();
+      render(<LanguageSelector />);
+
+      const trigger = screen.getByRole('button', { name: /select language/i });
+      trigger.focus();
+      await user.keyboard('{ArrowDown}');
+      await user.keyboard('{ArrowDown}');
+      expect(screen.getByRole('link', { name: /עברית/i })).toHaveFocus();
+
+      await user.keyboard('{Enter}');
+
+      // The menu unmounts the focused link; without an explicit hand-back,
+      // focus lands on <body> and keyboard users lose their place.
+      expect(screen.getByRole('button', { name: /בחירת שפה/i })).toHaveFocus();
+    });
+
+    it('returns focus to the trigger on Escape', async () => {
+      const user = userEvent.setup();
+      render(<LanguageSelector />);
+
+      const trigger = screen.getByRole('button', { name: /select language/i });
+      await user.click(trigger);
+      await user.keyboard('{Escape}');
+
+      expect(trigger).toHaveFocus();
+    });
+  });
+
+  describe('viewport pinning', () => {
+    function stubAnchor(drift: { top: number }) {
+      const footer = screen.getByRole('contentinfo');
+      footer.getBoundingClientRect = () =>
+        ({ top: drift.top, bottom: drift.top + 2000 }) as DOMRect;
+    }
+
+    it('corrects reflow drift instantly instead of riding the page smooth scroll', async () => {
+      const user = userEvent.setup();
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+      const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
+
+      render(
+        <div>
+          <LanguageSelector />
+          <footer>anchor</footer>
+        </div>
+      );
+
+      // jsdom reports a zero rect for everything, so the landmark that straddles
+      // the viewport centre is faked, then drifted as the new language reflows.
+      const drift = { top: 0 };
+      stubAnchor(drift);
+
+      await user.click(screen.getByRole('button', { name: /select language/i }));
+      await user.click(screen.getByRole('link', { name: /русский/i }));
+
+      drift.top = 50;
+      act(() => frames.shift()?.(0));
+
+      // 'auto' would defer to the page's CSS scroll-behavior: smooth and ease
+      // the correction over a dozen frames.
+      expect(scrollBy).toHaveBeenCalledWith({ top: 50, behavior: 'instant' });
+    });
+
+    it('stops pinning once two consecutive frames measure no drift', async () => {
+      const user = userEvent.setup();
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+      vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
+
+      render(
+        <div>
+          <LanguageSelector />
+          <footer>anchor</footer>
+        </div>
+      );
+
+      stubAnchor({ top: 0 });
+
+      await user.click(screen.getByRole('button', { name: /select language/i }));
+      await user.click(screen.getByRole('link', { name: /русский/i }));
+
+      expect(frames).toHaveLength(1);
+      act(() => frames.shift()?.(0));
+      expect(frames).toHaveLength(1);
+      act(() => frames.shift()?.(16));
+
+      expect(frames).toHaveLength(0);
+    });
   });
 });

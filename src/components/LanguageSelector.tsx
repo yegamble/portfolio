@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { USFlagIcon, IsraelFlagIcon, RussiaFlagIcon, EstoniaFlagIcon } from '@/components/icons';
 import { getDirection, getLocalizedPathname, type AppLocale } from '@/lib/i18n';
@@ -20,16 +20,18 @@ const LANGUAGES: LanguageOption[] = [
   { code: 'et', label: 'Eesti', initials: 'ET', Flag: EstoniaFlagIcon },
 ];
 
-function buildLanguageHref(
-  pathname: string | null,
-  locale: AppLocale,
-  searchParams: { toString(): string } | null
-) {
-  const localizedPath = getLocalizedPathname(pathname, locale);
-  const query = searchParams?.toString() ?? '';
-
-  return query ? `${localizedPath}?${query}` : localizedPath;
+// The href is the localized pathname only. A query string would have to come
+// from useSearchParams, which opts the whole route out of static rendering
+// unless it sits under a Suspense boundary — and this site has no query-string
+// routes. A live query/hash is re-attached from window.location on selection.
+function buildLanguageHref(pathname: string | null, locale: AppLocale) {
+  return getLocalizedPathname(pathname, locale);
 }
+
+// Landmarks worth pinning: the hero, the content sections and the footer. The
+// sticky page header is excluded (it never drifts) and so are the per-job
+// <header> elements inside Experience, which are far too small to anchor on.
+const ANCHOR_SELECTOR = 'header + section, main section, footer';
 
 /**
  * Keep the content the reader is looking at visually stationary while the page
@@ -45,17 +47,16 @@ function pinViewportDuringReflow(durationMs = 1500) {
   }
 
   const centerY = window.innerHeight / 2;
-  const anchor = Array.from(document.querySelectorAll<HTMLElement>('header, section, footer')).find(
-    (el) => {
-      const rect = el.getBoundingClientRect();
-      return rect.top <= centerY && rect.bottom >= centerY;
-    }
-  );
+  const anchor = Array.from(document.querySelectorAll<HTMLElement>(ANCHOR_SELECTOR)).find((el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.top <= centerY && rect.bottom >= centerY;
+  });
   if (!anchor) return;
 
   const startTop = anchor.getBoundingClientRect().top;
   const deadline = performance.now() + durationMs;
   let active = true;
+  let settledFrames = 0;
 
   const stop = () => {
     active = false;
@@ -71,9 +72,16 @@ function pinViewportDuringReflow(durationMs = 1500) {
     if (!active) return;
     const drift = anchor.getBoundingClientRect().top - startTop;
     if (Math.abs(drift) >= 1) {
-      // behavior:'auto' overrides the page's smooth scroll-behavior so the
-      // per-frame correction applies instantly and can keep up with the reflow.
-      window.scrollBy({ top: drift, behavior: 'auto' });
+      settledFrames = 0;
+      // behavior:'instant' is required. Per CSSOM View, 'auto' defers to the
+      // element's CSS scroll-behavior, which globals.css sets to `smooth`, so
+      // each correction would ease over 7-16 frames and the page would visibly
+      // glide back instead of never appearing to move.
+      window.scrollBy({ top: drift, behavior: 'instant' });
+    } else if (++settledFrames >= 2) {
+      // Two consecutive still frames: the reflow is over, stop measuring.
+      stop();
+      return;
     }
     if (now < deadline) {
       requestAnimationFrame(compensate);
@@ -87,20 +95,23 @@ function pinViewportDuringReflow(durationMs = 1500) {
 export default function LanguageSelector() {
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const menuId = useId();
   const [isOpen, setIsOpen] = useState(false);
+  const [openedByKeyboard, setOpenedByKeyboard] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const currentLang = LANGUAGES.find((language) => language.code === i18n.language) ?? LANGUAGES[0];
 
   const close = useCallback(() => {
     setIsOpen(false);
+    setOpenedByKeyboard(false);
   }, []);
 
   const selectLanguage = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>, code: AppLocale, href: string) => {
+    (event: React.MouseEvent<HTMLAnchorElement>, language: LanguageOption, href: string) => {
       // Let the browser handle modifier / non-primary clicks so the localized URL
       // can still open in a new tab, etc.
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
@@ -109,8 +120,11 @@ export default function LanguageSelector() {
 
       event.preventDefault();
       close();
+      // Closing unmounts the link that currently has focus, which would strand
+      // keyboard and screen-reader users on <body>.
+      triggerRef.current?.focus({ preventScroll: true });
 
-      if (code === i18n.language) {
+      if (language.code === i18n.language) {
         return;
       }
 
@@ -120,15 +134,71 @@ export default function LanguageSelector() {
       // navigating remounts the tree, which both cuts the cipher decrypt animation
       // short and causes a layout jump. history.replaceState keeps the URL (and a
       // refresh / share / crawl) on the correct localized route without remounting.
-      document.documentElement.lang = code;
-      document.documentElement.dir = getDirection(code);
-      void i18n.changeLanguage(code);
-      window.history.replaceState(window.history.state, '', href);
+      document.documentElement.lang = language.code;
+      document.documentElement.dir = getDirection(language.code);
+      void i18n.changeLanguage(language.code).then(() => {
+        // Nothing else tells assistive tech the page just changed language —
+        // the text swaps in place with no navigation and no focus change.
+        setAnnouncement(`${i18n.t('language.current')}: ${language.label}`);
+      });
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${href}${window.location.search}${window.location.hash}`
+      );
       // Hold the reader's view steady while the new-language text reflows.
       pinViewportDuringReflow();
     },
     [close, i18n]
   );
+
+  const handleMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLAnchorElement>('a[hreflang]') ?? []
+    );
+    if (items.length === 0) return;
+
+    const current = items.indexOf(document.activeElement as HTMLAnchorElement);
+    let next: number;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        next = current < 0 ? 0 : (current + 1) % items.length;
+        break;
+      case 'ArrowUp':
+        next = current < 0 ? items.length - 1 : (current - 1 + items.length) % items.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = items.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    items[next]?.focus({ preventScroll: true });
+  };
+
+  const handleTriggerKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    setOpenedByKeyboard(true);
+    setIsOpen(true);
+  };
+
+  // Opened from the keyboard: put focus on the current language so the arrow
+  // keys have somewhere to start. Pointer users keep focus on the trigger.
+  useEffect(() => {
+    if (!isOpen || !openedByKeyboard) return;
+    const menu = menuRef.current;
+    const target =
+      menu?.querySelector<HTMLAnchorElement>('a[aria-current="page"]') ??
+      menu?.querySelector<HTMLAnchorElement>('a[hreflang]');
+    target?.focus({ preventScroll: true });
+  }, [isOpen, openedByKeyboard]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -146,7 +216,7 @@ export default function LanguageSelector() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         close();
-        triggerRef.current?.focus();
+        triggerRef.current?.focus({ preventScroll: true });
       }
     };
 
@@ -164,26 +234,37 @@ export default function LanguageSelector() {
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen((previous) => !previous)}
+        onClick={(event) => {
+          // detail === 0 means Enter/Space, not a pointer.
+          setOpenedByKeyboard(event.detail === 0);
+          setIsOpen((previous) => !previous);
+        }}
+        onKeyDown={handleTriggerKeyDown}
         className="flex items-center gap-1.5 rounded-md border border-slate-700 px-2 py-1 text-xs font-bold tracking-wide text-text-muted transition-colors hover:border-primary hover:text-primary"
         aria-expanded={isOpen}
         aria-controls={menuId}
-        aria-label={t('language.selectLabel')}
       >
         <currentLang.Flag className="h-3.5 w-5" />
+        {/* WCAG 2.5.3: the accessible name has to contain the visible label, so
+            the description is part of the button's own text rather than an
+            aria-label that replaces "EN" with something a speech-input user
+            cannot see. */}
+        <span className="sr-only">{t('language.selectLabel')}: </span>
         <span>{currentLang.initials}</span>
       </button>
 
       {isOpen && (
         <div
           id={menuId}
+          ref={menuRef}
+          onKeyDown={handleMenuKeyDown}
           className="absolute end-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-slate-700 bg-slate-800 p-1 shadow-lg"
         >
           <nav aria-label={t('language.selectLabel')}>
             <ul className="space-y-1">
               {LANGUAGES.map((language) => {
                 const isCurrent = language.code === i18n.language;
-                const href = buildLanguageHref(pathname, language.code, searchParams);
+                const href = buildLanguageHref(pathname, language.code);
 
                 return (
                   <li key={language.code}>
@@ -192,18 +273,16 @@ export default function LanguageSelector() {
                       lang={language.code}
                       hrefLang={language.code}
                       aria-current={isCurrent ? 'page' : undefined}
-                      onClick={(event) => selectLanguage(event, language.code, href)}
+                      onClick={(event) => selectLanguage(event, language, href)}
                       className={`flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-colors ${
                         isCurrent
                           ? 'bg-slate-700/50 text-primary'
-                          : 'text-text-muted hover:bg-slate-700 hover:text-text-primary'
+                          : 'text-text-secondary hover:bg-slate-700 hover:text-text-primary'
                       }`}
                     >
                       <language.Flag className="h-3.5 w-5" />
                       <span className="flex-1 text-start">{language.label}</span>
-                      <span className="text-xs font-bold tracking-wide opacity-60">
-                        {language.initials}
-                      </span>
+                      <span className="text-xs font-bold tracking-wide">{language.initials}</span>
                     </a>
                   </li>
                 );
@@ -212,6 +291,12 @@ export default function LanguageSelector() {
           </nav>
         </div>
       )}
+
+      {/* Outside the button so the announcement never becomes part of the
+          trigger's accessible name. */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
     </div>
   );
 }
