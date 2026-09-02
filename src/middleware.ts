@@ -17,15 +17,6 @@ function getPathLocale(pathname: string): AppLocale | null {
   return isAppLocale(localeSegment) ? localeSegment : null;
 }
 
-function persistLocale(response: NextResponse, locale: AppLocale, request: NextRequest) {
-  response.cookies.set(LOCALE_COOKIE_NAME, locale, {
-    maxAge: LOCALE_COOKIE_MAX_AGE,
-    path: '/',
-    sameSite: 'lax',
-    secure: request.nextUrl.protocol === 'https:',
-  });
-}
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -33,13 +24,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
   const pathnameLocale = getPathLocale(pathname);
 
   if (pathnameLocale == null) {
     // A stored choice outranks the browser's list; without one, honour
     // Accept-Language before falling back to English, so a first-time Hebrew,
     // Russian or Estonian visitor is not pinned to `/en` for a year.
+    const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
     const locale =
       (isAppLocale(cookieLocale) ? cookieLocale : null) ??
       negotiateLocale(request.headers.get('accept-language')) ??
@@ -48,22 +39,40 @@ export function middleware(request: NextRequest) {
     redirectUrl.pathname =
       pathname === '/' ? getLocaleHref(locale) : `${getLocaleHref(locale)}${pathname}`;
 
+    // This redirect is the ONLY place the middleware writes the cookie. The
+    // other writer is an explicit language selection in the browser
+    // (I18nProvider's languageChanged handler) — a locale in the URL is not a
+    // choice, it is where a link happened to point.
     const response = NextResponse.redirect(redirectUrl);
-    persistLocale(response, locale, request);
+    response.cookies.set(LOCALE_COOKIE_NAME, locale, {
+      maxAge: LOCALE_COOKIE_MAX_AGE,
+      path: '/',
+      sameSite: 'lax',
+      secure: request.nextUrl.protocol === 'https:',
+    });
+    // The target is derived from the cookie and the header, so a shared cache
+    // must not hand one visitor's redirect to the next.
+    response.headers.set('Vary', 'Accept-Language, Cookie');
 
     return response;
   }
 
-  const response = NextResponse.next();
+  // A localized path is served as-is and gets no Set-Cookie: a visitor who
+  // chose Hebrew and follows an `/en` link from a CV sees English without
+  // losing their stored `he`. HTML responses therefore stay cacheable.
+  //
+  // The locale travels as a REQUEST header instead. Only `global-not-found.tsx`
+  // reads it (a 404 has no `locale` route param to read); the prerendered
+  // locale routes take their locale from `params` and never call `headers()`,
+  // so injecting this does not make them dynamic.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-locale', pathnameLocale);
 
-  // The URL is the source of truth, so a disagreeing cookie is corrected — but
-  // only then. Re-setting an already-correct cookie puts a Set-Cookie on every
-  // HTML response, which keeps a CDN from caching the prerendered page.
-  if (cookieLocale !== pathnameLocale) {
-    persistLocale(response, pathnameLocale, request);
-  }
-
-  return response;
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

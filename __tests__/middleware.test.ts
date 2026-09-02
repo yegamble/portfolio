@@ -113,47 +113,45 @@ describe('middleware', () => {
   });
 
   describe('localized paths', () => {
-    it('should pass a valid locale path through without a request header override', () => {
+    it('should pass a valid locale path through, forwarding the locale as a request header', () => {
       const req = new NextRequest('http://localhost:3000/ru/about');
       const res = middleware(req);
 
       expect(res.status).toBe(200);
       expect(res.headers.get('x-middleware-next')).toBe('1');
-      // The root layout derives the locale from the route params now, so no
-      // per-request header is injected (that alone made every route dynamic).
-      expect(res.headers.get('x-middleware-request-x-locale')).toBeNull();
-      expect(res.headers.get('x-middleware-override-headers')).toBeNull();
+      // Only global-not-found.tsx reads this. The prerendered locale routes take
+      // their locale from `params`, so nothing here forces a dynamic render.
+      expect(res.headers.get('x-middleware-request-x-locale')).toBe('ru');
     });
 
-    it('should not re-set the cookie when it already matches the path locale', () => {
-      const req = new NextRequest('http://localhost:3000/en', {
-        headers: { cookie: 'locale=en' },
-      });
-      const res = middleware(req);
+    it('should never set a cookie on a localized path, whatever the visitor has stored', () => {
+      // Following an /en link from a CV must not overwrite a stored `he`, and a
+      // Set-Cookie on an HTML response is what stops a CDN caching it.
+      for (const cookie of [undefined, 'locale=en', 'locale=he', 'locale=fr']) {
+        const req = new NextRequest(
+          'http://localhost:3000/en',
+          cookie == null ? undefined : { headers: { cookie } }
+        );
+        const res = middleware(req);
 
-      // A Set-Cookie on every HTML response is what stops a CDN from caching it.
-      expect(res.headers.get('set-cookie')).toBeNull();
-      expect(res.cookies.get('locale')).toBeUndefined();
+        expect(res.status).toBe(200);
+        expect(res.headers.get('set-cookie')).toBeNull();
+        expect(res.cookies.get('locale')).toBeUndefined();
+      }
     });
 
-    it('should set the cookie when it disagrees with the path locale (the path wins)', () => {
-      const req = new NextRequest('http://localhost:3000/en', {
+    it('should serve the path locale even when it disagrees with the stored one', () => {
+      const req = new NextRequest('http://localhost:3000/en/about', {
         headers: { cookie: 'locale=he' },
       });
       const res = middleware(req);
 
-      expect(res.cookies.get('locale')?.value).toBe('en');
-    });
-
-    it('should set the cookie when the visitor has none yet', () => {
-      const req = new NextRequest('http://localhost:3000/he/about');
-      const res = middleware(req);
-
-      expect(res.cookies.get('locale')?.value).toBe('he');
+      expect(res.headers.get('x-middleware-request-x-locale')).toBe('en');
+      expect(res.headers.get('set-cookie')).toBeNull();
     });
   });
 
-  describe('cookie attributes', () => {
+  describe('redirect cookie and cache headers', () => {
     it('should scope the cookie to the site for a year without the Secure flag over http', () => {
       const req = new NextRequest('http://localhost:3000/');
       const res = middleware(req);
@@ -170,6 +168,13 @@ describe('middleware', () => {
       const res = middleware(req);
 
       expect(res.headers.get('set-cookie')).toContain('Secure');
+    });
+
+    it('should vary the redirect on the inputs that choose its target', () => {
+      const req = new NextRequest('http://localhost:3000/about');
+      const res = middleware(req);
+
+      expect(res.headers.get('vary')).toBe('Accept-Language, Cookie');
     });
   });
 });
