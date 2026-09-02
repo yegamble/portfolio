@@ -16,9 +16,13 @@ const ARABIC = Array.from('ابتثجحخدذرزسشصضطظعغفقكلمنه�
 const DEVANAGARI = Array.from('अआइईउऊएऐओऔकखगघचछजझटठडढणतथदधनपफबभमयरलवशषसह');
 const GEORGIAN = Array.from('აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ');
 
-// Narrow pools, split by case: an uppercase target keeps cap-height scramble
-// glyphs and a lowercase target keeps x-height ones, so the scramble neither
-// overflows its slot nor changes the perceived weight of the line.
+// Narrow pools, roughly case-matched: an uppercase target draws cap-height
+// glyphs and a lowercase one mostly x-height glyphs. It is a heuristic, not a
+// guarantee — the digits are cap-height in both pools, several Greek lowercase
+// letters carry ascenders or descenders (beta, gamma, zeta, eta, theta, lambda,
+// xi, rho, phi, psi), and AE/O-slash are wider than a typical capital. It only
+// has to keep a draw in the same ballpark as its target; `overflow-x: clip` on
+// the slot is what actually contains whatever spills.
 const CYRILLIC_UPPER = Array.from('АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ');
 const CYRILLIC_LOWER = Array.from('абвгдежзиклмнопрстуфхцчшщэюя');
 const GREEK_UPPER = Array.from('ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ');

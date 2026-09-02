@@ -37,6 +37,9 @@ const CHAR_SLOT_STYLE = {
 // which moves an inline-block's baseline to its bottom edge and inflates every
 // line box for the length of the animation.
 
+// Stable identity for the non-animating case so the memo below never churns.
+const NO_SEED: string[] = [];
+
 const RTL_CHAR_REGEX = /[\u0590-\u07BF\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 const LETTER_REGEX = /\p{L}/u;
 
@@ -136,17 +139,6 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   const longTextRef = useRef<HTMLSpanElement>(null);
   const targetChars = useMemo(() => Array.from(text), [text]);
 
-  // Overlays must never mount showing the final word: they appear on the render
-  // that flips isAnimating, one or two painted frames before the first scramble
-  // write lands, and a readable translation in that window reads as a flash of
-  // the answer. Seeding them with cipher glyphs closes the gap. Recomputed per
-  // text; SSR and hydration are unaffected because the animating structure only
-  // mounts after a client-side text change.
-  const scrambleSeed = useMemo(
-    () => targetChars.map((char) => (isScramblable(char) ? getRandomCipherChar(char) : char)),
-    [targetChars]
-  );
-
   // Resolve the long-text threshold on the client (and on viewport changes) instead
   // of calling matchMedia in the render body — which would run on every animation
   // frame for every instance. Starts at the desktop value so SSR and the first
@@ -174,6 +166,23 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     isVisible,
     elementRef: isLongText ? longTextRef : undefined,
   });
+
+  // Overlays must never mount showing the final word: they appear on the render
+  // that flips isAnimating, one or two painted frames before the first scramble
+  // write lands, and a readable translation in that window reads as a flash of
+  // the answer. Seeding them with cipher glyphs closes the gap.
+  //
+  // Gated on isAnimating so Math.random never runs on the server or on any
+  // non-animating render: both SSR and the first client render take the
+  // non-animating branch, so they produce identical markup and hydration is
+  // unaffected. Keyed on targetChars too, so a language switch reseeds.
+  const scrambleSeed = useMemo(
+    () =>
+      isAnimating
+        ? targetChars.map((char) => (isScramblable(char) ? getRandomCipherChar(char) : char))
+        : NO_SEED,
+    [isAnimating, targetChars]
+  );
 
   // --- Render helper: wrap with observer ref when cipher is enabled ---
   const wrapObserver = (content: React.ReactNode): React.ReactNode =>

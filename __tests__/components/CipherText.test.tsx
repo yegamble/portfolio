@@ -80,6 +80,21 @@ describe('CipherText', () => {
       expect(screen.getByText('Screen Reader Text')).toBeInTheDocument();
     });
 
+    it('should not draw cipher glyphs on a render that is not animating', () => {
+      const random = vi.spyOn(Math, 'random');
+
+      render(
+        <CipherText>{'a fairly long sentence to exercise the ref path '.repeat(3)}</CipherText>
+      );
+
+      // The scramble seed is only needed by the animating branch. Drawing it
+      // unconditionally would run Math.random once per character on the server
+      // and on every idle render.
+      expect(random).not.toHaveBeenCalled();
+
+      random.mockRestore();
+    });
+
     it('should not have animation spans when not animating', () => {
       const { container } = render(<CipherText>Hello</CipherText>);
 
