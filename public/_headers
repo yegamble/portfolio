@@ -1,0 +1,26 @@
+# Cloudflare Workers static-asset response headers.
+#
+# OpenNext copies `public/` into `.open-next/assets`, so this file ships as
+# `.open-next/assets/_headers` and Workers Static Assets applies it to every
+# asset it serves. Without it, content-hashed build output is served with the
+# platform default `public, max-age=0, must-revalidate` and revalidated on
+# every navigation.
+#
+# `next.config.ts` `headers()` cannot reach these responses: assets are served
+# by the ASSETS binding before the Worker runs, so anything an asset needs has
+# to be repeated here. HTML still gets its headers from `next.config.ts`.
+#
+# Cloudflare treats `_headers` as a config file and does not serve it.
+
+# Content-hashed chunks, CSS and next/font woff2 files. The hash changes
+# whenever the bytes do, so these can never go stale.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Hand-managed images: not content-hashed, so a week of caching with a day of
+# stale-while-revalidate rather than a year of immutable.
+/images/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/*
+  X-Content-Type-Options: nosniff
