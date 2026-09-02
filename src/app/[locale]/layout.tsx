@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { fontVariables } from '@/app/fonts';
 import JsonLd from '@/app/json-ld';
 import I18nProvider from '@/components/I18nProvider';
+import SkipLink from '@/components/SkipLink';
 import {
   DEFAULT_LOCALE,
   getDirection,
@@ -130,7 +131,12 @@ export default async function LocaleLayout({
           <div className="absolute -bottom-[10%] -left-[10%] h-[30rem] w-[30rem] rounded-full bg-[#1e293b] opacity-30 blur-[80px]" />
         </div>
         <JsonLd locale={locale} />
-        <I18nProvider locale={locale}>{children}</I18nProvider>
+        <I18nProvider locale={locale}>
+          {/* Inside the provider so its label is translated, and first in the
+              body so it is the first thing a Tab press reaches. */}
+          <SkipLink />
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

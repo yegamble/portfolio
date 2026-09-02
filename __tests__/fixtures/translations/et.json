@@ -1,6 +1,7 @@
 {
   "nav": {
     "ariaLabel": "Main navigation",
+    "skipToContent": "Hüppa põhisisu juurde",
     "about": "Minust",
     "experience": "Kogemus",
     "projects": "Projektid"

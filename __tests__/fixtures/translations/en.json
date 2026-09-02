@@ -1,6 +1,7 @@
 {
   "nav": {
     "ariaLabel": "Main navigation",
+    "skipToContent": "Jump to the main content",
     "about": "About",
     "experience": "Experience",
     "projects": "Projects"

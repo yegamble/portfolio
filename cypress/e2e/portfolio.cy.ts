@@ -95,6 +95,36 @@ describe('Portfolio Site', () => {
   });
 });
 
+describe('Skip link', () => {
+  beforeEach(() => {
+    cy.visit('/en');
+  });
+
+  it('should be the first thing a Tab press can reach', () => {
+    // Eight header controls and three hero contact links sit between the top of
+    // the document and the content, so the skip link has to come before them.
+    cy.get('a[href], button, [tabindex]:not([tabindex="-1"])')
+      .first()
+      .should('have.attr', 'href', '#main');
+  });
+
+  it('should reveal itself on focus and hand focus to the content', () => {
+    cy.get('a[href="#main"]').focus().should('be.focused');
+
+    // sr-only clips it to a 1px box; focus has to take it out of that.
+    cy.get('a[href="#main"]').then(($link) => {
+      const rect = $link[0].getBoundingClientRect();
+      expect(rect.width).to.be.greaterThan(1);
+      expect(rect.height).to.be.greaterThan(1);
+    });
+
+    cy.get('a[href="#main"]').click();
+    cy.location('hash').should('eq', '#main');
+    cy.get('main').should('have.attr', 'tabindex', '-1');
+    cy.focused().should('have.attr', 'id', 'main');
+  });
+});
+
 describe('Scroll Header — Responsive Layout', () => {
   const viewports: [string, number, number][] = [
     ['mobile', 375, 812],

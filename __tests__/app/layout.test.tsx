@@ -57,6 +57,19 @@ describe('LocaleLayout', () => {
     expect(markup).toContain('--font-heebo');
   });
 
+  it('opens the body with a skip link pointing at the main landmark', async () => {
+    const markup = renderToStaticMarkup(
+      await LocaleLayout({
+        children: <div>Locale Child</div>,
+        params: Promise.resolve({ locale: 'en' }),
+      })
+    );
+
+    // First tab stop on the page: it has to precede the sticky header.
+    expect(markup).toContain('href="#main"');
+    expect(markup.indexOf('href="#main"')).toBeLessThan(markup.indexOf('Locale Child'));
+  });
+
   it('renders Hebrew right-to-left without reading a request header', async () => {
     const markup = renderToStaticMarkup(
       await LocaleLayout({

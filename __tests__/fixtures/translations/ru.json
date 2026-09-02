@@ -1,6 +1,7 @@
 {
   "nav": {
     "ariaLabel": "Main navigation",
+    "skipToContent": "Перейти к основному содержимому",
     "about": "Обо мне",
     "experience": "Опыт",
     "projects": "Проекты"

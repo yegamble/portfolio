@@ -55,6 +55,17 @@ describe('Localized Home Page', () => {
     expect(markup).toContain('mx-auto w-full max-w-3xl px-6 pb-24 lg:px-8');
   });
 
+  it('gives <main> the skip link target and makes it focusable', async () => {
+    const markup = renderToStaticMarkup(
+      await LocalizedHomePage({ params: Promise.resolve({ locale: 'en' }) })
+    );
+
+    expect(markup).toContain('id="main"');
+    // Without tabindex the skip link would move the viewport but leave focus in
+    // the header, so the next Tab press would land back on the nav.
+    expect(markup).toMatch(/<main[^>]*tabindex="-1"/);
+  });
+
   it('stops rendering for an invalid locale', async () => {
     await expect(LocalizedHomePage({ params: Promise.resolve({ locale: 'de' }) })).rejects.toThrow(
       NOT_FOUND_ERROR

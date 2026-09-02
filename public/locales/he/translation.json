@@ -1,6 +1,7 @@
 {
   "nav": {
     "ariaLabel": "ניווט ראשי",
+    "skipToContent": "דלג לתוכן",
     "about": "אודות",
     "experience": "ניסיון",
     "projects": "פרויקטים"

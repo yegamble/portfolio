@@ -8,6 +8,7 @@ import About from '@/components/About';
 import Experience from '@/components/Experience';
 import Projects from '@/components/Projects';
 import Footer from '@/components/Footer';
+import SkipLink from '@/components/SkipLink';
 
 import testEn from '../fixtures/translations/en.json';
 import testHe from '../fixtures/translations/he.json';
@@ -156,6 +157,14 @@ describe('i18n Integration - English Mode', () => {
     expect(screen.getByText(/View Full Resume/)).toBeInTheDocument();
   });
 
+  it('should render the skip link in English', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testEn.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
+  });
+
   it('should render footer attribution in English', () => {
     render(<Footer />);
     expect(screen.getByText(/Coded in/)).toBeInTheDocument();
@@ -248,6 +257,14 @@ describe('i18n Integration - Hebrew Mode', () => {
     expect(section).toHaveTextContent(/Vidra/);
   });
 
+  it('should render the skip link in Hebrew', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testHe.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
+  });
+
   it('should render footer attribution in Hebrew', () => {
     render(<Footer />);
     expect(screen.getByText(/נכתב באמצעות/)).toBeInTheDocument();
@@ -317,6 +334,14 @@ describe('i18n Integration - Russian Mode', () => {
     render(<Projects />);
     const heading = screen.getByRole('heading', { level: 2 });
     expect(heading).toHaveTextContent('Проекты');
+  });
+
+  it('should render the skip link in Russian', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testRu.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
   });
 
   it('should render footer attribution in Russian', () => {
@@ -436,6 +461,14 @@ describe('i18n Integration - Estonian Mode', () => {
     render(<Projects />);
     const heading = screen.getByRole('heading', { level: 2 });
     expect(heading).toHaveTextContent('Projektid');
+  });
+
+  it('should render the skip link in Estonian', () => {
+    render(<SkipLink />);
+    expect(screen.getByRole('link', { name: testEt.nav.skipToContent })).toHaveAttribute(
+      'href',
+      '#main'
+    );
   });
 
   it('should render footer attribution in Estonian', () => {
