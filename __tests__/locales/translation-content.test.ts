@@ -57,6 +57,30 @@ describe('production translation files', () => {
     });
   });
 
+  // Footer.tsx renders "<builtWith> <tailwind> <and> Inter <font>.". Locales
+  // where the word for "font" has to precede the name carry it in footer.and
+  // and leave footer.font empty, which the component branches on.
+  it('reads the footer attribution as a sentence in every locale', () => {
+    const sentences = (
+      [
+        ['en', en],
+        ['he', he],
+        ['ru', ru],
+        ['et', et],
+      ] as const
+    ).map(([code, translation]) => {
+      const { builtWith, tailwind, and, font } = translation.footer;
+      return [code, [builtWith, tailwind, and, 'Inter', font].filter(Boolean).join(' ') + '.'];
+    });
+
+    expect(Object.fromEntries(sentences)).toEqual({
+      en: 'Built with Tailwind CSS and Inter font.',
+      he: 'נבנה עם Tailwind CSS ועם הפונט Inter.',
+      ru: 'Создано с помощью Tailwind CSS и шрифта Inter.',
+      et: 'Loodud Tailwind CSS-i ja Inter fondiga.',
+    });
+  });
+
   it('lists Tel Aviv between New York and Auckland in the Hebrew hero location', () => {
     expect(he.hero.location).toBe('ניו יורק | תל אביב | אוקלנד');
   });

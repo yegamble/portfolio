@@ -86,8 +86,8 @@
     "vscode": "Visual Studio Code",
     "builtWith": "Создано с помощью",
     "tailwind": "Tailwind CSS",
-    "and": "и",
-    "font": "шрифт"
+    "and": "и шрифта",
+    "font": ""
   },
   "social": {
     "github": "GitHub",

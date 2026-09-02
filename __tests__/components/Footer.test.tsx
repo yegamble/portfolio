@@ -107,6 +107,26 @@ describe('Footer', () => {
     });
   });
 
+  describe('Attribution text in Russian (empty footer.font)', () => {
+    beforeEach(async () => {
+      await i18n.changeLanguage('ru');
+    });
+
+    afterEach(async () => {
+      await i18n.changeLanguage('en');
+    });
+
+    it('should decline "шрифт" before the name rather than trailing it', () => {
+      const { container } = render(<Footer />);
+      const attribution = container.querySelector('p');
+      // "…и Inter шрифт." is not Russian; the noun takes the genitive and comes
+      // before the name, so footer.and carries it and footer.font is empty.
+      expect(attribution?.textContent).toContain('Создано с помощью');
+      expect(attribution?.textContent).toContain('и шрифта');
+      expect(attribution?.textContent).toMatch(/Inter\.$/);
+    });
+  });
+
   describe('Tool links', () => {
     it('should link to Visual Studio Code', () => {
       render(<Footer />);
