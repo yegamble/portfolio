@@ -186,8 +186,8 @@ This repository is tested at multiple levels:
 
 - Unit and integration tests validate components, hooks, data modules, metadata generation, and i18n behavior
 - Cypress covers major user-facing flows such as navigation, hero rendering, responsiveness, and the PGP modal
-- Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics
-- axe-core runs over `/en` and `/he` at desktop and phone widths, asserting zero WCAG 2.0/2.1/2.2 A and AA violations
+- Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics. The `layout` project (`playwright/layout-stability.spec.ts` and `playwright/a11y.spec.ts`, 16 tests) gates the deploy; the `perf` project reports without blocking
+- axe-core (`playwright/a11y.spec.ts`) runs over `/en` and `/he` at desktop and phone widths, asserting zero WCAG 2.0/2.1/2.2 A and AA violations. It runs inside the `layout` project, so it is deploy-gating
 
 ## Continuous integration
 
@@ -198,7 +198,7 @@ lint-and-typecheck ───────────────────┐
 unit-tests ───────────────────────────┤
                                       ├──► deploy (push to main only)
 build ──┬── e2e (Cypress) ────────────┤
-        ├── playwright (layout) ──────┘
+        ├── playwright (layout + axe) ┘
         └── playwright-perf (advisory, does not gate the deploy)
 ```
 
@@ -206,9 +206,9 @@ build ──┬── e2e (Cypress) ────────────┤
 | --- | --- |
 | `lint-and-typecheck` | `pnpm lint`, `pnpm typecheck`, `pnpm format:check` |
 | `unit-tests` | `pnpm test:coverage` (thresholds live in `vitest.config.ts`; the summary is published to the run page), then `pnpm audit --prod` — blocking at `critical`, plus a non-blocking full report |
-| `build` | `pnpm build` against `.env.example`, uploaded as an artifact |
+| `build` | `pnpm build` against `.env.example`, uploaded as an artifact, then `pnpm build:worker` — the one place in the pipeline that exercises `open-next.config.ts`, `wrangler.jsonc` and `@opennextjs/cloudflare` before the deploy job builds with them for real |
 | `e2e` | Cypress against `pnpm start` serving that artifact |
-| `playwright` | Layout-stability specs against `next start` serving that artifact — not `next dev`, whose frame budget is a different number entirely. Geometry is deterministic, so this one blocks |
+| `playwright` | The `layout` project — layout-stability geometry **and** the axe accessibility specs — against `next start` serving that artifact, not `next dev`, whose frame budget is a different number entirely. Both are deterministic, so this one blocks |
 | `playwright-perf` | Frame rate, long tasks and animation shape, on a runner of its own. `continue-on-error`, because the budgets were tuned on a laptop and have never been observed on a 4-vCPU runner |
 | `deploy` | `pnpm run deploy`, then a smoke test against the live site |
 

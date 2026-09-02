@@ -98,7 +98,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Two builds: `next build`, then the OpenNext bundle on top of it.
+    timeout-minutes: 15
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.rollback_version_id == '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -109,6 +110,18 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # `next build` cannot exercise the Cloudflare adapter, and until this step
+      # existed `opennextjs-cloudflare build` ran for the FIRST time inside the
+      # deploy job — on main, after merge, with nothing left to gate. This is
+      # what turns an `open-next.config.ts`, `wrangler.jsonc` or
+      # `@opennextjs/cloudflare` regression into a red pull request instead of a
+      # red deploy. `.open-next/` is deliberately not uploaded: the browser jobs
+      # serve `.next` through `next start`, and `pnpm run deploy` rebuilds from
+      # source anyway, so keeping the bundle would only invite someone to
+      # mistake it for the deployed bytes.
+      - name: Build the Cloudflare Worker
+        run: pnpm build:worker
 
       # The three browser jobs share this one build, so they all exercise the
       # same commit rather than three separate compilations. It is not the
@@ -221,7 +234,7 @@ jobs:
 
       # playwright.config.ts starts `next start` (not `next dev`) when CI is
       # set, so these assertions describe the production bundle.
-      - name: Run layout-stability specs
+      - name: Run layout and accessibility specs
         run: pnpm exec playwright test --project=layout
 
       - name: Upload Playwright results

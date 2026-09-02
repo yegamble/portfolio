@@ -29,7 +29,7 @@ export default defineConfig({
       // measurements taken in a browser that shares the machine with every
       // other worker, so what these specs need above all is the machine to
       // themselves (measured: 3/3 clean alone, 3/6 failing both attempts while
-      // the 12 layout tests ran beside them). Locally that means running after
+      // the 16 layout tests ran beside them). Locally that means running after
       // the layout project; in CI it means a runner of their own, which is what
       // the `playwright-perf` job is for. On that runner they also run one at a
       // time, and the retries are for whatever noise is left — which is also
@@ -38,7 +38,7 @@ export default defineConfig({
       testMatch: /(cipher-performance|height-ease)\.spec\.ts/,
       // CI runs the two projects as two jobs on two runners, so the job split
       // already provides the separation — and declaring the dependency there
-      // would make `--project=perf` re-run all twelve layout specs first. A
+      // would make `--project=perf` re-run all sixteen layout specs first. A
       // local `pnpm test:playwright` runs both projects in one process, where
       // the dependency is the only thing keeping them off each other.
       dependencies: isCI ? [] : ['layout'],

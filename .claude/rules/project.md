@@ -13,7 +13,7 @@ Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland
 - **Language:** TypeScript (strict mode)
 - **Styling:** Tailwind CSS v4 with `@theme` custom variables
 - **i18n:** i18next + react-i18next (bundled JSON, no backend) — see `i18n.md`
-- **Testing:** Vitest + Testing Library (unit), Cypress (E2E), Playwright (animation/layout-stability specs)
+- **Testing:** Vitest + Testing Library (unit), Cypress (E2E), Playwright — layout-stability geometry and `@axe-core/playwright` accessibility in the deploy-gating `layout` project, animation wall-clock budgets in the advisory `perf` project
 - **Linting:** ESLint (next config + prettier), Prettier
 - **Deploy:** Cloudflare Workers via `@opennextjs/cloudflare` (`wrangler.jsonc`, `open-next.config.ts`). The four locale routes are prerendered (`● /en /he /ru /et`), and `open-next.config.ts` uses the `static-assets-incremental-cache` override with `enableCacheInterception: true` so the Worker serves that prerendered HTML (`x-opennext-cache: HIT`) instead of re-rendering React per request. `opennextjs-cloudflare deploy` / `preview` populate `.open-next/assets/cdn-cgi/_next_cache` — a bare `wrangler deploy` would not
 - **CI:** GitHub Actions. Node from `.nvmrc`, pnpm from the `packageManager` pin via `pnpm/action-setup` (not Corepack), every action pinned to a commit SHA
@@ -56,8 +56,9 @@ public/icons/       # PWA icons the manifest points at (192, 512, maskable-512).
 public/locales/     # Translation JSON (en/, he/, ru/, et/)
 __tests__/          # Vitest unit tests (mirrors src/) + fixtures/translations/
 cypress/e2e/        # Cypress E2E specs
-playwright/         # Playwright specs: layout-stability (layout project),
-                    # cipher-performance + height-ease (perf project)
+playwright/         # Playwright specs: layout-stability + a11y (layout
+                    # project, deploy-gating), cipher-performance + height-ease
+                    # (perf project, advisory)
 scripts/            # Asset tooling (process-images.mjs — run by hand on macOS,
                     # output committed; see the header comment)
 .github/workflows   # CI pipeline (ci.yml)
@@ -154,7 +155,7 @@ lint-and-typecheck ───────────────────┐
 unit-tests ───────────────────────────┤
                                       ├──► deploy (push to main only)
 build ──┬── e2e (Cypress) ────────────┤
-        ├── playwright (layout) ──────┘
+        ├── playwright (layout + axe) ┘
         └── playwright-perf (advisory, continue-on-error, NOT in deploy's needs)
 
 rollback — workflow_dispatch from main with a non-empty rollback_version_id;
@@ -172,15 +173,23 @@ rollback — workflow_dispatch from main with a non-empty rollback_version_id;
   `.next/cache`) as an artifact. All three browser jobs download it, so they exercise a
   production build **of the same commit** — not the deployed bytes, since `pnpm run
   deploy` rebuilds through `opennextjs-cloudflare build`, but the same source at the
-  same settings
+  same settings. Then `pnpm build:worker`, which is the only thing in the pipeline that
+  runs `opennextjs-cloudflare build` before the deploy does: `next build` cannot
+  exercise `open-next.config.ts`, `wrangler.jsonc` or the adapter version, so without
+  it an OpenNext regression surfaces as a red deploy on `main` rather than a red pull
+  request. `.open-next/` is not uploaded — the browser jobs serve `.next` through
+  `next start`, and keeping the bundle would only invite someone to mistake it for the
+  deployed bytes. Two builds is also why this job's timeout is 15 minutes
 - `playwright` / `playwright-perf`: `playwright.config.ts` switches
   `webServer.command` to `next start` when `CI` is set and refuses to reuse an existing
-  server. The two projects run as two jobs: `layout` is deterministic geometry and gates
-  the deploy; `perf` is wall-clock budgets tuned on a laptop, so it runs
-  `continue-on-error` on a runner of its own (one worker) and is not in `deploy`'s
-  `needs`. `dependencies: ['layout']` on the perf project therefore applies **only**
-  outside CI, where a single `pnpm test:playwright` runs both projects in one process —
-  in CI it would just re-run the 12 layout specs inside the perf job
+  server. The two projects run as two jobs: `layout` is deterministic geometry **plus**
+  the axe accessibility specs (`playwright/a11y.spec.ts`), 16 tests in total, and gates
+  the deploy — which is why the CI step is named "Run layout and accessibility specs";
+  `perf` is wall-clock budgets tuned on a laptop, so it runs `continue-on-error` on a
+  runner of its own (one worker) and is not in `deploy`'s `needs`.
+  `dependencies: ['layout']` on the perf project therefore applies **only** outside CI,
+  where a single `pnpm test:playwright` runs both projects in one process — in CI it
+  would just re-run the 16 layout specs inside the perf job
 - `deploy`: `environment: Production`, its own `production-deploy` concurrency group
   (`cancel-in-progress: false`, so two merges cannot deploy at once — that is how
   production went backwards on 2026-08-16), records the Worker's `Current Version ID`
