@@ -97,6 +97,7 @@
   },
   "pgp": {
     "title": "Avalik PGP-võti",
+    "keyRegion": "PGP-võtme tekst",
     "fingerprint": "Sõrmejälg",
     "userId": "Kasutajatunnus",
     "algorithm": "Algoritm",

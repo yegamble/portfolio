@@ -222,9 +222,20 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </button>
         </div>
 
-        {loading && <p className="mb-4 text-sm text-text-muted">{t('pgp.loading')}</p>}
+        {/* The parse runs after the dialog is already on screen, so its outcome
+            has to be announced rather than merely rendered: progress politely,
+            failure assertively. */}
+        {loading && (
+          <p role="status" className="mb-4 text-sm text-text-muted">
+            {t('pgp.loading')}
+          </p>
+        )}
 
-        {error && <p className="mb-4 text-sm text-red-400">{t('pgp.error')}</p>}
+        {error && (
+          <p role="alert" className="mb-4 text-sm text-red-400">
+            {t('pgp.error')}
+          </p>
+        )}
 
         {keyInfo && (
           <div className="mb-4 space-y-2 text-sm">
@@ -256,7 +267,16 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
           </div>
         )}
 
-        <div className="mb-4 max-h-96 overflow-auto rounded border border-slate-700 bg-slate-950 p-5 [&]:scrollbar-thin">
+        {/* A scroll container holding nothing focusable is unreachable from the
+            keyboard on WebKit, so the key block is a labelled region in the tab
+            order (Close -> key -> Copy; the focus trap picks it up via its
+            tabindex). */}
+        <div
+          role="region"
+          aria-label={t('pgp.keyRegion')}
+          tabIndex={0}
+          className="mb-4 max-h-96 overflow-auto rounded border border-slate-700 bg-slate-950 p-5 [&]:scrollbar-thin"
+        >
           <pre className="whitespace-pre font-mono text-[11px] leading-relaxed text-text-secondary">
             {decodedKey}
           </pre>

@@ -97,6 +97,7 @@
   },
   "pgp": {
     "title": "Публичный ключ PGP",
+    "keyRegion": "Текст ключа PGP",
     "fingerprint": "Отпечаток",
     "userId": "Идентификатор",
     "algorithm": "Алгоритм",

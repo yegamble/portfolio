@@ -97,6 +97,7 @@
   },
   "pgp": {
     "title": "PGP Public Key",
+    "keyRegion": "PGP key text",
     "fingerprint": "Fingerprint",
     "userId": "User ID",
     "algorithm": "Algorithm",

@@ -97,6 +97,7 @@
   },
   "pgp": {
     "title": "מפתח PGP ציבורי",
+    "keyRegion": "טקסט מפתח PGP",
     "fingerprint": "טביעת אצבע",
     "userId": "מזהה משתמש",
     "algorithm": "אלגוריתם",
