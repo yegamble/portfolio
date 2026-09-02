@@ -59,9 +59,7 @@ vi.mock('@/data/projects', () => ({
     },
     {
       id: 'aurialis',
-      repos: [
-        { name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' },
-      ],
+      repos: [{ name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' }],
       technologies: ['Next.js', 'TypeScript'],
       icon: 'layers',
     },
@@ -118,12 +116,8 @@ describe('i18n Integration - English Mode', () => {
 
   it('should render hero content in English', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByText(testEn.hero.name, { selector: 'section p' })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(testEn.hero.title, { selector: 'section p' })
-    ).toBeInTheDocument();
+    expect(screen.getByText(testEn.hero.name, { selector: 'section p' })).toBeInTheDocument();
+    expect(screen.getByText(testEn.hero.title, { selector: 'section p' })).toBeInTheDocument();
     const h1 = screen.getByRole('heading', { level: 1 });
     expect(h1).toHaveTextContent(/Senior C\+\+, Rust & Go engineer/);
   });
@@ -184,16 +178,12 @@ describe('i18n Integration - Hebrew Mode', () => {
 
   it('should render hero name in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByText(testHe.hero.name, { selector: 'section p' })
-    ).toBeInTheDocument();
+    expect(screen.getByText(testHe.hero.name, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero title in Hebrew', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByText(testHe.hero.title, { selector: 'section p' })
-    ).toBeInTheDocument();
+    expect(screen.getByText(testHe.hero.title, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Hebrew', () => {
@@ -280,16 +270,12 @@ describe('i18n Integration - Russian Mode', () => {
 
   it('should render hero name in Russian', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByText(testRu.hero.name, { selector: 'section p' })
-    ).toBeInTheDocument();
+    expect(screen.getByText(testRu.hero.name, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero title in Russian', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByText(testRu.hero.title, { selector: 'section p' })
-    ).toBeInTheDocument();
+    expect(screen.getByText(testRu.hero.title, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Russian', () => {
@@ -349,13 +335,9 @@ describe('i18n Integration - Russian Mode', () => {
 
   it('should preserve company URLs in Russian Experience', () => {
     render(<Experience />);
-    const links = screen
-      .getAllByRole('link')
-      .filter((l) => l.getAttribute('target') === '_blank');
+    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('target') === '_blank');
     const hrefs = links.map((l) => l.getAttribute('href'));
-    expect(hrefs).toContain(
-      'https://example.com/edge-corp?q=test&lang=en#section'
-    );
+    expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
     expect(hrefs).toContain('https://cafe-societe.example.com/');
   });
 
@@ -406,16 +388,12 @@ describe('i18n Integration - Estonian Mode', () => {
 
   it('should render hero name in Estonian', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByText(testEt.hero.name, { selector: 'section p' })
-    ).toBeInTheDocument();
+    expect(screen.getByText(testEt.hero.name, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero title in Estonian', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByText(testEt.hero.title, { selector: 'section p' })
-    ).toBeInTheDocument();
+    expect(screen.getByText(testEt.hero.title, { selector: 'section p' })).toBeInTheDocument();
   });
 
   it('should render hero tagline in Estonian', () => {
@@ -433,9 +411,7 @@ describe('i18n Integration - Estonian Mode', () => {
 
   it('should render About section with Estonian aria-label', () => {
     render(<About />);
-    expect(
-      screen.getByRole('region', { name: 'Minu kohta' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Minu kohta' })).toBeInTheDocument();
   });
 
   it('should render Experience section heading in Estonian', () => {
@@ -478,13 +454,9 @@ describe('i18n Integration - Estonian Mode', () => {
 
   it('should preserve company URLs in Estonian Experience', () => {
     render(<Experience />);
-    const links = screen
-      .getAllByRole('link')
-      .filter((l) => l.getAttribute('target') === '_blank');
+    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('target') === '_blank');
     const hrefs = links.map((l) => l.getAttribute('href'));
-    expect(hrefs).toContain(
-      'https://example.com/edge-corp?q=test&lang=en#section'
-    );
+    expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
     expect(hrefs).toContain('https://cafe-societe.example.com/');
   });
 
@@ -584,9 +556,7 @@ describe('i18n Integration - Language Selector Flow', () => {
 
   it('should render language selector button in navbar', () => {
     render(<ScrollHeader />);
-    expect(
-      screen.getByRole('button', { name: /select language/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select language/i })).toBeInTheDocument();
   });
 });
 
@@ -613,13 +583,9 @@ describe('i18n Regression - Structural integrity across languages', () => {
   it('should preserve company URLs in Hebrew Experience', async () => {
     await i18n.changeLanguage('he');
     render(<Experience />);
-    const links = screen
-      .getAllByRole('link')
-      .filter((l) => l.getAttribute('target') === '_blank');
+    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('target') === '_blank');
     const hrefs = links.map((l) => l.getAttribute('href'));
-    expect(hrefs).toContain(
-      'https://example.com/edge-corp?q=test&lang=en#section'
-    );
+    expect(hrefs).toContain('https://example.com/edge-corp?q=test&lang=en#section');
     expect(hrefs).toContain('https://cafe-societe.example.com/');
   });
 
@@ -629,10 +595,7 @@ describe('i18n Regression - Structural integrity across languages', () => {
     const resumeLink = screen.getByRole('link', {
       name: /לצפייה בקורות החיים המלאים/,
     });
-    expect(resumeLink).toHaveAttribute(
-      'href',
-      'https://www.linkedin.com/in/yosefgamble/'
-    );
+    expect(resumeLink).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
   });
 
   it('should preserve technology tags in Hebrew Experience (not translated)', async () => {
@@ -659,10 +622,7 @@ describe('i18n Regression - Structural integrity across languages', () => {
     const vscodeLink = screen.getByRole('link', {
       name: /visual studio code/i,
     });
-    expect(vscodeLink).toHaveAttribute(
-      'href',
-      'https://code.visualstudio.com/'
-    );
+    expect(vscodeLink).toHaveAttribute('href', 'https://code.visualstudio.com/');
     const tailwindLink = screen.getByRole('link', { name: /tailwind css/i });
     expect(tailwindLink).toHaveAttribute('href', 'https://tailwindcss.com/');
   });
@@ -738,9 +698,7 @@ describe('i18n Integration - PGP Key Icon Labels', () => {
     const heroSection = screen
       .getByText(testEn.hero.name, { selector: 'section p' })
       .closest('section');
-    expect(
-      within(heroSection!).getByRole('button', { name: 'PGP Key' })
-    ).toBeInTheDocument();
+    expect(within(heroSection!).getByRole('button', { name: 'PGP Key' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Hebrew label', async () => {
@@ -749,9 +707,7 @@ describe('i18n Integration - PGP Key Icon Labels', () => {
     const heroSection = screen
       .getByText(testHe.hero.name, { selector: 'section p' })
       .closest('section');
-    expect(
-      within(heroSection!).getByRole('button', { name: 'מפתח PGP' })
-    ).toBeInTheDocument();
+    expect(within(heroSection!).getByRole('button', { name: 'מפתח PGP' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Russian label', async () => {
@@ -760,9 +716,7 @@ describe('i18n Integration - PGP Key Icon Labels', () => {
     const heroSection = screen
       .getByText(testRu.hero.name, { selector: 'section p' })
       .closest('section');
-    expect(
-      within(heroSection!).getByRole('button', { name: 'Ключ PGP' })
-    ).toBeInTheDocument();
+    expect(within(heroSection!).getByRole('button', { name: 'Ключ PGP' })).toBeInTheDocument();
   });
 
   it('should render PGP key button with Estonian label', async () => {
@@ -771,9 +725,7 @@ describe('i18n Integration - PGP Key Icon Labels', () => {
     const heroSection = screen
       .getByText(testEt.hero.name, { selector: 'section p' })
       .closest('section');
-    expect(
-      within(heroSection!).getByRole('button', { name: 'PGP-võti' })
-    ).toBeInTheDocument();
+    expect(within(heroSection!).getByRole('button', { name: 'PGP-võti' })).toBeInTheDocument();
   });
 
   it('should render email icon label in Hebrew', async () => {
@@ -782,9 +734,7 @@ describe('i18n Integration - PGP Key Icon Labels', () => {
     const heroSection = screen
       .getByText(testHe.hero.name, { selector: 'section p' })
       .closest('section');
-    expect(
-      within(heroSection!).getByRole('link', { name: 'אימייל' })
-    ).toBeInTheDocument();
+    expect(within(heroSection!).getByRole('link', { name: 'אימייל' })).toBeInTheDocument();
   });
 
   it('should render secure email icon label in Hebrew', async () => {
@@ -793,8 +743,6 @@ describe('i18n Integration - PGP Key Icon Labels', () => {
     const heroSection = screen
       .getByText(testHe.hero.name, { selector: 'section p' })
       .closest('section');
-    expect(
-      within(heroSection!).getByRole('link', { name: 'אימייל מאובטח' })
-    ).toBeInTheDocument();
+    expect(within(heroSection!).getByRole('link', { name: 'אימייל מאובטח' })).toBeInTheDocument();
   });
 });

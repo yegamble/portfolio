@@ -28,9 +28,7 @@ describe('Experience', () => {
   describe('Section structure', () => {
     it('should render the experience section with correct aria label', () => {
       render(<Experience />);
-      expect(
-        screen.getByRole('region', { name: /work experience/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: /work experience/i })).toBeInTheDocument();
     });
 
     it('should have the correct section id for anchor navigation', () => {
@@ -121,10 +119,7 @@ describe('Experience', () => {
       const cafeLink = screen.getByRole('link', {
         name: /full-stack developer at cafe societe/i,
       });
-      expect(cafeLink).toHaveAttribute(
-        'href',
-        'https://cafe-societe.example.com/'
-      );
+      expect(cafeLink).toHaveAttribute('href', 'https://cafe-societe.example.com/');
 
       expect(
         screen.queryByRole('link', {
@@ -237,10 +232,7 @@ describe('Experience', () => {
       render(<Experience />);
       const section = screen.getByRole('region', { name: /work experience/i });
       const link = within(section).getByRole('link', { name: /view full/i });
-      expect(link).toHaveAttribute(
-        'href',
-        'https://www.linkedin.com/in/yosefgamble/'
-      );
+      expect(link).toHaveAttribute('href', 'https://www.linkedin.com/in/yosefgamble/');
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
@@ -328,10 +320,7 @@ describe('Experience', () => {
           screen.getByRole('link', {
             name: /principal engineer.*at edge corp/i,
           })
-        ).toHaveAttribute(
-          'href',
-          'https://example.com/edge-corp?q=test&lang=en#section'
-        );
+        ).toHaveAttribute('href', 'https://example.com/edge-corp?q=test&lang=en#section');
         expect(
           screen.getByRole('link', {
             name: /full-stack developer at cafe societe/i,

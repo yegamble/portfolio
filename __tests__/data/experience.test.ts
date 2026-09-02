@@ -13,10 +13,7 @@ describe('Experience Data validation', () => {
   it('each entry should have a valid structure', () => {
     experienceEntries.forEach((entry) => {
       // Validate id
-      expect(
-        entry.id,
-        'Entry id should be defined and non-empty'
-      ).toBeDefined();
+      expect(entry.id, 'Entry id should be defined and non-empty').toBeDefined();
       expect(typeof entry.id).toBe('string');
       expect(entry.id.trim().length).toBeGreaterThan(0);
 

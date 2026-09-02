@@ -26,9 +26,7 @@ describe('LanguageSelector', () => {
   it('does not render the language navigation initially', () => {
     render(<LanguageSelector />);
 
-    expect(
-      screen.queryByRole('navigation', { name: /select language/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: /select language/i })).not.toBeInTheDocument();
   });
 
   it('opens a plain navigation list instead of a listbox', async () => {
@@ -52,9 +50,10 @@ describe('LanguageSelector', () => {
     await user.click(screen.getByRole('button', { name: /select language/i }));
 
     const menu = screen.getByRole('navigation', { name: /select language/i });
-    expect(
-      within(menu).getByRole('link', { name: /english/i })
-    ).toHaveAttribute('aria-current', 'page');
+    expect(within(menu).getByRole('link', { name: /english/i })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
   });
 
   it('builds locale-aware hrefs that preserve the current path and query string', async () => {
@@ -64,16 +63,18 @@ describe('LanguageSelector', () => {
     await user.click(screen.getByRole('button', { name: /select language/i }));
 
     const menu = screen.getByRole('navigation', { name: /select language/i });
-    expect(
-      within(menu).getByRole('link', { name: /english/i })
-    ).toHaveAttribute('href', '/en/projects?tab=featured');
+    expect(within(menu).getByRole('link', { name: /english/i })).toHaveAttribute(
+      'href',
+      '/en/projects?tab=featured'
+    );
     expect(within(menu).getByRole('link', { name: /עברית/i })).toHaveAttribute(
       'href',
       '/he/projects?tab=featured'
     );
-    expect(
-      within(menu).getByRole('link', { name: /русский/i })
-    ).toHaveAttribute('href', '/ru/projects?tab=featured');
+    expect(within(menu).getByRole('link', { name: /русский/i })).toHaveAttribute(
+      'href',
+      '/ru/projects?tab=featured'
+    );
     expect(within(menu).getByRole('link', { name: /eesti/i })).toHaveAttribute(
       'href',
       '/et/projects?tab=featured'
@@ -85,15 +86,11 @@ describe('LanguageSelector', () => {
     render(<LanguageSelector />);
 
     await user.click(screen.getByRole('button', { name: /select language/i }));
-    expect(
-      screen.getByRole('navigation', { name: /select language/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /select language/i })).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
 
-    expect(
-      screen.queryByRole('navigation', { name: /select language/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: /select language/i })).not.toBeInTheDocument();
   });
 
   it('closes when clicking outside', async () => {
@@ -106,15 +103,11 @@ describe('LanguageSelector', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /select language/i }));
-    expect(
-      screen.getByRole('navigation', { name: /select language/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /select language/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Outside' }));
 
-    expect(
-      screen.queryByRole('navigation', { name: /select language/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: /select language/i })).not.toBeInTheDocument();
   });
 
   it('updates the current language initials immediately when selecting a different locale', async () => {
@@ -124,11 +117,7 @@ describe('LanguageSelector', () => {
     await user.click(screen.getByRole('button', { name: /select language/i }));
     await user.click(screen.getByRole('link', { name: /русский/i }));
 
-    expect(
-      screen.getByRole('button', { name: /выбрать язык/i })
-    ).toHaveTextContent('RU');
-    expect(
-      screen.queryByRole('navigation', { name: /выбрать язык/i })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /выбрать язык/i })).toHaveTextContent('RU');
+    expect(screen.queryByRole('navigation', { name: /выбрать язык/i })).not.toBeInTheDocument();
   });
 });

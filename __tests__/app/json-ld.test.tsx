@@ -6,9 +6,7 @@ describe('JsonLd', () => {
   function getSchemas(): unknown[] {
     const markup = renderToStaticMarkup(<JsonLd />);
     const matches = [
-      ...markup.matchAll(
-        /<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/g
-      ),
+      ...markup.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/g),
     ];
     return matches.map((m) => JSON.parse(m[1]));
   }

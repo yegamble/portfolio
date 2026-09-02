@@ -18,9 +18,7 @@ interface ProjectItem {
   description: string;
 }
 
-const METADATA_BY_ID = new Map(
-  projectEntries.map((entry) => [entry.id, entry])
-);
+const METADATA_BY_ID = new Map(projectEntries.map((entry) => [entry.id, entry]));
 
 export default function Projects() {
   const { t } = useTranslation();
@@ -75,10 +73,7 @@ export default function Projects() {
       className="scroll-mt-24 border-t border-slate-800/30 py-16 md:py-24"
       aria-label={t('projects.ariaLabel')}
     >
-      <SectionHeader
-        title={<CipherText>{t('projects.heading')}</CipherText>}
-        className="mb-12"
-      />
+      <SectionHeader title={<CipherText>{t('projects.heading')}</CipherText>} className="mb-12" />
 
       {/* Carousel on mobile, grid on md+ */}
       <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:gap-8 md:overflow-visible md:pb-0">
@@ -90,9 +85,7 @@ export default function Projects() {
             }}
             className="group relative flex shrink-0 snap-center flex-col rounded-2xl border border-border-card bg-bg-card p-8 shadow-xl shadow-black/20 transition-all hover:border-border-card-hover hover:bg-bg-card-hover w-[85vw] md:w-auto"
           >
-            <div className="mb-6 flex items-start justify-between">
-              {iconMap[meta.icon]}
-            </div>
+            <div className="mb-6 flex items-start justify-between">{iconMap[meta.icon]}</div>
 
             <h3 className="mb-3 text-xl font-bold text-slate-100">
               <CipherText>{project.title}</CipherText>
@@ -102,10 +95,7 @@ export default function Projects() {
               <CipherText block>{project.description}</CipherText>
             </p>
 
-            <ul
-              className="flex flex-wrap gap-x-4 gap-y-2"
-              aria-label={t('projects.techAriaLabel')}
-            >
+            <ul className="flex flex-wrap gap-x-4 gap-y-2" aria-label={t('projects.techAriaLabel')}>
               {meta.technologies.map((tech) => (
                 <li
                   key={tech}

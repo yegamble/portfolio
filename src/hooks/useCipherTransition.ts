@@ -1,10 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  type RefObject,
-} from 'react';
+import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 interface CipherTransitionResult {
@@ -91,18 +85,12 @@ function unregisterTick(fn: TickFn) {
 // Pure helpers (unchanged logic, no side-effects)
 // ---------------------------------------------------------------------------
 
-function calculateResolveTimes(
-  maxLen: number,
-  profile: AnimationProfile
-): number[] {
+function calculateResolveTimes(maxLen: number, profile: AnimationProfile): number[] {
   const resolveTimes: number[] = [];
   for (let i = 0; i < maxLen; i++) {
     const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
     const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
-    resolveTimes[i] =
-      profile.scrambleDuration +
-      progress * profile.revealStagger +
-      randomJitter;
+    resolveTimes[i] = profile.scrambleDuration + progress * profile.revealStagger + randomJitter;
   }
   return resolveTimes;
 }
@@ -260,12 +248,7 @@ function useCipherLoop(
       const timeSinceLastUpdate = currentTime - lastUpdateTime;
       if (timeSinceLastUpdate >= profile.updateInterval) {
         const elapsed = currentTime - startTime;
-        const { chars, allResolved } = generateFrameChars(
-          maxLen,
-          newChars,
-          resolveTimes,
-          elapsed
-        );
+        const { chars, allResolved } = generateFrameChars(maxLen, newChars, resolveTimes, elapsed);
 
         commitFrame(chars);
 
@@ -307,16 +290,9 @@ function useCipherLoop(
 // ---------------------------------------------------------------------------
 
 function useCipherAnimationLoop(text: string, isEnabled: boolean) {
-  const [displayChars, setDisplayChars] = useState<string[]>(() =>
-    Array.from(text)
-  );
+  const [displayChars, setDisplayChars] = useState<string[]>(() => Array.from(text));
 
-  const { isAnimating } = useCipherLoop(
-    text,
-    isEnabled,
-    setDisplayChars,
-    undefined
-  );
+  const { isAnimating } = useCipherLoop(text, isEnabled, setDisplayChars, undefined);
 
   return { displayChars, isAnimating };
 }

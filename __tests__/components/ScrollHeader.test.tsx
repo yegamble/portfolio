@@ -136,9 +136,7 @@ describe('ScrollHeader', () => {
   describe('Hero contact icons', () => {
     it('should render contact icons in the hero section', () => {
       render(<ScrollHeader />);
-      const heroSection = screen
-        .getByText(TEST_NAME, { selector: 'section p' })
-        .closest('section');
+      const heroSection = screen.getByText(TEST_NAME, { selector: 'section p' }).closest('section');
       expect(heroSection).toBeInTheDocument();
       const emailLink = within(heroSection!).getByRole('link', {
         name: /^email$/i,
@@ -148,9 +146,7 @@ describe('ScrollHeader', () => {
 
     it('should render PGP key button in the hero section', () => {
       render(<ScrollHeader />);
-      const heroSection = screen
-        .getByText(TEST_NAME, { selector: 'section p' })
-        .closest('section');
+      const heroSection = screen.getByText(TEST_NAME, { selector: 'section p' }).closest('section');
       const pgpButton = within(heroSection!).getByRole('button', {
         name: /pgp key/i,
       });
@@ -198,20 +194,14 @@ describe('ScrollHeader', () => {
     it('should render GitHub social link', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /github/i });
-      expect(link).toHaveAttribute(
-        'href',
-        expect.stringContaining('github.com')
-      );
+      expect(link).toHaveAttribute('href', expect.stringContaining('github.com'));
       expect(link).toHaveAttribute('target', '_blank');
     });
 
     it('should render LinkedIn social link', () => {
       render(<ScrollHeader />);
       const link = screen.getByRole('link', { name: /linkedin/i });
-      expect(link).toHaveAttribute(
-        'href',
-        expect.stringContaining('linkedin.com')
-      );
+      expect(link).toHaveAttribute('href', expect.stringContaining('linkedin.com'));
       expect(link).toHaveAttribute('target', '_blank');
     });
 
@@ -290,9 +280,7 @@ describe('ScrollHeader', () => {
     it('should make nav name link tabbable only when scrolled', () => {
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector(
-        'a[href="/en"]'
-      ) as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
       expect(navNameLink).toHaveAttribute('tabIndex', '-1');
 
       act(() => {
@@ -365,10 +353,10 @@ describe('ScrollHeader', () => {
 
     it('should set up IntersectionObserver on mount', () => {
       render(<ScrollHeader />);
-      expect(window.IntersectionObserver).toHaveBeenCalledWith(
-        expect.any(Function),
-        { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
-      );
+      expect(window.IntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
+        threshold: 0,
+        rootMargin: '-64px 0px 0px 0px',
+      });
       expect(mockObserve).toHaveBeenCalled();
     });
 
@@ -394,28 +382,20 @@ describe('ScrollHeader', () => {
     it('should display the name in the nav area', () => {
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector(
-        'a[href="/en"]'
-      ) as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
       expect(navNameLink).toBeInTheDocument();
       expect(navNameLink).toHaveAttribute('href', '/en');
     });
 
     it('should scroll to top when nav name is clicked', async () => {
-      const scrollToSpy = vi
-        .spyOn(window, 'scrollTo')
-        .mockImplementation(() => {});
+      const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
       window.matchMedia = vi.fn().mockReturnValue({ matches: false });
 
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector(
-        'a[href="/en"]'
-      ) as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
 
-      const user = (
-        await import('@testing-library/user-event')
-      ).default.setup();
+      const user = (await import('@testing-library/user-event')).default.setup();
       await user.click(navNameLink);
 
       expect(scrollToSpy).toHaveBeenCalledWith({
@@ -427,20 +407,14 @@ describe('ScrollHeader', () => {
     });
 
     it('should use instant scroll when prefers-reduced-motion is enabled', async () => {
-      const scrollToSpy = vi
-        .spyOn(window, 'scrollTo')
-        .mockImplementation(() => {});
+      const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
       window.matchMedia = vi.fn().mockReturnValue({ matches: true });
 
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
-      const navNameLink = header.querySelector(
-        'a[href="/en"]'
-      ) as HTMLAnchorElement;
+      const navNameLink = header.querySelector('a[href="/en"]') as HTMLAnchorElement;
 
-      const user = (
-        await import('@testing-library/user-event')
-      ).default.setup();
+      const user = (await import('@testing-library/user-event')).default.setup();
       await user.click(navNameLink);
 
       expect(scrollToSpy).toHaveBeenCalledWith({

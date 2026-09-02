@@ -14,10 +14,7 @@ const personSchema = {
   jobTitle: 'Senior Software Engineer',
   url: PERSON_URL,
   image: `${PERSON_URL}/images/og-image.jpg`,
-  sameAs: [
-    'https://github.com/yegamble',
-    'https://linkedin.com/in/yosefgamble',
-  ],
+  sameAs: ['https://github.com/yegamble', 'https://linkedin.com/in/yosefgamble'],
   knowsAbout: [
     'Go',
     'Golang',

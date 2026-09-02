@@ -29,10 +29,7 @@ vi.mock('@/components/I18nProvider', () => ({
 }));
 
 import RootLayout from '@/app/layout';
-import LocaleLayout, {
-  generateMetadata,
-  generateStaticParams,
-} from '@/app/[locale]/layout';
+import LocaleLayout, { generateMetadata, generateStaticParams } from '@/app/[locale]/layout';
 
 describe('RootLayout', () => {
   beforeEach(() => {

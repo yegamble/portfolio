@@ -43,9 +43,7 @@ vi.mock('@/data/projects', () => ({
     },
     {
       id: 'aurialis',
-      repos: [
-        { name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' },
-      ],
+      repos: [{ name: 'Aurialis', url: 'https://github.com/yegamble/Aurialis' }],
       technologies: ['Next.js', 'TypeScript'],
       icon: 'layers',
     },
@@ -154,17 +152,13 @@ describe('Cipher Integration - DOM structure consistency across languages', () =
     it('should have one heading in English and Hebrew', async () => {
       const { unmount } = render(<About />);
       const enSection = screen.getByRole('region', { name: /about me/i });
-      expect(
-        within(enSection).getAllByRole('heading', { level: 2 })
-      ).toHaveLength(1);
+      expect(within(enSection).getAllByRole('heading', { level: 2 })).toHaveLength(1);
       unmount();
 
       await i18n.changeLanguage('he');
       render(<About />);
       const heSection = screen.getByRole('region', { name: 'אודותיי' });
-      expect(
-        within(heSection).getAllByRole('heading', { level: 2 })
-      ).toHaveLength(1);
+      expect(within(heSection).getAllByRole('heading', { level: 2 })).toHaveLength(1);
     });
   });
 

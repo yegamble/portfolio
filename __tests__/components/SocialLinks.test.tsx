@@ -7,19 +7,13 @@ describe('SocialLinks', () => {
     it('should render GitHub link with a github.com href', () => {
       render(<SocialLinks />);
       const link = screen.getByRole('link', { name: /github/i });
-      expect(link).toHaveAttribute(
-        'href',
-        expect.stringContaining('github.com')
-      );
+      expect(link).toHaveAttribute('href', expect.stringContaining('github.com'));
     });
 
     it('should render LinkedIn link with a linkedin.com href', () => {
       render(<SocialLinks />);
       const link = screen.getByRole('link', { name: /linkedin/i });
-      expect(link).toHaveAttribute(
-        'href',
-        expect.stringContaining('linkedin.com')
-      );
+      expect(link).toHaveAttribute('href', expect.stringContaining('linkedin.com'));
     });
 
     it('should render Email link with a mailto href', () => {
@@ -114,9 +108,7 @@ describe('SocialLinks', () => {
     });
 
     it('should apply custom className', () => {
-      const { container } = render(
-        <SocialLinks className="mb-8 justify-center" />
-      );
+      const { container } = render(<SocialLinks className="mb-8 justify-center" />);
       expect(container.firstElementChild).toHaveClass('mb-8', 'justify-center');
     });
 

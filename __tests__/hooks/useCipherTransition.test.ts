@@ -45,10 +45,9 @@ describe('useCipherTransition', () => {
 
   describe('text changes (disabled mode)', () => {
     it('should update displayChars when text changes', () => {
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
 
@@ -56,10 +55,9 @@ describe('useCipherTransition', () => {
     });
 
     it('should return array matching new text length', () => {
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hi' } }
-      );
+      const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hi' },
+      });
 
       rerender({ text: 'Hello World' });
 
@@ -69,10 +67,9 @@ describe('useCipherTransition', () => {
 
   describe('environment variable toggle', () => {
     it('should skip animation when NEXT_PUBLIC_CIPHER_TRANSITION is not "true"', () => {
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
 
@@ -117,10 +114,9 @@ describe('useCipherTransition', () => {
         dispatchEvent: vi.fn(),
       }));
 
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
 
@@ -186,9 +182,7 @@ describe('useCipherTransition', () => {
 
   describe('cleanup', () => {
     it('should handle unmount gracefully', () => {
-      const { unmount, result } = renderHook(() =>
-        useCipherTransition('Hello')
-      );
+      const { unmount, result } = renderHook(() => useCipherTransition('Hello'));
 
       expect(result.current.displayChars).toEqual(['H', 'e', 'l', 'l', 'o']);
 
@@ -196,10 +190,9 @@ describe('useCipherTransition', () => {
     });
 
     it('should handle rapid text changes', () => {
-      const { rerender, result } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { rerender, result } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
       rerender({ text: 'Test' });
@@ -216,10 +209,9 @@ describe('useCipherTransition', () => {
         return rafCallbacks.length;
       }) as unknown as typeof requestAnimationFrame;
 
-      const { rerender, result } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { rerender, result } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       // Start first animation
       rerender({ text: 'World' });
@@ -236,9 +228,7 @@ describe('useCipherTransition', () => {
       // mid-scramble cipher glyphs survive the interruption. cipher glyphs are all
       // non-Latin, so a pure-ASCII result proves nothing stale persisted.
       expect(result.current.displayChars).toEqual(['W', 'o', 'r', 'l', 'd']);
-      expect(
-        result.current.displayChars.every((char) => /^[A-Za-z]$/.test(char))
-      ).toBe(true);
+      expect(result.current.displayChars.every((char) => /^[A-Za-z]$/.test(char))).toBe(true);
     });
 
     it('should not produce more displayChars than target text length', () => {
@@ -250,10 +240,9 @@ describe('useCipherTransition', () => {
         return rafCallbacks.length;
       }) as unknown as typeof requestAnimationFrame;
 
-      const { rerender, result } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'A long sentence here' } }
-      );
+      const { rerender, result } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'A long sentence here' },
+      });
 
       // Switch to shorter text
       rerender({ text: 'Short' });
@@ -280,10 +269,9 @@ describe('useCipherTransition', () => {
       const elementRef = { current: null as HTMLSpanElement | null };
       const nextText = 'B'.repeat(96);
 
-      const { rerender } = renderHook(
-        ({ text }) => useCipherTransition(text, { elementRef }),
-        { initialProps: { text: 'A'.repeat(96) } }
-      );
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text, { elementRef }), {
+        initialProps: { text: 'A'.repeat(96) },
+      });
 
       rerender({ text: nextText });
 
@@ -314,10 +302,9 @@ describe('useCipherTransition', () => {
         '<span class="cipher-word-slot"><span class="cipher-char-layout">WORLD</span><span class="cipher-word" data-start="6" data-end="11">WORLD</span></span>';
       const elementRef = { current: element as HTMLSpanElement | null };
 
-      const { rerender } = renderHook(
-        ({ text }) => useCipherTransition(text, { elementRef }),
-        { initialProps: { text: 'AAAAA AAAAA' } }
-      );
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text, { elementRef }), {
+        initialProps: { text: 'AAAAA AAAAA' },
+      });
 
       rerender({ text: 'HELLO WORLD' });
       act(() => rafCallbacks.shift()?.(100));
@@ -359,10 +346,9 @@ describe('useCipherTransition', () => {
     }
 
     it('keeps characters scrambling well past the old fast timing before resolving', () => {
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
 
@@ -386,10 +372,9 @@ describe('useCipherTransition', () => {
     });
 
     it('resolves characters progressively (left-to-right wave), not all at once', () => {
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'World' });
 
@@ -404,10 +389,9 @@ describe('useCipherTransition', () => {
     });
 
     it('keeps digits, spaces and punctuation literal while only letters scramble', () => {
-      const { result, rerender } = renderHook(
-        ({ text }) => useCipherTransition(text),
-        { initialProps: { text: 'Hello' } }
-      );
+      const { result, rerender } = renderHook(({ text }) => useCipherTransition(text), {
+        initialProps: { text: 'Hello' },
+      });
 
       rerender({ text: 'Go 5!' });
 

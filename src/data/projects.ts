@@ -17,14 +17,7 @@ export const projectEntries: ProjectEntry[] = [
       { name: 'vidra-core', url: 'https://github.com/yegamble/vidra-core' },
       { name: 'vidra-user', url: 'https://github.com/yegamble/vidra-user' },
     ],
-    technologies: [
-      'Go',
-      'ActivityPub',
-      'ATProto',
-      'PostgreSQL',
-      'Redis',
-      'Docker',
-    ],
+    technologies: ['Go', 'ActivityPub', 'ATProto', 'PostgreSQL', 'Redis', 'Docker'],
     icon: 'layers',
   },
   {

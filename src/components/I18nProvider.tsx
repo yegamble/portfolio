@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
-import {
-  createI18nInstance,
-  getDirection,
-  LOCALE_COOKIE_NAME,
-  type AppLocale,
-} from '@/lib/i18n';
+import { createI18nInstance, getDirection, LOCALE_COOKIE_NAME, type AppLocale } from '@/lib/i18n';
 
 interface I18nProviderProps {
   children: React.ReactNode;

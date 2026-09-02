@@ -20,10 +20,10 @@ export default function ScrollHeader() {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsScrolled(!entry.isIntersecting),
-      { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
-    );
+    const observer = new IntersectionObserver(([entry]) => setIsScrolled(!entry.isIntersecting), {
+      threshold: 0,
+      rootMargin: '-64px 0px 0px 0px',
+    });
 
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -41,9 +41,7 @@ export default function ScrollHeader() {
       >
         <div
           className={`mx-auto flex h-16 w-full items-center gap-4 px-6 transition-all duration-500 ease-out motion-reduce:duration-0 lg:gap-6 lg:px-8 ${
-            isScrolled
-              ? 'max-w-3xl justify-between xl:max-w-5xl'
-              : 'max-w-3xl justify-center'
+            isScrolled ? 'max-w-3xl justify-between xl:max-w-5xl' : 'max-w-3xl justify-center'
           }`}
         >
           {/* Name — visible only when scrolled past hero */}
@@ -56,8 +54,7 @@ export default function ScrollHeader() {
               e.preventDefault();
               window.scrollTo({
                 top: 0,
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)')
-                  .matches
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
                   ? 'auto'
                   : 'smooth',
               });

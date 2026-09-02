@@ -22,9 +22,7 @@ async function switchLanguage(page: Page, langLabel: string) {
 }
 
 test.describe('cipher animation performance', () => {
-  test('no cipher animation fires on page reload with stored language', async ({
-    page,
-  }) => {
+  test('no cipher animation fires on page reload with stored language', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await waitForPortfolioReady(page);
 
@@ -38,22 +36,16 @@ test.describe('cipher animation performance', () => {
     // Inject a mutation observer before reload to detect any cipher animation
     // We'll set it up via an addInitScript so it runs on the reloaded page
     await page.addInitScript(() => {
-      (window as unknown as Record<string, unknown>).__cipherAnimationDetected =
-        false;
+      (window as unknown as Record<string, unknown>).__cipherAnimationDetected = false;
       const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
-          if (
-            mutation.type === 'characterData' ||
-            mutation.type === 'childList'
-          ) {
+          if (mutation.type === 'characterData' || mutation.type === 'childList') {
             const target =
               mutation.type === 'characterData'
                 ? (mutation.target.parentElement as HTMLElement | null)
                 : (mutation.target as HTMLElement);
             if (target?.classList?.contains('cipher-char')) {
-              (
-                window as unknown as Record<string, unknown>
-              ).__cipherAnimationDetected = true;
+              (window as unknown as Record<string, unknown>).__cipherAnimationDetected = true;
             }
           }
         }
@@ -88,8 +80,7 @@ test.describe('cipher animation performance', () => {
 
     // Check that no cipher animation was detected after reload
     const animationDetected = await page.evaluate(
-      () =>
-        (window as unknown as Record<string, unknown>).__cipherAnimationDetected
+      () => (window as unknown as Record<string, unknown>).__cipherAnimationDetected
     );
 
     expect(
@@ -98,9 +89,7 @@ test.describe('cipher animation performance', () => {
     ).toBe(false);
   });
 
-  test('language switch animation maintains acceptable frame rate', async ({
-    page,
-  }) => {
+  test('language switch animation maintains acceptable frame rate', async ({ page }) => {
     test.slow();
     await page.setViewportSize({ width: 1280, height: 900 });
     await waitForPortfolioReady(page);
@@ -113,8 +102,7 @@ test.describe('cipher animation performance', () => {
       });
       observer.observe({ type: 'longtask', buffered: false });
 
-      (window as unknown as Record<string, unknown>).__longTaskObserver =
-        observer;
+      (window as unknown as Record<string, unknown>).__longTaskObserver = observer;
       (window as unknown as Record<string, unknown>).__longTasks = tasks;
     });
 
@@ -128,9 +116,8 @@ test.describe('cipher animation performance', () => {
     const results = await page.evaluate(() => {
       const tasks = (window as unknown as Record<string, unknown[]>)
         .__longTasks as PerformanceEntry[];
-      const observer = (
-        window as unknown as Record<string, PerformanceObserver>
-      ).__longTaskObserver;
+      const observer = (window as unknown as Record<string, PerformanceObserver>)
+        .__longTaskObserver;
       observer?.disconnect();
 
       const longTaskCount = tasks.length;
@@ -166,8 +153,7 @@ test.describe('cipher animation performance', () => {
       });
       observer.observe({ type: 'longtask', buffered: false });
 
-      (window as unknown as Record<string, unknown>).__longTaskObserver =
-        observer;
+      (window as unknown as Record<string, unknown>).__longTaskObserver = observer;
       (window as unknown as Record<string, unknown>).__longTasks = tasks;
     });
 
@@ -181,9 +167,8 @@ test.describe('cipher animation performance', () => {
     const results = await page.evaluate(() => {
       const tasks = (window as unknown as Record<string, unknown[]>)
         .__longTasks as PerformanceEntry[];
-      const observer = (
-        window as unknown as Record<string, PerformanceObserver>
-      ).__longTaskObserver;
+      const observer = (window as unknown as Record<string, PerformanceObserver>)
+        .__longTaskObserver;
       observer?.disconnect();
 
       const longTaskCount = tasks.length;
@@ -206,9 +191,7 @@ test.describe('cipher animation performance', () => {
     ).toBeLessThan(100);
   });
 
-  test('frame rate stays above threshold during animation', async ({
-    page,
-  }) => {
+  test('frame rate stays above threshold during animation', async ({ page }) => {
     test.slow();
     await page.setViewportSize({ width: 1280, height: 900 });
     await waitForPortfolioReady(page);
@@ -218,8 +201,7 @@ test.describe('cipher animation performance', () => {
       (window as unknown as Record<string, unknown>).__frameTimes = [];
       (window as unknown as Record<string, unknown>).__measuring = true;
 
-      const frameTimes = (window as unknown as Record<string, number[]>)
-        .__frameTimes;
+      const frameTimes = (window as unknown as Record<string, number[]>).__frameTimes;
 
       function measure(time: number) {
         if ((window as unknown as Record<string, boolean>).__measuring) {
@@ -240,11 +222,9 @@ test.describe('cipher animation performance', () => {
     const fpsData = await page.evaluate(() => {
       (window as unknown as Record<string, boolean>).__measuring = false;
 
-      const frameTimes = (window as unknown as Record<string, number[]>)
-        .__frameTimes;
+      const frameTimes = (window as unknown as Record<string, number[]>).__frameTimes;
 
-      if (frameTimes.length < 2)
-        return { avgFps: 0, minFps: 0, droppedFrames: 0 };
+      if (frameTimes.length < 2) return { avgFps: 0, minFps: 0, droppedFrames: 0 };
 
       const deltas: number[] = [];
       for (let i = 1; i < frameTimes.length; i++) {

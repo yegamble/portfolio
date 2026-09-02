@@ -33,9 +33,7 @@ await sharp(SOURCE)
   .toFile(AVATAR_OUTPUT);
 
 const avatarStats = await sharp(AVATAR_OUTPUT).metadata();
-console.log(
-  `Avatar: ${avatarStats.width}x${avatarStats.height} → ${AVATAR_OUTPUT}`
-);
+console.log(`Avatar: ${avatarStats.width}x${avatarStats.height} → ${AVATAR_OUTPUT}`);
 
 // Delete 18MB source
 unlinkSync(SOURCE);

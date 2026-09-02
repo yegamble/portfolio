@@ -36,11 +36,7 @@ function decodeArmoredKey(raw: string): string {
 // most recently parsed key is enough to make reopening it instant.
 let cached: { key: string; info: PgpKeyInfo } | null = null;
 
-export default function PgpKeyModal({
-  isOpen,
-  onClose,
-  armoredKey,
-}: PgpKeyModalProps) {
+export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModalProps) {
   const { t } = useTranslation();
   const [keyInfo, setKeyInfo] = useState<PgpKeyInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -178,10 +174,7 @@ export default function PgpKeyModal({
         className="w-full max-w-lg rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl outline-none"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2
-            id="pgp-modal-title"
-            className="text-lg font-semibold text-text-primary"
-          >
+          <h2 id="pgp-modal-title" className="text-lg font-semibold text-text-primary">
             {t('pgp.title')}
           </h2>
           <button
@@ -189,64 +182,43 @@ export default function PgpKeyModal({
             className="text-text-muted transition-colors hover:text-text-primary"
             aria-label={t('pgp.close')}
           >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
             </svg>
           </button>
         </div>
 
-        {loading && (
-          <p className="mb-4 text-sm text-text-muted">{t('pgp.loading')}</p>
-        )}
+        {loading && <p className="mb-4 text-sm text-text-muted">{t('pgp.loading')}</p>}
 
         {error && <p className="mb-4 text-sm text-red-400">{t('pgp.error')}</p>}
 
         {keyInfo && (
           <div className="mb-4 space-y-2 text-sm">
             <div>
-              <span className="font-medium text-text-muted">
-                {t('pgp.fingerprint')}:{' '}
-              </span>
+              <span className="font-medium text-text-muted">{t('pgp.fingerprint')}: </span>
               <code className="break-all font-mono text-xs text-primary">
                 {keyInfo.fingerprint}
               </code>
             </div>
             {keyInfo.userIds.map((uid) => (
               <div key={uid}>
-                <span className="font-medium text-text-muted">
-                  {t('pgp.userId')}:{' '}
-                </span>
+                <span className="font-medium text-text-muted">{t('pgp.userId')}: </span>
                 <span className="text-text-primary">{uid}</span>
               </div>
             ))}
             <div>
-              <span className="font-medium text-text-muted">
-                {t('pgp.algorithm')}:{' '}
-              </span>
+              <span className="font-medium text-text-muted">{t('pgp.algorithm')}: </span>
               <span className="text-text-primary">{keyInfo.algorithm}</span>
             </div>
             <div>
-              <span className="font-medium text-text-muted">
-                {t('pgp.created')}:{' '}
-              </span>
+              <span className="font-medium text-text-muted">{t('pgp.created')}: </span>
               <span className="text-text-primary">{keyInfo.created}</span>
             </div>
             <div>
-              <span className="font-medium text-text-muted">
-                {t('pgp.keyId')}:{' '}
-              </span>
-              <code className="font-mono text-xs text-text-primary">
-                {keyInfo.keyId}
-              </code>
+              <span className="font-medium text-text-muted">{t('pgp.keyId')}: </span>
+              <code className="font-mono text-xs text-text-primary">{keyInfo.keyId}</code>
             </div>
-            <p className="mt-3 text-xs text-text-muted italic">
-              {t('pgp.verifyNotice')}
-            </p>
+            <p className="mt-3 text-xs text-text-muted italic">{t('pgp.verifyNotice')}</p>
           </div>
         )}
 

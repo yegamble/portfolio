@@ -10,13 +10,11 @@ import et from '../../public/locales/et/translation.json';
 
 function keyPaths(value: unknown, prefix = ''): string[] {
   if (Array.isArray(value)) {
-    return value.flatMap((item, index) =>
-      keyPaths(item, `${prefix}[${index}]`)
-    );
+    return value.flatMap((item, index) => keyPaths(item, `${prefix}[${index}]`));
   }
   if (value !== null && typeof value === 'object') {
-    return Object.entries(value as Record<string, unknown>).flatMap(
-      ([key, child]) => keyPaths(child, prefix ? `${prefix}.${key}` : key)
+    return Object.entries(value as Record<string, unknown>).flatMap(([key, child]) =>
+      keyPaths(child, prefix ? `${prefix}.${key}` : key)
     );
   }
   return [prefix];

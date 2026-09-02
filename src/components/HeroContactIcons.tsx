@@ -12,9 +12,7 @@ interface HeroContactIconsProps {
 
 const linkClass = 'text-text-muted transition-colors hover:text-primary';
 
-export default function HeroContactIcons({
-  className = '',
-}: HeroContactIconsProps) {
+export default function HeroContactIcons({ className = '' }: HeroContactIconsProps) {
   const { t } = useTranslation();
   const [showPgpModal, setShowPgpModal] = useState(false);
 
@@ -24,20 +22,12 @@ export default function HeroContactIcons({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       {primaryEmailHref && (
-        <a
-          className={linkClass}
-          href={primaryEmailHref}
-          aria-label={t('social.email')}
-        >
+        <a className={linkClass} href={primaryEmailHref} aria-label={t('social.email')}>
           <EmailIcon className="h-7 w-7" />
         </a>
       )}
       {secureEmailHref && (
-        <a
-          className={linkClass}
-          href={secureEmailHref}
-          aria-label={t('social.secureEmail')}
-        >
+        <a className={linkClass} href={secureEmailHref} aria-label={t('social.secureEmail')}>
           <SecureEmailIcon className="h-7 w-7" />
         </a>
       )}

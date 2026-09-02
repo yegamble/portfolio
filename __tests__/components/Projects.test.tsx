@@ -18,9 +18,7 @@ vi.mock('@/data/projects', () => ({
     },
     {
       id: 'proj-beta',
-      repos: [
-        { name: 'proj-beta', url: 'https://github.com/example/proj-beta' },
-      ],
+      repos: [{ name: 'proj-beta', url: 'https://github.com/example/proj-beta' }],
       technologies: ['Next.js', 'TypeScript'],
       icon: 'folder',
     },
@@ -112,9 +110,7 @@ describe('Projects', () => {
   describe('Section structure', () => {
     it('should render the projects section with correct aria label', () => {
       render(<Projects />);
-      expect(
-        screen.getByRole('region', { name: /selected projects/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: /selected projects/i })).toBeInTheDocument();
     });
 
     it('should have the correct section id for anchor navigation', () => {
@@ -168,18 +164,10 @@ describe('Projects', () => {
 
     it('should render project titles from translation', () => {
       render(<Projects />);
-      expect(
-        screen.getByRole('heading', { level: 3, name: /project alpha/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('heading', { level: 3, name: /project beta/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('heading', { level: 3, name: /project gamma/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('heading', { level: 3, name: /project delta/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /project alpha/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /project beta/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /project gamma/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /project delta/i })).toBeInTheDocument();
     });
   });
 
@@ -241,9 +229,7 @@ describe('Projects', () => {
       expect(
         screen.getByRole('link', { name: /view proj-alpha-core on github/i })
       ).toBeInTheDocument();
-      expect(
-        screen.getByRole('link', { name: /view proj-beta on github/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /view proj-beta on github/i })).toBeInTheDocument();
     });
   });
 

@@ -13,9 +13,7 @@ describe('NotFound', () => {
   it('should render descriptive text', () => {
     render(<NotFound />);
 
-    expect(
-      screen.getByText(/page you.+looking for doesn.+t exist/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/page you.+looking for doesn.+t exist/i)).toBeInTheDocument();
   });
 
   it('should have link back to home', () => {

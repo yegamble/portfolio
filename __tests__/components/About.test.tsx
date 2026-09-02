@@ -7,9 +7,7 @@ describe('About', () => {
   describe('Section structure', () => {
     it('should render the about section with correct aria label', () => {
       render(<About />);
-      expect(
-        screen.getByRole('region', { name: /about me/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: /about me/i })).toBeInTheDocument();
     });
 
     it('should have the correct section id for anchor navigation', () => {

@@ -20,10 +20,7 @@ describe('ProfilePicture', () => {
       const img = screen.getByRole('img', {
         name: new RegExp(profileAlt, 'i'),
       });
-      expect(img).toHaveAttribute(
-        'src',
-        expect.stringContaining('profile.jpg')
-      );
+      expect(img).toHaveAttribute('src', expect.stringContaining('profile.jpg'));
     });
 
     it('should render with lazy loading', () => {

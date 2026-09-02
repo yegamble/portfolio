@@ -55,14 +55,7 @@ export function SecureEmailIcon({ className = 'h-5 w-5' }: IconProps) {
       <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
       <circle cx="12" cy="12" r="6.5" fill="var(--color-bg-dark, #0f172a)" />
       <circle cx="12" cy="12" r="5.5" />
-      <rect
-        x="9.5"
-        y="12"
-        width="5"
-        height="3.5"
-        rx="0.7"
-        fill="var(--color-bg-dark, #0f172a)"
-      />
+      <rect x="9.5" y="12" width="5" height="3.5" rx="0.7" fill="var(--color-bg-dark, #0f172a)" />
       <path
         d="M10.5 12v-1.2a1.5 1.5 0 013 0V12"
         fill="none"
@@ -110,9 +103,7 @@ export function ArrowRightIcon({ className = 'h-4 w-4' }: IconProps) {
   );
 }
 
-export function FolderIcon({
-  className = 'h-9 w-9 text-primary/90',
-}: IconProps) {
+export function FolderIcon({ className = 'h-9 w-9 text-primary/90' }: IconProps) {
   return (
     <BaseIcon viewBox="0 0 24 24" className={className}>
       <path d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 10.146V6a3 3 0 013-3h5.379a2.25 2.25 0 011.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 013 3v1.146A4.483 4.483 0 0019.5 9h-15a4.483 4.483 0 00-3 1.146z" />
@@ -216,9 +207,7 @@ export function EstoniaFlagIcon({ className = 'h-4 w-6' }: FlagIconProps) {
   );
 }
 
-export function LayersIcon({
-  className = 'h-9 w-9 text-primary/90',
-}: IconProps) {
+export function LayersIcon({ className = 'h-9 w-9 text-primary/90' }: IconProps) {
   return (
     <BaseIcon viewBox="0 0 24 24" className={className}>
       <path d="M11.644 1.59a.75.75 0 01.712 0l9.75 5.25a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.712 0l-9.75-5.25a.75.75 0 010-1.32l9.75-5.25z" />

@@ -83,10 +83,7 @@ describe('Icon components', () => {
 
       it('should have aria-hidden attribute', () => {
         const { container } = render(<Component />);
-        expect(container.querySelector('svg')).toHaveAttribute(
-          'aria-hidden',
-          'true'
-        );
+        expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
       });
 
       it('should apply default className', () => {
@@ -105,18 +102,12 @@ describe('Icon components', () => {
 
       it(`should use correct viewBox: ${viewBox}`, () => {
         const { container } = render(<Component />);
-        expect(container.querySelector('svg')).toHaveAttribute(
-          'viewBox',
-          viewBox
-        );
+        expect(container.querySelector('svg')).toHaveAttribute('viewBox', viewBox);
       });
 
       it('should use fill="currentColor"', () => {
         const { container } = render(<Component />);
-        expect(container.querySelector('svg')).toHaveAttribute(
-          'fill',
-          'currentColor'
-        );
+        expect(container.querySelector('svg')).toHaveAttribute('fill', 'currentColor');
       });
 
       it('should have xmlns attribute', () => {
@@ -188,10 +179,7 @@ describe('Icon components', () => {
 
         it('should have aria-hidden attribute', () => {
           const { container } = render(<Component />);
-          expect(container.querySelector('svg')).toHaveAttribute(
-            'aria-hidden',
-            'true'
-          );
+          expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
         });
 
         it('should have default flag dimensions class', () => {

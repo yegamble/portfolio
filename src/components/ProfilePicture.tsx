@@ -7,9 +7,7 @@ interface ProfilePictureProps {
   className?: string;
 }
 
-export default function ProfilePicture({
-  className = '',
-}: ProfilePictureProps) {
+export default function ProfilePicture({ className = '' }: ProfilePictureProps) {
   const { t } = useTranslation();
 
   return (

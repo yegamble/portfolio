@@ -1,12 +1,7 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import {
-  GitHubIcon,
-  LinkedInIcon,
-  EmailIcon,
-  SecureEmailIcon,
-} from '@/components/icons';
+import { GitHubIcon, LinkedInIcon, EmailIcon, SecureEmailIcon } from '@/components/icons';
 import { primaryEmailHref, secureEmailHref } from '@/lib/contact';
 
 interface SocialLinkItem {
@@ -71,9 +66,7 @@ export default function SocialLinks({
           key={labelKey}
           className={linkClassName}
           href={href}
-          {...(external
-            ? { target: '_blank', rel: 'noreferrer noopener' }
-            : {})}
+          {...(external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
         >
           <span className="sr-only">{t(labelKey)}</span>
           <Icon className={iconSize} />

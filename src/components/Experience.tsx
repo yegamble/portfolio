@@ -16,13 +16,9 @@ interface ExperienceJob {
   description: string;
 }
 
-const METADATA_BY_ID = new Map(
-  experienceEntries.map((entry) => [entry.id, entry])
-);
+const METADATA_BY_ID = new Map(experienceEntries.map((entry) => [entry.id, entry]));
 
-function hasExternalCompanyUrl(
-  companyUrl?: string | null
-): companyUrl is string {
+function hasExternalCompanyUrl(companyUrl?: string | null): companyUrl is string {
   if (!companyUrl) {
     return false;
   }
@@ -55,10 +51,7 @@ export default function Experience() {
       className="scroll-mt-24 border-t border-slate-800/30 py-16 md:py-24"
       aria-label={t('experience.ariaLabel')}
     >
-      <SectionHeader
-        title={<CipherText>{t('experience.heading')}</CipherText>}
-        className="mb-12"
-      />
+      <SectionHeader title={<CipherText>{t('experience.heading')}</CipherText>} className="mb-12" />
       <ol className="space-y-12">
         {jobsWithMetadata.map(({ job, meta }) => {
           return (

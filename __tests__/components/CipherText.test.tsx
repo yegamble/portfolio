@@ -245,9 +245,7 @@ describe('CipherText', () => {
     it('should not render wrapper spans when not animating', () => {
       const { container } = render(<CipherText>Hello</CipherText>);
 
-      expect(
-        container.querySelector('[aria-hidden="true"]')
-      ).not.toBeInTheDocument();
+      expect(container.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
       expect(container.querySelector('.sr-only')).not.toBeInTheDocument();
     });
 
@@ -292,9 +290,7 @@ describe('CipherText', () => {
       expect(wrapper?.tagName).toBe('SPAN');
       expect(wrapper?.style.display).toBe('inline-block');
       expect(wrapper?.querySelector('.sr-only')).toBeInTheDocument();
-      expect(
-        wrapper?.querySelector('[aria-hidden="true"]')
-      ).toBeInTheDocument();
+      expect(wrapper?.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
     });
 
     it('should render a full-width inline-block wrapper when block is true', () => {
@@ -306,9 +302,7 @@ describe('CipherText', () => {
     });
 
     it('should keep the block wrapper when switching between animating and non-animating states', () => {
-      const { container, rerender } = render(
-        <CipherText block>Text A</CipherText>
-      );
+      const { container, rerender } = render(<CipherText block>Text A</CipherText>);
 
       // Non-animating: wrapper span exists
       const wrapperBefore = container.querySelector('span');
@@ -380,13 +374,11 @@ describe('CipherText', () => {
 
       const slots = Array.from(container.querySelectorAll('.cipher-word-slot'));
       const latinSlot = slots.find(
-        (slot) =>
-          slot.querySelector('.cipher-char-layout')?.textContent === 'AWS'
+        (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'AWS'
       );
       expect(latinSlot?.previousSibling?.textContent).toBe('‎');
       const hebrewSlot = slots.find(
-        (slot) =>
-          slot.querySelector('.cipher-char-layout')?.textContent === 'מערכת'
+        (slot) => slot.querySelector('.cipher-char-layout')?.textContent === 'מערכת'
       );
       expect(hebrewSlot?.previousSibling?.textContent).toBe('‏');
     });

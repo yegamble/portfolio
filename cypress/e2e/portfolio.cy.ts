@@ -60,9 +60,7 @@ describe('Portfolio Site', () => {
   });
 
   it('should display technology tags in experience entries', () => {
-    cy.get('#experience')
-      .find('[aria-label="Technologies used"]')
-      .should('have.length', 3);
+    cy.get('#experience').find('[aria-label="Technologies used"]').should('have.length', 3);
   });
 
   it('should display the Projects section with card layout', () => {
@@ -75,18 +73,10 @@ describe('Portfolio Site', () => {
     cy.get('header')
       .first()
       .within(() => {
-        cy.get('a')
-          .filter('[href="https://github.com/yegamble"]')
-          .should('exist');
-        cy.get('a')
-          .filter('[href="https://linkedin.com/in/yosefgamble"]')
-          .should('exist');
-        cy.get('a')
-          .filter('[href="mailto:yegamble@gmail.com"]')
-          .should('exist');
-        cy.get('a')
-          .filter('[href="mailto:yosef.gamble@protonmail.com"]')
-          .should('exist');
+        cy.get('a').filter('[href="https://github.com/yegamble"]').should('exist');
+        cy.get('a').filter('[href="https://linkedin.com/in/yosefgamble"]').should('exist');
+        cy.get('a').filter('[href="mailto:yegamble@gmail.com"]').should('exist');
+        cy.get('a').filter('[href="mailto:yosef.gamble@protonmail.com"]').should('exist');
       });
   });
 
@@ -121,9 +111,7 @@ describe('Scroll Header — Responsive Layout', () => {
 
       it('should center nav links before scroll', () => {
         // The inner flex container should use justify-center before scrolling
-        cy.get('header > div')
-          .first()
-          .should('have.css', 'justify-content', 'center');
+        cy.get('header > div').first().should('have.css', 'justify-content', 'center');
       });
 
       it('should not clip navbar text on initial load', () => {
@@ -135,35 +123,23 @@ describe('Scroll Header — Responsive Layout', () => {
               .first()
               .then(($section) => {
                 const sectionTop = $section[0].getBoundingClientRect().top;
-                expect(sectionTop).to.be.greaterThan(
-                  (headerHeight as number) - 1
-                );
+                expect(sectionTop).to.be.greaterThan((headerHeight as number) - 1);
               });
           });
       });
 
       it('should transition navbar to justify-between after scroll', () => {
         cy.get('#experience').scrollIntoView();
-        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should(
-          'exist'
-        );
-        cy.get('header > div')
-          .first()
-          .should('have.css', 'justify-content', 'space-between');
+        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
+        cy.get('header > div').first().should('have.css', 'justify-content', 'space-between');
       });
 
       it('should not have text overflow or wrapping in navbar after scroll', () => {
         cy.get('#experience').scrollIntoView();
-        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should(
-          'exist'
-        );
+        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
 
         // The name container should not have visible overflow
-        cy.get('header [aria-hidden="false"]').should(
-          'have.css',
-          'white-space',
-          'nowrap'
-        );
+        cy.get('header [aria-hidden="false"]').should('have.css', 'white-space', 'nowrap');
 
         // Each navbar link should be fully visible (not clipped)
         if (width >= 640) {
@@ -187,9 +163,7 @@ describe('Scroll Header — Responsive Layout', () => {
 
         // After scroll
         cy.get('#experience').scrollIntoView();
-        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should(
-          'exist'
-        );
+        cy.get('header [aria-hidden="false"]', { timeout: 6000 }).should('exist');
         cy.get('header a[href="https://github.com/yegamble"]')
           .should('be.visible')
           .then(($el) => {
@@ -201,20 +175,12 @@ describe('Scroll Header — Responsive Layout', () => {
 
       it('should have opaque header background to prevent text bleed-through', () => {
         // Header must not be transparent — hero text must not show through during scroll
-        cy.get('header').should(
-          'not.have.css',
-          'background-color',
-          'rgba(0, 0, 0, 0)'
-        );
+        cy.get('header').should('not.have.css', 'background-color', 'rgba(0, 0, 0, 0)');
 
         // Scroll partway so hero text would be behind the header
         cy.scrollTo(0, 100);
         cy.wait(100);
-        cy.get('header').should(
-          'not.have.css',
-          'background-color',
-          'rgba(0, 0, 0, 0)'
-        );
+        cy.get('header').should('not.have.css', 'background-color', 'rgba(0, 0, 0, 0)');
       });
 
       it('should have adequate spacing between hero name and navbar', () => {
@@ -306,9 +272,7 @@ describe('Hero Contact Icons & PGP Modal', () => {
 describe('Estonian locale', () => {
   it('should serve /et with Estonian document attributes and navigation', () => {
     cy.visit('/et');
-    cy.get('html')
-      .should('have.attr', 'lang', 'et')
-      .and('have.attr', 'dir', 'ltr');
+    cy.get('html').should('have.attr', 'lang', 'et').and('have.attr', 'dir', 'ltr');
     cy.get('nav[aria-label="Peanavigatsioon"]').within(() => {
       cy.contains('Minust').should('have.attr', 'href', '#about');
       cy.contains('Kogemus').should('have.attr', 'href', '#experience');
@@ -336,9 +300,7 @@ describe('Estonian locale', () => {
 describe('Hebrew locale', () => {
   it('should serve /he in RTL with Tel Aviv in the hero location', () => {
     cy.visit('/he');
-    cy.get('html')
-      .should('have.attr', 'lang', 'he')
-      .and('have.attr', 'dir', 'rtl');
+    cy.get('html').should('have.attr', 'lang', 'he').and('have.attr', 'dir', 'rtl');
     cy.get('section')
       .first()
       .within(() => {

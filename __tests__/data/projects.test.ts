@@ -13,18 +13,12 @@ describe('Projects Data validation', () => {
   it('each entry should have a valid structure', () => {
     projectEntries.forEach((entry) => {
       // Validate id
-      expect(
-        entry.id,
-        'Entry id should be defined and non-empty'
-      ).toBeDefined();
+      expect(entry.id, 'Entry id should be defined and non-empty').toBeDefined();
       expect(typeof entry.id).toBe('string');
       expect(entry.id.trim().length).toBeGreaterThan(0);
 
       // Validate repos array (replaces single url)
-      expect(
-        entry.repos,
-        'Entry repos should be a non-empty array'
-      ).toBeDefined();
+      expect(entry.repos, 'Entry repos should be a non-empty array').toBeDefined();
       expect(Array.isArray(entry.repos)).toBe(true);
       expect(entry.repos.length).toBeGreaterThan(0);
       entry.repos.forEach((repo) => {

@@ -8,9 +8,7 @@ const CHARACTER_POOLS: string[][] = [
   Array.from(
     'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'
   ),
-  Array.from(
-    '的一是不了人我在有他这中大来上个国到说们为子和你地出会也时要就可以'
-  ),
+  Array.from('的一是不了人我在有他这中大来上个国到说们为子和你地出会也时要就可以'),
   Array.from('ابتثجحخدذرزسشصضطظعغفقكلمنهوي'),
   Array.from('אבגדהוזחטיכלמנסעפצקרשת'),
   Array.from('अआइईउऊएऐओऔकखगघचछजझटठडढणतथदधनपफबभमयरलवशषसह'),
@@ -27,8 +25,7 @@ const SINGLE_LETTER_REGEX = /^\p{L}$/u;
  * Character pools are pre-computed as arrays for performance in animation hot paths.
  */
 export function getRandomCipherChar(): string {
-  const pool =
-    CHARACTER_POOLS[Math.floor(Math.random() * CHARACTER_POOLS.length)];
+  const pool = CHARACTER_POOLS[Math.floor(Math.random() * CHARACTER_POOLS.length)];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 

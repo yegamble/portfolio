@@ -1,10 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import {
-  getLocaleHref,
-  getPreferredLocale,
-  LOCALE_COOKIE_NAME,
-} from '@/lib/i18n';
+import { getLocaleHref, getPreferredLocale, LOCALE_COOKIE_NAME } from '@/lib/i18n';
 
 export default async function IndexPage() {
   const cookieStore = await cookies();
