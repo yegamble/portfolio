@@ -2,6 +2,10 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 
+// Next's notFound() throws to unwind the render; a mock that returns would let
+// a component keep going past it and hide a real bug.
+const NOT_FOUND_ERROR = 'NEXT_HTTP_ERROR_FALLBACK;404';
+
 const { notFoundMock } = vi.hoisted(() => ({
   notFoundMock: vi.fn(),
 }));
@@ -28,6 +32,9 @@ import LocaleLayout, { generateMetadata, generateStaticParams } from '@/app/[loc
 describe('LocaleLayout', () => {
   beforeEach(() => {
     notFoundMock.mockReset();
+    notFoundMock.mockImplementation(() => {
+      throw new Error(NOT_FOUND_ERROR);
+    });
   });
 
   it('renders the document shell with the locale from the route params', async () => {
@@ -113,17 +120,21 @@ describe('LocaleLayout', () => {
     });
   });
 
-  it('calls notFound for invalid locales', async () => {
-    await LocaleLayout({
-      children: <div>Ignored</div>,
-      params: Promise.resolve({ locale: 'de' }),
-    });
+  it('stops rendering for an invalid locale', async () => {
+    await expect(
+      LocaleLayout({
+        children: <div>Ignored</div>,
+        params: Promise.resolve({ locale: 'de' }),
+      })
+    ).rejects.toThrow(NOT_FOUND_ERROR);
 
     expect(notFoundMock).toHaveBeenCalled();
   });
 
-  it('calls notFound when building metadata for an invalid locale', async () => {
-    await generateMetadata({ params: Promise.resolve({ locale: 'de' }) }).catch(() => undefined);
+  it('stops building metadata for an invalid locale', async () => {
+    await expect(generateMetadata({ params: Promise.resolve({ locale: 'de' }) })).rejects.toThrow(
+      NOT_FOUND_ERROR
+    );
 
     expect(notFoundMock).toHaveBeenCalled();
   });

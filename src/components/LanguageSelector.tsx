@@ -23,11 +23,10 @@ const LANGUAGES: LanguageOption[] = [
 
 // The href is the localized pathname only: this site has no query-string routes,
 // so there is nothing for a query to carry. Reading one would mean
-// useSearchParams, which needs a Suspense boundary around this component once
-// the route is statically rendered — the root layout's headers() call keeps the
-// route dynamic today, so this is about not planting a blocker rather than
-// clearing one. A query or hash that is present on the client is re-attached
-// from window.location on selection.
+// useSearchParams, and the locale routes are statically prerendered now, so that
+// would need a Suspense boundary around this component or the whole route falls
+// back to client rendering. A query or hash that is present on the client is
+// re-attached from window.location on selection.
 function buildLanguageHref(pathname: string | null, locale: AppLocale) {
   return getLocalizedPathname(pathname, locale);
 }
