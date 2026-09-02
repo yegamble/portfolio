@@ -148,7 +148,7 @@ override values there — `.env` and `.env*.local` are git-ignored.
 
 ### Deploy-time Cloudflare variables
 
-The CI deploy job expects these GitHub Actions secrets:
+The `deploy` and `rollback` jobs expect these GitHub Actions secrets. They belong in the `Production` environment (see [Repository settings this pipeline assumes](#repository-settings-this-pipeline-assumes)) rather than at repository scope:
 
 | Secret | Purpose |
 | --- | --- |
@@ -188,13 +188,32 @@ This repository is tested at multiple levels:
 - Cypress covers major user-facing flows such as navigation, hero rendering, responsiveness, and the PGP modal
 - Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics
 
-The CI pipeline enforces this sequence on every pull request:
+## Continuous integration
 
-1. Lint and typecheck
-2. Unit tests
-3. Production build
-4. Cypress end-to-end tests
-5. Cloudflare deploy on `main`
+`.github/workflows/ci.yml` runs on every pull request and on every push to `main`:
+
+```text
+lint-and-typecheck ───────────────────┐
+unit-tests ───────────────────────────┤
+                                      ├──► deploy (push to main only)
+build ──┬── e2e (Cypress) ────────────┤
+        └── playwright (layout, perf) ┘
+```
+
+| Job | Gate |
+| --- | --- |
+| `lint-and-typecheck` | `pnpm lint`, `pnpm typecheck`, `pnpm format:check` |
+| `unit-tests` | `pnpm test:coverage` (thresholds live in `vitest.config.ts`; the summary is published to the run page), then `pnpm audit --prod` — blocking at `critical`, plus a non-blocking full report |
+| `build` | `pnpm build` against `.env.example`, uploaded as an artifact |
+| `e2e` | Cypress against `pnpm start` serving that artifact |
+| `playwright` | Layout-stability and animation-performance specs against `next start` serving that artifact — not `next dev`, whose frame budget is a different number entirely |
+| `deploy` | `pnpm run deploy`, then a smoke test against the live site |
+
+Both browser suites consume the `build` artifact instead of compiling their own, so what is measured is what ships. Every job carries a timeout, every action is pinned to a commit SHA, and the workflow's `GITHUB_TOKEN` is read-only — the deploy authenticates to Cloudflare with its own secrets. A pull request run is cancelled when a newer commit arrives; runs on `main` queue rather than cancel, and the deploy job holds a separate `production-deploy` lock, so two merges can never deploy at the same time.
+
+Dependencies are updated weekly by Dependabot (`.github/dependabot.yml`). `next`, `eslint-config-next`, `@opennextjs/*` and `wrangler` arrive in a single pull request, because a version bump to any one of them alone cannot pass CI.
+
+The audit gate blocks on `critical` rather than `high` deliberately: the advisories open today are all transitive under `next > styled-jsx > @babel/core`, with no published version to move to. A `high` gate would fail every run without anyone being able to fix it, which trains people to ignore it.
 
 ## Deployment
 
@@ -202,11 +221,28 @@ The app is configured for Cloudflare Workers using OpenNext.
 
 Key files:
 
-- `wrangler.jsonc`
+- `wrangler.jsonc` — the Worker's `workers_dev` setting and route bindings are managed in the Cloudflare dashboard, not in this file
 - `open-next.config.ts`
 - `.github/workflows/ci.yml`
 
-Production deploys run automatically from `main` after the full CI pipeline succeeds.
+Production deploys run automatically from `main` once the full pipeline succeeds. The deploy job:
+
+1. Builds and deploys with `pnpm run deploy`
+2. Records the Worker's `Current Version ID` in the run summary and as a job output — that id is the only handle a rollback accepts
+3. Smoke-tests the live site with retries: `/en` answers 200 carrying `Strict-Transport-Security` and `Content-Security-Policy`, `/he` renders `dir="rtl"`, and `/` answers 307 to `/en`
+
+### Rolling back
+
+Run the **CI** workflow manually from the Actions tab (`Run workflow`) with `rollback_version_id` set to the version id of a known-good deploy. Every deploy prints its id in the job summary, and `pnpm exec wrangler versions list` lists them. Only the rollback job runs — the rest of the pipeline is skipped — and it takes the same `production-deploy` lock a deploy does.
+
+### Repository settings this pipeline assumes
+
+These live in GitHub settings rather than in the repository, so they are the owner's to apply:
+
+- Add `e2e` and `playwright` to the required status checks on `main`. The existing `lint-and-typecheck`, `unit-tests` and `build` keep their names and keep reporting, so nothing already required breaks — but the two browser suites are new gates and are advisory until they are required.
+- Include administrators (`enforce_admins`), and require at least one approving review with `require_last_push_approval`
+- Move `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` out of repository secrets and into the `Production` environment, with a deployment branch policy limited to `main`, so a workflow running on any other branch cannot read them
+- Enable Dependabot alerts. Without them `.github/dependabot.yml` opens version-update pull requests but never security ones
 
 ## Repo structure and ownership signals
 

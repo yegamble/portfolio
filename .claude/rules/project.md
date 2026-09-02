@@ -16,7 +16,7 @@ Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland
 - **Testing:** Vitest + Testing Library (unit), Cypress (E2E), Playwright (animation/layout-stability specs)
 - **Linting:** ESLint (next config + prettier), Prettier
 - **Deploy:** Cloudflare Workers via `@opennextjs/cloudflare` (`wrangler.jsonc`, `open-next.config.ts`). The four locale routes are prerendered (`● /en /he /ru /et`), and `open-next.config.ts` uses the `static-assets-incremental-cache` override with `enableCacheInterception: true` so the Worker serves that prerendered HTML (`x-opennext-cache: HIT`) instead of re-rendering React per request. `opennextjs-cloudflare deploy` / `preview` populate `.open-next/assets/cdn-cgi/_next_cache` — a bare `wrangler deploy` would not
-- **CI:** GitHub Actions (Node 22, pnpm via Corepack)
+- **CI:** GitHub Actions. Node from `.nvmrc`, pnpm from the `packageManager` pin via `pnpm/action-setup` (not Corepack), every action pinned to a commit SHA
 
 ## Directory Structure
 
@@ -61,6 +61,10 @@ playwright/         # Playwright specs: layout-stability (layout project),
 scripts/            # Asset tooling (process-images.mjs — run by hand on macOS,
                     # output committed; see the header comment)
 .github/workflows   # CI pipeline (ci.yml)
+.github/actions/    # setup/action.yml — the shared pnpm + Node + install
+                    # sequence every job runs after its own checkout (a local
+                    # composite action cannot check out the repo holding it)
+.github/dependabot.yml
 ```
 
 ## Commands (pnpm)
@@ -144,8 +148,39 @@ characters, enforced by `__tests__/locales/translation-content.test.ts`.
 ## CI Pipeline (.github/workflows/ci.yml)
 
 ```
-lint-and-typecheck ──┐
-unit-tests ──────────┤──► build ──► e2e-tests ──► deploy
+lint-and-typecheck ───────────────────┐
+unit-tests ───────────────────────────┤
+                                      ├──► deploy (push to main only)
+build ──┬── e2e (Cypress) ────────────┤
+        └── playwright (layout, perf) ┘
+
+rollback — workflow_dispatch with a non-empty rollback_version_id; nothing else runs
 ```
 
-All jobs on `ubuntu-latest`, Node 22, pnpm via Corepack. The build job copies `.env.example` to `.env`.
+- `lint-and-typecheck`: lint, typecheck, `format:check`
+- `unit-tests`: `test:coverage` (summary appended to `$GITHUB_STEP_SUMMARY`), then
+  `pnpm audit --prod --audit-level=critical` blocking plus a non-blocking full
+  `pnpm audit --prod`. **`critical`, not `high`**: today's three advisories are
+  transitive under `next > styled-jsx > @babel/core` with nothing to upgrade to, so a
+  `high` gate would fail every run for reasons nobody can fix
+- `build`: `cp .env.example .env` then `pnpm build`, uploading `.next` (minus
+  `.next/cache`) as an artifact. `e2e` and `playwright` both download it, so the browser
+  suites measure the artifact that deploys rather than a build of their own
+- `playwright`: `playwright.config.ts` switches `webServer.command` to
+  `next start` when `CI` is set and refuses to reuse an existing server — the
+  perf specs were tuned against the production bundle, and the `perf` project
+  drops to one worker there
+- `deploy`: `environment: Production`, its own `production-deploy` concurrency group
+  (`cancel-in-progress: false`, so two merges cannot deploy at once — that is how
+  production went backwards on 2026-08-16), records the Worker's `Current Version ID`,
+  then smoke-tests `/en` (200 + HSTS + CSP), `/he` (`dir="rtl"`) and `/` (307 to `/en`)
+- `rollback`: `pnpm exec wrangler rollback <id> -y`, same environment and lock
+
+All jobs on `ubuntu-latest` with a `timeout-minutes`, Node from `.nvmrc`, pnpm from the
+`packageManager` pin, `permissions: contents: read` at the top level, and every action
+pinned to a full commit SHA with a version comment.
+
+**A job id is its status check name.** `lint-and-typecheck`, `unit-tests` and `build`
+therefore keep the ids branch protection already requires — splitting the quality work
+into two jobs was not a style choice. `e2e` and `playwright` are new checks and stay
+advisory until the owner adds them to the rule.
