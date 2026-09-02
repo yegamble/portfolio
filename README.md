@@ -91,6 +91,16 @@ The cipher transition is not just a visual flourish. The implementation includes
 
 The project ships with strict response headers, structured data, robots and sitemap generation, and localized canonical metadata. This is portfolio code written with the same care expected in production applications.
 
+Response headers come from two places, because they reach different responses:
+
+- `src/lib/security-headers.ts` holds the list once. `next.config.ts` applies it to everything the Next server answers, and `src/proxy.ts` re-applies it to the `/` → `/en` redirect, which short-circuits before that layer — HSTS preload requires the redirect itself to carry `Strict-Transport-Security`.
+- `public/_headers` covers Cloudflare's static assets, which the ASSETS binding serves before the Worker runs. Hashed build output (`/_next/static/*`, including `next/font` woff2 files) is `immutable` for a year; hand-managed images and PWA icons get a week with a day of `stale-while-revalidate`; `/favicon.ico` gets a day.
+
+Two CSP decisions are deliberate:
+
+- `script-src` keeps `'unsafe-inline'`. The locale routes are prerendered, and their HTML carries Next's inline bootstrap plus the two JSON-LD blocks. A nonce has to be minted per request, which is exactly what would make those routes dynamic — trading a real caching win for a directive that `'strict-dynamic'` cannot rescue while the bootstrap is inline.
+- `'unsafe-eval'` is added only when `NODE_ENV` is `development`, for the dev overlay and Fast Refresh. Production ships `'wasm-unsafe-eval'` instead, which is all openpgp's argon2 WASM needs and does not permit `eval()`. `static.cloudflareinsights.com` is allow-listed because the zone injects the Web Analytics beacon into the response itself.
+
 ### Optional secure contact workflow
 
 If a public PGP key is configured, the UI exposes a modal that parses and displays key metadata client-side and supports copy-to-clipboard. The implementation also handles Cloudflare-friendly env-var formats by normalizing escaped newlines and base64-encoded values.
@@ -168,6 +178,7 @@ If you later add route mappings or custom domains to the Worker configuration, a
 | `pnpm build:worker` | Generates the Cloudflare Worker build with OpenNext |
 | `pnpm preview` | Builds and previews the Cloudflare Worker locally |
 | `pnpm deploy` | Builds and deploys the Worker to Cloudflare |
+| `node scripts/process-images.mjs` | Regenerates the avatar WebP sources, the favicon, the Apple touch icon and the PWA icons. Not part of any build — the output is committed. Run it on macOS: `src/app/icon.svg` sets its glyph in `system-ui`, so the rasterizer resolves the font against the host |
 
 ## Quality bar
 

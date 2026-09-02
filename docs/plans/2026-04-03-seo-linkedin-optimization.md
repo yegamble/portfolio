@@ -226,7 +226,7 @@ Type: Feature
 - Add `twitter` metadata object with `card: 'summary_large_image'`, `title`, `description`
 - Add `openGraph.images` array pointing to `/images/og-image.jpg` with `width: 1200, height: 630`
 - Add `alternates.canonical: 'https://yosefgamble.com'`
-- Add `keywords` array for supplementary signal (still used by some engines)
+- Add `keywords` array for supplementary signal (still used by some engines) — **superseded 2026-09-02:** the array was removed in the audit fixes. No major crawler has read `keywords` in over a decade, and the list described its subject as a "full-stack engineer", which contradicts the site's branding.
 - Keep existing `robots` configuration
 - Title format: "Yosef Gamble | Senior Software Engineer — Go, TypeScript, AWS"
 
