@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
+import { isCoarsePointerOrNarrow, prefersReducedMotion } from '@/lib/media';
 
 interface CipherTransitionResult {
   displayChars: string[];
@@ -96,14 +97,7 @@ function calculateResolveTimes(maxLen: number, profile: AnimationProfile): numbe
 }
 
 function getAnimationProfile(): AnimationProfile {
-  if (typeof window === 'undefined') {
-    return DESKTOP_PROFILE;
-  }
-
-  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-  const isNarrowViewport = window.matchMedia('(max-width: 768px)').matches;
-
-  return isCoarsePointer || isNarrowViewport ? MOBILE_PROFILE : DESKTOP_PROFILE;
+  return isCoarsePointerOrNarrow() ? MOBILE_PROFILE : DESKTOP_PROFILE;
 }
 
 function generateFrameChars(
@@ -192,11 +186,7 @@ function useCipherLoop(
       return;
     }
 
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion()) {
       prevTextRef.current = text;
       if (deferReducedMotion) {
         // Update in the next frame so React commits the resolved text once.

@@ -6,6 +6,7 @@ import SectionHeader from '@/components/SectionHeader';
 import CipherText from '@/components/CipherText';
 import { FolderIcon, GitHubIcon, LayersIcon } from '@/components/icons';
 import { projectEntries } from '@/data/projects';
+import { prefersReducedMotion } from '@/lib/media';
 
 const iconMap = {
   folder: <FolderIcon />,
@@ -167,9 +168,7 @@ export default function Projects() {
             aria-current={index === activeIndex ? 'true' : undefined}
             onClick={() => {
               cardRefs.current[index]?.scrollIntoView({
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                  ? 'auto'
-                  : 'smooth',
+                behavior: prefersReducedMotion() ? 'auto' : 'smooth',
                 block: 'nearest',
                 inline: 'center',
               });

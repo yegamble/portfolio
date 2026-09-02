@@ -9,6 +9,7 @@ import CipherText from '@/components/CipherText';
 import ProfilePicture from '@/components/ProfilePicture';
 import HeroContactIcons from '@/components/HeroContactIcons';
 import { getLocaleHref, type AppLocale } from '@/lib/i18n';
+import { prefersReducedMotion } from '@/lib/media';
 
 export default function ScrollHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -59,9 +60,7 @@ export default function ScrollHeader() {
               e.preventDefault();
               window.scrollTo({
                 top: 0,
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                  ? 'auto'
-                  : 'smooth',
+                behavior: prefersReducedMotion() ? 'auto' : 'smooth',
               });
             }}
           >

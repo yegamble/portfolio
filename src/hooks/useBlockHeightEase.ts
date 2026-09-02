@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 import { cancelHeightEase, easeHeight, isHeightEasing } from '@/lib/height-ease';
+import { prefersReducedMotion } from '@/lib/media';
 
 // The ease measures the DOM after a commit, which is client-only work.
 // useLayoutEffect warns when React renders on the server, so pick the effect
@@ -8,14 +9,6 @@ const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : us
 
 /** Sub-pixel wobble between two layouts is not a height change worth animating. */
 const EPSILON_PX = 1;
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-}
 
 /**
  * Ease a block's height across an in-place text swap.

@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useBlockHeightEase } from '@/hooks/useBlockHeightEase';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
+import { COARSE_POINTER_QUERY, isCoarsePointerOrNarrow, NARROW_VIEWPORT_QUERY } from '@/lib/media';
 
 interface CipherTextProps {
   children?: string;
@@ -100,13 +101,7 @@ const CHAR_THRESHOLD_DESKTOP = 80;
 const CHAR_THRESHOLD_MOBILE = 40;
 
 function getCharThreshold(): number {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return CHAR_THRESHOLD_DESKTOP;
-  }
-  const isMobile =
-    window.matchMedia('(pointer: coarse)').matches ||
-    window.matchMedia('(max-width: 768px)').matches;
-  return isMobile ? CHAR_THRESHOLD_MOBILE : CHAR_THRESHOLD_DESKTOP;
+  return isCoarsePointerOrNarrow() ? CHAR_THRESHOLD_MOBILE : CHAR_THRESHOLD_DESKTOP;
 }
 
 /**
@@ -192,8 +187,8 @@ export default function CipherText({ children, block = false }: CipherTextProps)
       return;
     }
     const queries = [
-      window.matchMedia('(pointer: coarse)'),
-      window.matchMedia('(max-width: 768px)'),
+      window.matchMedia(COARSE_POINTER_QUERY),
+      window.matchMedia(NARROW_VIEWPORT_QUERY),
     ].filter((query) => typeof query?.addEventListener === 'function');
     queries.forEach((query) => query.addEventListener('change', update));
     return () => {

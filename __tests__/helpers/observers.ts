@@ -116,10 +116,11 @@ export function stubResizeObserver(): ResizeObserverStub {
  * as normal. Pass a predicate for the others:
  *
  *   stubMatchMedia((query) => query === REDUCED_MOTION_QUERY)
+ *
+ * The query strings are re-exported from the module the components ask through,
+ * so a stub can never answer a question the application no longer poses.
  */
-export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
-export const COARSE_POINTER_QUERY = '(pointer: coarse)';
-export const NARROW_VIEWPORT_QUERY = '(max-width: 768px)';
+export { COARSE_POINTER_QUERY, NARROW_VIEWPORT_QUERY, REDUCED_MOTION_QUERY } from '@/lib/media';
 
 export interface MatchMediaStub {
   ctor: Mock;
