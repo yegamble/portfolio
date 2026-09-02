@@ -9,6 +9,15 @@ import { SECURITY_HEADERS } from './src/lib/security-headers';
 const ICON_ROUTES = ['/icon.svg', '/apple-icon.png'];
 const ICON_CACHE_CONTROL = 'public, max-age=86400, stale-while-revalidate=604800';
 
+// The two generated metadata documents. Both are routes rather than assets, and
+// both otherwise go out under the framework default of
+// `public, max-age=0, must-revalidate`, so every visit re-fetches a file that
+// changes when the locale list or `LAST_MODIFIED` does — i.e. rarely. An hour is
+// short enough that a crawler sees a real edit the same day, and the day of
+// stale-while-revalidate keeps the refetch off the request that noticed.
+const METADATA_ROUTES = ['/manifest.webmanifest', '/sitemap.xml'];
+const METADATA_CACHE_CONTROL = 'public, max-age=3600, stale-while-revalidate=86400';
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
   poweredByHeader: false,
@@ -48,6 +57,10 @@ const nextConfig: NextConfig = {
       ...ICON_ROUTES.map((source) => ({
         source,
         headers: [{ key: 'Cache-Control', value: ICON_CACHE_CONTROL }],
+      })),
+      ...METADATA_ROUTES.map((source) => ({
+        source,
+        headers: [{ key: 'Cache-Control', value: METADATA_CACHE_CONTROL }],
       })),
     ];
   },

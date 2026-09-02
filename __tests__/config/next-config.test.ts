@@ -105,6 +105,21 @@ describe('next.config cache headers', () => {
 
     expect(routes.find((entry) => entry.source === '/favicon.ico')).toBeUndefined();
   });
+
+  // Both are generated routes, so they would otherwise go out under the
+  // framework default of `max-age=0, must-revalidate` and be re-fetched on every
+  // visit for a document that changes when the locale list does.
+  it('should cache the generated metadata documents for an hour', async () => {
+    const routes = await nextConfig.headers!();
+
+    ['/manifest.webmanifest', '/sitemap.xml'].forEach((source) => {
+      const route = routes.find((entry) => entry.source === source);
+
+      expect(route?.headers).toEqual([
+        { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' },
+      ]);
+    });
+  });
 });
 
 describe('next.config build options', () => {

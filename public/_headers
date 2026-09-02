@@ -31,5 +31,13 @@
 /favicon.ico
   Cache-Control: public, max-age=86400
 
+# Everything else the ASSETS binding answers. HSTS is host-wide the moment any
+# response carries it, so the HTML from `next.config.ts` already covers a normal
+# visit — but a first request that is an asset (a bookmarked chunk URL, a
+# prefetch, a hotlinked image) reaches the binding without ever touching the
+# Worker, and this is the only place that can answer it. Keep the value in step
+# with `SECURITY_HEADERS` in `src/lib/security-headers.ts`; a test pins them
+# together.
 /*
   X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
