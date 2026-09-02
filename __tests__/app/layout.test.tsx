@@ -124,6 +124,27 @@ describe('LocaleLayout', () => {
     });
   });
 
+  it('lists the other three translations as Open Graph alternates', async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'he' }),
+    });
+
+    expect(metadata.openGraph).toMatchObject({
+      locale: 'he_IL',
+      alternateLocale: ['en_US', 'ru_RU', 'et_EE'],
+    });
+  });
+
+  // Ignored by every major crawler, and the list claimed "full-stack engineer",
+  // which is not how this site describes its subject.
+  it('does not emit a keywords meta tag', async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'en' }),
+    });
+
+    expect(metadata.keywords).toBeUndefined();
+  });
+
   it('paints the browser chrome to match the page background', () => {
     expect(viewport.themeColor).toBe('#0f172a');
   });

@@ -33,6 +33,24 @@ describe('production translation files', () => {
     });
   });
 
+  // Google truncates a snippet around 155-160 characters, so anything past that
+  // is invisible; ogDescription is separately capped for the social card.
+  it('keeps every meta description short enough to survive a search snippet', () => {
+    (
+      [
+        ['en', en],
+        ['he', he],
+        ['ru', ru],
+        ['et', et],
+      ] as const
+    ).forEach(([code, translation]) => {
+      expect(
+        translation.meta.description.length,
+        `${code} meta.description is ${translation.meta.description.length} characters`
+      ).toBeLessThanOrEqual(155);
+    });
+  });
+
   it('keeps the {{name}} interpolation placeholder in every locale', () => {
     [en, he, ru, et].forEach((translation) => {
       expect(translation.projects.viewOnGitHub).toContain('{{name}}');

@@ -44,22 +44,6 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
     metadataBase: new URL(SITE_URL),
     title: meta.title,
     description: meta.description,
-    keywords: [
-      'Yosef Gamble',
-      'senior software engineer',
-      'Golang',
-      'Go developer',
-      'TypeScript',
-      'AWS',
-      'New York software engineer',
-      'Auckland software engineer',
-      'New Zealand developer',
-      'real estate portal engineer',
-      'video streaming',
-      'full-stack engineer',
-      'ActivityPub',
-      'cloud infrastructure',
-    ],
     alternates: {
       canonical: href,
       languages: {
@@ -73,6 +57,10 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
       url: href,
       siteName: 'Yosef Gamble',
       locale: OG_LOCALES[locale],
+      // The three other translations of this same page.
+      alternateLocale: LOCALES.filter((other) => other !== locale).map(
+        (other) => OG_LOCALES[other]
+      ),
       type: 'website',
       images: [
         {
