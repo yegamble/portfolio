@@ -1,22 +1,27 @@
-import {
-  act,
-  fireEvent,
-  createEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react';
+import { fireEvent, createEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import i18n from '@/lib/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
+import { pinViewportDuringReflow } from '@/lib/viewport-pin';
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/en/projects',
 }));
 
+// The pin's own behaviour is covered directly in __tests__/lib/viewport-pin.test.ts;
+// what matters here is that the selector calls it, and calls it before the
+// mutations that reflow the page.
+let langAtPinTime: string | null = null;
+vi.mock('@/lib/viewport-pin', () => ({
+  pinViewportDuringReflow: vi.fn(() => {
+    langAtPinTime = document.documentElement.lang;
+  }),
+}));
+
 beforeEach(async () => {
+  vi.mocked(pinViewportDuringReflow).mockClear();
+  langAtPinTime = null;
   await i18n.changeLanguage('en');
   window.history.replaceState({}, '', '/en/projects');
   document.documentElement.lang = 'en';
@@ -278,118 +283,28 @@ describe('LanguageSelector', () => {
   });
 
   describe('viewport pinning', () => {
-    function stubAnchor(drift: { top: number }) {
-      const footer = screen.getByRole('contentinfo');
-      footer.getBoundingClientRect = () =>
-        ({ top: drift.top, bottom: drift.top + 2000 }) as DOMRect;
-    }
-
-    it('corrects reflow drift instantly instead of riding the page smooth scroll', async () => {
+    it('pins the viewport before it mutates anything, and only for a real switch', async () => {
       const user = userEvent.setup();
-      const frames: FrameRequestCallback[] = [];
-      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-        frames.push(callback);
-        return frames.length;
-      });
-      const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
-
-      render(
-        <div>
-          <LanguageSelector />
-          <footer>anchor</footer>
-        </div>
-      );
-
-      // jsdom reports a zero rect for everything, so the landmark that straddles
-      // the viewport centre is faked, then drifted as the new language reflows.
-      const drift = { top: 0 };
-      stubAnchor(drift);
+      render(<LanguageSelector />);
 
       await user.click(screen.getByRole('button', { name: /select language/i }));
       await user.click(screen.getByRole('link', { name: /русский/i }));
 
-      drift.top = 50;
-      act(() => frames.shift()?.(0));
-
-      // 'auto' would defer to the page's CSS scroll-behavior: smooth and ease
-      // the correction over a dozen frames.
-      expect(scrollBy).toHaveBeenCalledWith({ top: 50, behavior: 'instant' });
+      // The pin samples its anchor synchronously (see viewport-pin.test.ts), so
+      // it has to run before the lang flip — that flip alone reflows the page,
+      // because globals.css keys the font stack off html:lang(he).
+      expect(pinViewportDuringReflow).toHaveBeenCalledTimes(1);
+      expect(langAtPinTime).toBe('en');
     });
 
-    it('keeps polling through still frames so a late reflow is still corrected', async () => {
+    it('does not pin when the chosen language is already current', async () => {
       const user = userEvent.setup();
-      const frames: FrameRequestCallback[] = [];
-      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-        frames.push(callback);
-        return frames.length;
-      });
-      const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
-
-      render(
-        <div>
-          <LanguageSelector />
-          <footer>anchor</footer>
-        </div>
-      );
-
-      const drift = { top: 0 };
-      stubAnchor(drift);
+      render(<LanguageSelector />);
 
       await user.click(screen.getByRole('button', { name: /select language/i }));
-      await user.click(screen.getByRole('link', { name: /русский/i }));
+      await user.click(screen.getByRole('link', { name: /english/i }));
 
-      // The reflow arrives in bursts: a production build commits the i18n store
-      // in a microtask after the handler and the scramble structure unmounts
-      // ~1.6s later. A loop that settled on the first still frames would
-      // abandon everything after the first burst.
-      drift.top = 40;
-      act(() => frames.shift()?.(0));
-      drift.top = 0;
-      act(() => frames.shift()?.(16));
-      act(() => frames.shift()?.(32));
-      expect(scrollBy).toHaveBeenCalledTimes(1);
-
-      drift.top = 26;
-      act(() => frames.shift()?.(1600));
-
-      expect(scrollBy).toHaveBeenCalledTimes(2);
-      expect(scrollBy).toHaveBeenLastCalledWith({ top: 26, behavior: 'instant' });
-    });
-
-    it('samples the anchor before the language flip, which reflows on its own', async () => {
-      const user = userEvent.setup();
-      const frames: FrameRequestCallback[] = [];
-      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-        frames.push(callback);
-        return frames.length;
-      });
-      const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
-
-      render(
-        <div>
-          <LanguageSelector />
-          <footer>anchor</footer>
-        </div>
-      );
-
-      // globals.css keys the font stack off `html:lang(he)`, so flipping
-      // documentElement.lang re-wraps the still-untranslated text before React
-      // has committed anything. Measured on a production build (he -> en,
-      // #experience at top 112) that alone moved the anchor to 141.25 — pinning
-      // to the post-flip geometry left the reader 29px from where they were.
-      const footer = screen.getByRole('contentinfo');
-      footer.getBoundingClientRect = () => {
-        const top = document.documentElement.lang === 'en' ? 0 : 30;
-        return { top, bottom: top + 2000 } as DOMRect;
-      };
-      document.documentElement.lang = 'en';
-
-      await user.click(screen.getByRole('button', { name: /select language/i }));
-      await user.click(screen.getByRole('link', { name: /русский/i }));
-
-      act(() => frames.shift()?.(0));
-
-      expect(scrollBy).toHaveBeenCalledWith({ top: 30, behavior: 'instant' });
+      expect(pinViewportDuringReflow).not.toHaveBeenCalled();
     });
   });
 });
