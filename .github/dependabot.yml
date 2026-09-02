@@ -24,9 +24,24 @@ updates:
           - eslint-config-next
           - '@opennextjs/*'
           - wrangler
+      # React and its type packages are a version pair; a runtime bumped
+      # without its @types drags a typecheck failure behind it.
+      react:
+        patterns:
+          - react
+          - react-dom
+          - '@types/react'
+          - '@types/react-dom'
+      # react-i18next tracks i18next's major, so the two travel together.
+      i18next:
+        patterns:
+          - i18next
+          - react-i18next
       # Everything else that only runs on a developer's machine or in CI: test
-      # runners, linters, type definitions, the Tailwind toolchain. One PR a
-      # week rather than a dozen.
+      # runners, linters, the Tailwind toolchain. One PR a week rather than a
+      # dozen. A dependency joins the first group it matches, so the type
+      # packages above are already spoken for — the excludes are belt and
+      # braces for a reader skimming this file.
       dev-tooling:
         dependency-type: development
         patterns:
@@ -35,6 +50,8 @@ updates:
           - eslint-config-next
           - '@opennextjs/*'
           - wrangler
+          - '@types/react'
+          - '@types/react-dom'
 
   - package-ecosystem: github-actions
     # The workflows and the composite action under .github/actions each need
