@@ -1,13 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { NextConfig } from 'next';
 import nextConfig from '../../next.config';
+
+const PRODUCTION_SCRIPT_SRC =
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://static.cloudflareinsights.com";
 
 const EXPECTED_CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  PRODUCTION_SCRIPT_SRC,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https:",
+  "connect-src 'self' https://cloudflareinsights.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -22,21 +26,28 @@ const EXPECTED_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'X-XSS-Protection': '1; mode=block',
+  'Cross-Origin-Opener-Policy': 'same-origin',
   'Content-Security-Policy': EXPECTED_CSP,
 };
+
+async function headerMap(config: NextConfig): Promise<Record<string, string>> {
+  const routes = await config.headers!();
+  const route = routes.find((entry) => entry.source === '/:path*');
+
+  expect(route).toBeDefined();
+
+  return Object.fromEntries(route!.headers.map((header) => [header.key, header.value]));
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.resetModules();
+});
 
 describe('next.config security headers', () => {
   it('should apply exactly the expected security headers to every route', async () => {
     expect(nextConfig.headers).toBeTypeOf('function');
-
-    const routes = await nextConfig.headers!();
-    const route = routes.find((entry) => entry.source === '/:path*');
-
-    expect(route).toBeDefined();
-    expect(Object.fromEntries(route!.headers.map((header) => [header.key, header.value]))).toEqual(
-      EXPECTED_SECURITY_HEADERS
-    );
+    expect(await headerMap(nextConfig)).toEqual(EXPECTED_SECURITY_HEADERS);
   });
 
   it('should register a single header rule covering all paths', async () => {
@@ -44,5 +55,43 @@ describe('next.config security headers', () => {
 
     expect(routes).toHaveLength(1);
     expect(routes[0].source).toBe('/:path*');
+  });
+
+  it('should not send the deprecated X-XSS-Protection header', async () => {
+    expect(await headerMap(nextConfig)).not.toHaveProperty('X-XSS-Protection');
+  });
+
+  it('should allow the Cloudflare Web Analytics beacon to load and report', async () => {
+    const csp = (await headerMap(nextConfig))['Content-Security-Policy'];
+
+    expect(csp).toContain('https://static.cloudflareinsights.com');
+    expect(csp).toContain("connect-src 'self' https://cloudflareinsights.com");
+  });
+
+  it("should allow openpgp's WASM without allowing eval in production", async () => {
+    const csp = (await headerMap(nextConfig))['Content-Security-Policy'];
+
+    expect(csp).toContain("'wasm-unsafe-eval'");
+    expect(csp).not.toContain("'unsafe-eval'");
+  });
+
+  it('should relax script-src with unsafe-eval only while developing', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.resetModules();
+
+    const devConfig = (await import('../../next.config')).default;
+    const csp = (await headerMap(devConfig))['Content-Security-Policy'];
+
+    expect(csp).toContain(`${PRODUCTION_SCRIPT_SRC} 'unsafe-eval'`);
+  });
+});
+
+describe('next.config build options', () => {
+  it('should not let next dev write agent rule files into the project root', () => {
+    expect(nextConfig.agentRules).toBe(false);
+  });
+
+  it('should skip the image optimizer, which is a pass-through on Cloudflare', () => {
+    expect(nextConfig.images?.unoptimized).toBe(true);
   });
 });
