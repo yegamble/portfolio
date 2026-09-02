@@ -1,19 +1,29 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import {
+  DEFAULT_LOCALE,
   getLocaleHref,
-  getPreferredLocale,
   isAppLocale,
+  LOCALE_COOKIE_MAX_AGE,
   LOCALE_COOKIE_NAME,
+  negotiateLocale,
   type AppLocale,
-} from '@/lib/i18n';
+} from '@/lib/locales';
 
 const PUBLIC_FILE = /\.[^/]+$/;
-const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
 function getPathLocale(pathname: string): AppLocale | null {
   const localeSegment = pathname.split('/')[1];
 
   return isAppLocale(localeSegment) ? localeSegment : null;
+}
+
+function persistLocale(response: NextResponse, locale: AppLocale, request: NextRequest) {
+  response.cookies.set(LOCALE_COOKIE_NAME, locale, {
+    maxAge: LOCALE_COOKIE_MAX_AGE,
+    path: '/',
+    sameSite: 'lax',
+    secure: request.nextUrl.protocol === 'https:',
+  });
 }
 
 export function middleware(request: NextRequest) {
@@ -23,38 +33,35 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
   const pathnameLocale = getPathLocale(pathname);
 
   if (pathnameLocale == null) {
-    const locale = getPreferredLocale(request.cookies.get(LOCALE_COOKIE_NAME)?.value);
+    // A stored choice outranks the browser's list; without one, honour
+    // Accept-Language before falling back to English, so a first-time Hebrew,
+    // Russian or Estonian visitor is not pinned to `/en` for a year.
+    const locale =
+      (isAppLocale(cookieLocale) ? cookieLocale : null) ??
+      negotiateLocale(request.headers.get('accept-language')) ??
+      DEFAULT_LOCALE;
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname =
       pathname === '/' ? getLocaleHref(locale) : `${getLocaleHref(locale)}${pathname}`;
 
     const response = NextResponse.redirect(redirectUrl);
-    response.cookies.set(LOCALE_COOKIE_NAME, locale, {
-      maxAge: ONE_YEAR_IN_SECONDS,
-      path: '/',
-      sameSite: 'lax',
-    });
+    persistLocale(response, locale, request);
 
     return response;
   }
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-locale', pathnameLocale);
+  const response = NextResponse.next();
 
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
-
-  response.cookies.set(LOCALE_COOKIE_NAME, pathnameLocale, {
-    maxAge: ONE_YEAR_IN_SECONDS,
-    path: '/',
-    sameSite: 'lax',
-  });
+  // The URL is the source of truth, so a disagreeing cookie is corrected — but
+  // only then. Re-setting an already-correct cookie puts a Set-Cookie on every
+  // HTML response, which keeps a CDN from caching the prerendered page.
+  if (cookieLocale !== pathnameLocale) {
+    persistLocale(response, pathnameLocale, request);
+  }
 
   return response;
 }
