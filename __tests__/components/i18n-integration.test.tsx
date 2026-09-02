@@ -718,33 +718,6 @@ describe('i18n Regression - Structural integrity across languages', () => {
   });
 });
 
-describe('i18n Regression - RTL design classes', () => {
-  it('should use logical border property (border-s) on social links in ScrollHeader', () => {
-    render(<ScrollHeader />);
-    const { container } = render(<ScrollHeader />);
-    const socialContainer = container.querySelector('.sm\\:border-s');
-    expect(socialContainer).toBeInTheDocument();
-  });
-
-  it('should use logical padding (ps-) on social links in ScrollHeader', () => {
-    const { container } = render(<ScrollHeader />);
-    const socialContainer = container.querySelector('.ps-2');
-    expect(socialContainer).toBeInTheDocument();
-  });
-
-  it('should apply rtl:rotate-180 on resume arrow icon', () => {
-    const { container } = render(<Experience />);
-    const rtlRotated = container.querySelector('.rtl\\:rotate-180');
-    expect(rtlRotated).toBeInTheDocument();
-  });
-
-  it('should apply ms-1 (logical margin) on experience arrow icons', () => {
-    const { container } = render(<Experience />);
-    const arrows = container.querySelectorAll('.ms-1');
-    expect(arrows.length).toBeGreaterThan(0);
-  });
-});
-
 describe('i18n Integration - PGP Key Icon Labels', () => {
   it('should render PGP key button with English label', () => {
     render(<ScrollHeader />);

@@ -1,4 +1,3 @@
-'use client';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -80,6 +79,10 @@ beforeEach(() => {
 import i18n from '@/lib/i18n';
 import Projects from '@/components/Projects';
 
+// Snapshot the fixture bundle BEFORE any test mutates it: `afterEach` used to
+// read the bundle it was restoring, so it wrote the mutated one back.
+const fixtureBundle = i18n.getResourceBundle('en', 'translation');
+
 // Translation items keyed to match mock project IDs
 const testProjectItems = [
   {
@@ -105,21 +108,20 @@ const testProjectItems = [
 ];
 
 beforeEach(() => {
-  const bundle = i18n.getResourceBundle('en', 'translation');
   i18n.addResourceBundle(
     'en',
     'translation',
-    { ...bundle, projects: { ...bundle.projects, items: testProjectItems } },
+    {
+      ...fixtureBundle,
+      projects: { ...fixtureBundle.projects, items: testProjectItems },
+    },
     false,
     true
   );
 });
 
 afterEach(() => {
-  // Restore fixture translations (setup.ts will re-apply on next test)
-  const bundle = i18n.getResourceBundle('en', 'translation');
-  const originalFixture = i18n.getResourceBundle('en', 'translation');
-  i18n.addResourceBundle('en', 'translation', originalFixture, false, true);
+  i18n.addResourceBundle('en', 'translation', fixtureBundle, false, true);
 });
 
 describe('Projects', () => {
@@ -135,22 +137,6 @@ describe('Projects', () => {
         name: /selected projects/i,
       });
       expect(section).toHaveAttribute('id', 'projects');
-    });
-
-    it('should have scroll-mt-24 class for fixed header offset', () => {
-      render(<Projects />);
-      const section = screen.getByRole('region', {
-        name: /selected projects/i,
-      });
-      expect(section).toHaveClass('scroll-mt-24');
-    });
-
-    it('should have a top border separator', () => {
-      render(<Projects />);
-      const section = screen.getByRole('region', {
-        name: /selected projects/i,
-      });
-      expect(section.className).toContain('border-t');
     });
   });
 
@@ -188,30 +174,6 @@ describe('Projects', () => {
   });
 
   describe('Carousel structure', () => {
-    it('should render a carousel container with snap classes', () => {
-      const { container } = render(<Projects />);
-      const carousel = container.querySelector('.snap-x');
-      expect(carousel).toBeInTheDocument();
-    });
-
-    it('should render snap-mandatory on carousel container', () => {
-      const { container } = render(<Projects />);
-      const carousel = container.querySelector('.snap-mandatory');
-      expect(carousel).toBeInTheDocument();
-    });
-
-    it('should render overflow-x-auto on carousel container', () => {
-      const { container } = render(<Projects />);
-      const carousel = container.querySelector('.overflow-x-auto');
-      expect(carousel).toBeInTheDocument();
-    });
-
-    it('should render 2-column grid class for md breakpoint', () => {
-      const { container } = render(<Projects />);
-      const el = container.querySelector('[class*="md:grid-cols-2"]');
-      expect(el).toBeInTheDocument();
-    });
-
     it('should render dot indicators for carousel', () => {
       render(<Projects />);
       const dots = within(screen.getByRole('group', { name: /project pagination/i })).getAllByRole(

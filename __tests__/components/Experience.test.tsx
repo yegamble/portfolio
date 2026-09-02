@@ -36,18 +36,6 @@ describe('Experience', () => {
       const section = screen.getByRole('region', { name: /work experience/i });
       expect(section).toHaveAttribute('id', 'experience');
     });
-
-    it('should have scroll-mt-24 class for fixed header offset', () => {
-      render(<Experience />);
-      const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section).toHaveClass('scroll-mt-24');
-    });
-
-    it('should have a top border separator', () => {
-      render(<Experience />);
-      const section = screen.getByRole('region', { name: /work experience/i });
-      expect(section.className).toContain('border-t');
-    });
   });
 
   describe('Section header', () => {

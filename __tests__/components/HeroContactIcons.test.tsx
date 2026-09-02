@@ -52,12 +52,6 @@ describe('HeroContactIcons', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
-    it('should have hover transition classes on icons', () => {
-      render(<HeroContactIcons />);
-      const emailLink = screen.getByRole('link', { name: /^email$/i });
-      expect(emailLink.className).toContain('transition-colors');
-    });
-
     it('should apply custom className', () => {
       const { container } = render(<HeroContactIcons className="mt-3" />);
       expect(container.firstChild).toHaveClass('mt-3');

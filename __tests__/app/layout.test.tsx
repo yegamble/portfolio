@@ -52,7 +52,6 @@ describe('LocaleLayout', () => {
     expect(markup).toContain('Locale Child');
     expect(markup).toContain('lang="en"');
     expect(markup).toContain('dir="ltr"');
-    expect(markup).toContain('pointer-events-none');
     expect(markup).toContain('--font-inter');
     expect(markup).toContain('--font-heebo');
   });

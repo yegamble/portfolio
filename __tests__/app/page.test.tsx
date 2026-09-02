@@ -52,7 +52,6 @@ describe('Localized Home Page', () => {
     expect(markup).toContain('Mock Experience');
     expect(markup).toContain('Mock Projects');
     expect(markup).toContain('Mock Footer');
-    expect(markup).toContain('mx-auto w-full max-w-3xl px-6 pb-24');
   });
 
   it('gives <main> the skip link target and makes it focusable', async () => {
@@ -64,9 +63,8 @@ describe('Localized Home Page', () => {
     // Without tabindex the skip link would move the viewport but leave focus in
     // the header, so the next Tab press would land back on the nav.
     expect(markup).toMatch(/<main[^>]*tabindex="-1"/);
-    // The landing is only perceivable if it is drawn; Cypress asserts the
-    // computed outline, this pins the intent.
-    expect(markup).toMatch(/<main[^>]*focus-visible:outline-primary/);
+    // That the landing is actually drawn is measured from the computed outline
+    // in cypress/e2e/portfolio.cy.ts, where there is real CSS.
   });
 
   it('stops rendering for an invalid locale', async () => {

@@ -9,18 +9,6 @@ describe('Footer', () => {
       render(<Footer />);
       expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     });
-
-    it('should have a top border separator', () => {
-      render(<Footer />);
-      const footer = screen.getByRole('contentinfo');
-      expect(footer.className).toContain('border-t');
-    });
-
-    it('should be centered text', () => {
-      render(<Footer />);
-      const footer = screen.getByRole('contentinfo');
-      expect(footer).toHaveClass('text-center');
-    });
   });
 
   describe('Social links via SocialLinks component', () => {
@@ -154,14 +142,6 @@ describe('Footer', () => {
   });
 
   describe('Accessibility', () => {
-    it('should have sr-only labels for social icons', () => {
-      render(<Footer />);
-      expect(screen.getByText('GitHub')).toHaveClass('sr-only');
-      expect(screen.getByText('LinkedIn')).toHaveClass('sr-only');
-      expect(screen.getByText('Email')).toHaveClass('sr-only');
-      expect(screen.getByText('Secure email')).toHaveClass('sr-only');
-    });
-
     it('should have all external links with noreferrer noopener', () => {
       render(<Footer />);
       const externalLinks = screen

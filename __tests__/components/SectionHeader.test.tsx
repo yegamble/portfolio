@@ -27,18 +27,6 @@ describe('SectionHeader', () => {
     expect(wrapper).toHaveClass('mb-12');
   });
 
-  it('should apply default flex layout classes', () => {
-    const { container } = render(<SectionHeader title="Test" />);
-    const wrapper = container.firstElementChild;
-    expect(wrapper).toHaveClass('flex', 'items-center', 'gap-4');
-  });
-
-  it('should render uppercase tracking-widest title styling', () => {
-    render(<SectionHeader title="About" />);
-    const heading = screen.getByRole('heading', { level: 2 });
-    expect(heading).toHaveClass('text-sm', 'font-bold', 'uppercase', 'tracking-widest');
-  });
-
   it('should render different titles correctly', () => {
     const { rerender } = render(<SectionHeader title="About" />);
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('About');

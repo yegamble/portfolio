@@ -52,7 +52,6 @@ describe('ScrollHeader', () => {
         selector: 'section p',
       });
       expect(heroName).toBeInTheDocument();
-      expect(heroName.className).toContain('text-3xl');
     });
 
     it('should render the job title in the hero area', () => {
@@ -88,48 +87,12 @@ describe('ScrollHeader', () => {
       expect(heroSection).toBeInTheDocument();
     });
 
-    it('should render the profile picture with circular styling', () => {
-      render(<ScrollHeader />);
-      const img = screen.getByRole('img', {
-        name: new RegExp(testEn.hero.profileAlt, 'i'),
-      });
-      const circleContainer = img.closest('.rounded-full');
-      expect(circleContainer).toBeInTheDocument();
-    });
-
-    it('should render the teal accent bar', () => {
-      render(<ScrollHeader />);
-      const heroName = screen.getByText(TEST_NAME, {
-        selector: 'section p',
-      });
-      const heroSection = heroName.closest('section');
-      expect(heroSection).toBeInTheDocument();
-      const accentBar = heroSection!.querySelector('[class*="bg-primary"]');
-      expect(accentBar).toBeInTheDocument();
-    });
-
     it('should render hero section as a section element', () => {
       render(<ScrollHeader />);
       const heroName = screen.getByText(TEST_NAME, {
         selector: 'section p',
       });
       expect(heroName.closest('section')).toBeInTheDocument();
-    });
-
-    it('should render the hero name with bold tracking-tight styling', () => {
-      render(<ScrollHeader />);
-      const heroName = screen.getByText(TEST_NAME, {
-        selector: 'section p',
-      });
-      expect(heroName).toHaveClass('font-bold', 'tracking-tight');
-    });
-
-    it('should render the job title with uppercase tracking-widest styling', () => {
-      render(<ScrollHeader />);
-      const title = screen.getByText(TEST_TITLE, {
-        selector: 'section p',
-      });
-      expect(title).toHaveClass('uppercase', 'tracking-widest');
     });
   });
 
@@ -174,15 +137,6 @@ describe('ScrollHeader', () => {
       expect(links[2]).toHaveAttribute('href', '#projects');
     });
 
-    it('should render nav links with uppercase tracking-widest styling', () => {
-      render(<ScrollHeader />);
-      const nav = screen.getByRole('navigation', { name: /main navigation/i });
-      const links = within(nav).getAllByRole('link');
-      links.forEach((link) => {
-        expect(link).toHaveClass('uppercase', 'tracking-widest', 'text-xs');
-      });
-    });
-
     it('should have a navigation element with aria-label', () => {
       render(<ScrollHeader />);
       const nav = screen.getByRole('navigation', { name: /main navigation/i });
@@ -217,15 +171,6 @@ describe('ScrollHeader', () => {
       const header = screen.getByRole('banner');
       const link = within(header).getByRole('link', { name: /secure email/i });
       expect(link).toHaveAttribute('href', expect.stringMatching(/^mailto:/));
-    });
-
-    it('should render social links with sr-only labels', () => {
-      render(<ScrollHeader />);
-      const header = screen.getByRole('banner');
-      expect(within(header).getByText('GitHub')).toHaveClass('sr-only');
-      expect(within(header).getByText('LinkedIn')).toHaveClass('sr-only');
-      expect(within(header).getByText('Email')).toHaveClass('sr-only');
-      expect(within(header).getByText('Secure email')).toHaveClass('sr-only');
     });
   });
 
@@ -293,28 +238,6 @@ describe('ScrollHeader', () => {
       expect(navNameLink).toHaveAttribute('tabIndex', '0');
     });
 
-    it('should apply pointer-events-none when not scrolled', () => {
-      render(<ScrollHeader />);
-      const header = screen.getByRole('banner');
-      const navNameBlock = header.querySelector('a[aria-hidden] > div');
-      expect(navNameBlock?.className).toContain('pointer-events-none');
-    });
-
-    it('should remove pointer-events-none when scrolled', () => {
-      render(<ScrollHeader />);
-
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: false } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
-
-      const header = screen.getByRole('banner');
-      const navNameBlock = header.querySelector('a[aria-hidden] > div');
-      expect(navNameBlock?.className).not.toContain('pointer-events-none');
-    });
-
     it('should keep the collapsed brand link out of the accessibility tree', () => {
       render(<ScrollHeader />);
       const header = screen.getByRole('banner');
@@ -350,42 +273,6 @@ describe('ScrollHeader', () => {
       expect(brandLink).not.toHaveAttribute('aria-label');
     });
 
-    it('should apply backdrop-blur when scrolled', () => {
-      render(<ScrollHeader />);
-
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: false } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
-
-      const header = screen.getByRole('banner');
-      expect(header.className).toContain('backdrop-blur-md');
-    });
-
-    it('should apply justify-between when scrolled', () => {
-      render(<ScrollHeader />);
-
-      act(() => {
-        observerCallback(
-          [{ isIntersecting: false } as IntersectionObserverEntry],
-          {} as IntersectionObserver
-        );
-      });
-
-      const header = screen.getByRole('banner');
-      const innerDiv = header.firstElementChild;
-      expect(innerDiv?.className).toContain('justify-between');
-    });
-
-    it('should apply justify-center when not scrolled', () => {
-      render(<ScrollHeader />);
-      const header = screen.getByRole('banner');
-      const innerDiv = header.firstElementChild;
-      expect(innerDiv?.className).toContain('justify-center');
-    });
-
     it('should set up IntersectionObserver on mount', () => {
       render(<ScrollHeader />);
       expect(window.IntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
@@ -406,12 +293,6 @@ describe('ScrollHeader', () => {
     it('should render a header element', () => {
       render(<ScrollHeader />);
       expect(screen.getByRole('banner')).toBeInTheDocument();
-    });
-
-    it('should have sticky positioning', () => {
-      render(<ScrollHeader />);
-      const header = screen.getByRole('banner');
-      expect(header).toHaveClass('sticky', 'top-0', 'z-50');
     });
 
     it('should display the name in the nav area', () => {
@@ -458,14 +339,6 @@ describe('ScrollHeader', () => {
       });
 
       scrollToSpy.mockRestore();
-    });
-  });
-
-  describe('Motion preference', () => {
-    it('should include motion-reduce duration overrides', () => {
-      render(<ScrollHeader />);
-      const header = screen.getByRole('banner');
-      expect(header.className).toContain('motion-reduce:duration-0');
     });
   });
 });

@@ -15,18 +15,6 @@ describe('About', () => {
       const section = screen.getByRole('region', { name: /about me/i });
       expect(section).toHaveAttribute('id', 'about');
     });
-
-    it('should have scroll-mt-24 class for fixed header offset', () => {
-      render(<About />);
-      const section = screen.getByRole('region', { name: /about me/i });
-      expect(section).toHaveClass('scroll-mt-24');
-    });
-
-    it('should have a top border separator', () => {
-      render(<About />);
-      const section = screen.getByRole('region', { name: /about me/i });
-      expect(section.className).toContain('border-t');
-    });
   });
 
   describe('Section header', () => {

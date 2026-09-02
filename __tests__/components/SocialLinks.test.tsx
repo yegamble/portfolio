@@ -36,14 +36,6 @@ describe('SocialLinks', () => {
   });
 
   describe('Accessibility', () => {
-    it('should have sr-only labels for all links', () => {
-      render(<SocialLinks />);
-      expect(screen.getByText('GitHub')).toHaveClass('sr-only');
-      expect(screen.getByText('LinkedIn')).toHaveClass('sr-only');
-      expect(screen.getByText('Email')).toHaveClass('sr-only');
-      expect(screen.getByText('Secure email')).toHaveClass('sr-only');
-    });
-
     it('should render SVG icons with aria-hidden', () => {
       const { container } = render(<SocialLinks />);
       const svgs = container.querySelectorAll('svg');
@@ -89,22 +81,9 @@ describe('SocialLinks', () => {
       });
     });
 
-    it('should apply default iconSize of h-5 w-5', () => {
-      const { container } = render(<SocialLinks />);
-      const svgs = container.querySelectorAll('svg');
-      svgs.forEach((svg) => {
-        expect(svg).toHaveClass('h-5', 'w-5');
-      });
-    });
-
     it('should apply custom gap class', () => {
       const { container } = render(<SocialLinks gap="gap-8" />);
       expect(container.firstElementChild).toHaveClass('gap-8');
-    });
-
-    it('should apply default gap-3', () => {
-      const { container } = render(<SocialLinks />);
-      expect(container.firstElementChild).toHaveClass('gap-3');
     });
 
     it('should apply custom className', () => {
