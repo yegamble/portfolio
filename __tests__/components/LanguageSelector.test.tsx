@@ -314,7 +314,7 @@ describe('LanguageSelector', () => {
       expect(scrollBy).toHaveBeenCalledWith({ top: 50, behavior: 'instant' });
     });
 
-    it('stops pinning once two consecutive frames measure no drift', async () => {
+    it('stops pinning two still frames after the drift has been corrected', async () => {
       const user = userEvent.setup();
       const frames: FrameRequestCallback[] = [];
       vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
@@ -330,17 +330,59 @@ describe('LanguageSelector', () => {
         </div>
       );
 
-      stubAnchor({ top: 0 });
+      const drift = { top: 0 };
+      stubAnchor(drift);
 
       await user.click(screen.getByRole('button', { name: /select language/i }));
       await user.click(screen.getByRole('link', { name: /русский/i }));
 
-      expect(frames).toHaveLength(1);
+      // The reflow lands, is corrected, and then two still frames end the loop.
+      drift.top = 40;
       act(() => frames.shift()?.(0));
+      drift.top = 0;
       expect(frames).toHaveLength(1);
       act(() => frames.shift()?.(16));
+      expect(frames).toHaveLength(1);
+      act(() => frames.shift()?.(32));
 
       expect(frames).toHaveLength(0);
+    });
+
+    it('keeps pinning while the reflow has not landed yet', async () => {
+      const user = userEvent.setup();
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+      const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
+
+      render(
+        <div>
+          <LanguageSelector />
+          <footer>anchor</footer>
+        </div>
+      );
+
+      const drift = { top: 0 };
+      stubAnchor(drift);
+
+      await user.click(screen.getByRole('button', { name: /select language/i }));
+      await user.click(screen.getByRole('link', { name: /русский/i }));
+
+      // i18next resolves asynchronously, so the commit that reflows the page
+      // lands several frames after the click. Settling on those still frames
+      // would abandon the pin before it has anything to correct.
+      act(() => frames.shift()?.(0));
+      act(() => frames.shift()?.(16));
+      act(() => frames.shift()?.(32));
+      expect(scrollBy).not.toHaveBeenCalled();
+      expect(frames).toHaveLength(1);
+
+      drift.top = 40;
+      act(() => frames.shift()?.(48));
+
+      expect(scrollBy).toHaveBeenCalledWith({ top: 40, behavior: 'instant' });
     });
   });
 });

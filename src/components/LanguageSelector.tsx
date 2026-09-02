@@ -57,6 +57,7 @@ function pinViewportDuringReflow(durationMs = 1500) {
   const deadline = performance.now() + durationMs;
   let active = true;
   let settledFrames = 0;
+  let observedReflow = false;
 
   const stop = () => {
     active = false;
@@ -72,14 +73,20 @@ function pinViewportDuringReflow(durationMs = 1500) {
     if (!active) return;
     const drift = anchor.getBoundingClientRect().top - startTop;
     if (Math.abs(drift) >= 1) {
+      observedReflow = true;
       settledFrames = 0;
       // behavior:'instant' is required. Per CSSOM View, 'auto' defers to the
       // element's CSS scroll-behavior, which globals.css sets to `smooth`, so
       // each correction would ease over 7-16 frames and the page would visibly
       // glide back instead of never appearing to move.
       window.scrollBy({ top: drift, behavior: 'instant' });
-    } else if (++settledFrames >= 2) {
-      // Two consecutive still frames: the reflow is over, stop measuring.
+    } else if (observedReflow && ++settledFrames >= 2) {
+      // The reflow has been corrected and two consecutive frames measured no
+      // further movement, so stop rather than polling to the deadline. The
+      // counter deliberately only starts once drift has been seen: i18next
+      // resolves asynchronously, so the React commit that reflows the page
+      // lands a few frames after the click and an unconditional early stop
+      // would quit before it.
       stop();
       return;
     }
