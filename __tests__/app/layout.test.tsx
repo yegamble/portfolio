@@ -27,7 +27,11 @@ vi.mock('@/components/I18nProvider', () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-import LocaleLayout, { generateMetadata, generateStaticParams } from '@/app/[locale]/layout';
+import LocaleLayout, {
+  generateMetadata,
+  generateStaticParams,
+  viewport,
+} from '@/app/[locale]/layout';
 
 describe('LocaleLayout', () => {
   beforeEach(() => {
@@ -118,6 +122,10 @@ describe('LocaleLayout', () => {
       et: 'https://yosefgamble.com/et',
       'x-default': 'https://yosefgamble.com/en',
     });
+  });
+
+  it('paints the browser chrome to match the page background', () => {
+    expect(viewport.themeColor).toBe('#0f172a');
   });
 
   it('stops rendering for an invalid locale', async () => {

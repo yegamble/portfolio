@@ -7,8 +7,9 @@
 //   1. (optional) re-derive og-image.jpg and profile.jpg from a full-resolution
 //      profile2.png, then delete that source
 //   2. derive the WebP avatar sources from profile.jpg
+//   3. rasterize src/app/icon.svg into favicon.ico and apple-icon.png
 
-import { existsSync, readdirSync, unlinkSync } from 'node:fs';
+import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
 const imagesDir = resolve(projectRoot, 'public', 'images');
+const appDir = resolve(projectRoot, 'src', 'app');
 
 // sharp arrives as an optional dependency of Next.js. pnpm's isolated store
 // does not hoist it to node_modules/, so fall back to resolving it out of the
@@ -91,5 +93,56 @@ for (const size of [256, 320]) {
     .toFile(output);
   await report(`Avatar ${size}px`, output);
 }
+
+// 3. App icons. `src/app/icon.svg` is the source of truth; Next serves whatever
+// icon files sit beside it, so these two only exist because .ico and Apple's
+// touch icon cannot be SVG.
+const ICON_SOURCE = resolve(appDir, 'icon.svg');
+const FAVICON_OUTPUT = resolve(appDir, 'favicon.ico');
+const APPLE_ICON_OUTPUT = resolve(appDir, 'apple-icon.png');
+// Matches `--color-bg-dark` in globals.css, and the icon's own rounded square.
+const BACKGROUND = '#0f172a';
+
+if (!existsSync(ICON_SOURCE)) {
+  console.error(`Icon source not found: ${ICON_SOURCE}`);
+  process.exit(1);
+}
+
+// sharp cannot write .ico, but the format has allowed a PNG payload since
+// Vista and every browser in use reads it, so the container is a 6-byte
+// ICONDIR plus one 16-byte ICONDIRENTRY wrapped around a normal PNG.
+function wrapPngInIco(png, size) {
+  const header = Buffer.alloc(22);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(1, 4); // one image
+  header.writeUInt8(size, 6); // width
+  header.writeUInt8(size, 7); // height
+  header.writeUInt8(0, 8); // colours in palette: none, it is truecolour
+  header.writeUInt8(0, 9); // reserved
+  header.writeUInt16LE(1, 10); // colour planes
+  header.writeUInt16LE(32, 12); // bits per pixel
+  header.writeUInt32LE(png.length, 14);
+  header.writeUInt32LE(header.length, 18); // payload offset
+
+  return Buffer.concat([header, png]);
+}
+
+const faviconPng = await sharp(ICON_SOURCE, { density: 384 })
+  .resize(32, 32, { fit: 'contain', background: BACKGROUND })
+  .png({ compressionLevel: 9 })
+  .toBuffer();
+writeFileSync(FAVICON_OUTPUT, wrapPngInIco(faviconPng, 32));
+console.log(`Favicon: 32x32 ico → ${FAVICON_OUTPUT}`);
+
+// Apple flattens the touch icon onto white and squares off the corners, so it
+// gets an opaque dark plate and a little padding instead of the bare glyph.
+await sharp(ICON_SOURCE, { density: 1080 })
+  .resize(160, 160, { fit: 'contain', background: BACKGROUND })
+  .extend({ top: 10, bottom: 10, left: 10, right: 10, background: BACKGROUND })
+  .flatten({ background: BACKGROUND })
+  .png({ compressionLevel: 9 })
+  .toFile(APPLE_ICON_OUTPUT);
+await report('Apple touch icon', APPLE_ICON_OUTPUT);
 
 console.log('Done.');

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { fontVariables } from '@/app/fonts';
 import JsonLd from '@/app/json-ld';
@@ -95,6 +95,13 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
     },
   };
 }
+
+// Paints the browser chrome to match the page background instead of leaving a
+// white bar above a dark document. Locale-independent, so it is a constant
+// rather than part of generateMetadata.
+export const viewport: Viewport = {
+  themeColor: '#0f172a',
+};
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
