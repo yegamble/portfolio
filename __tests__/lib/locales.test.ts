@@ -91,7 +91,7 @@ describe('getLocalizedPathname', () => {
   });
 
   it('keeps a lone slash as a trailing slash after the locale', () => {
-    // The root path never reaches the selector (middleware redirects it), so
+    // The root path never reaches the selector (the proxy redirects it), so
     // the trailing slash is harmless — pinned here so the behaviour is explicit.
     expect(getLocalizedPathname('/', 'he')).toBe('/he/');
   });

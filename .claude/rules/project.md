@@ -8,7 +8,7 @@ Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland
 
 ## Technology Stack
 
-- **Framework:** Next.js 16.x (App Router, React 19, Turbopack) with `src/middleware.ts` for locale routing. It has to live under `src/`: with a `src/` directory present, `next dev --turbopack` silently ignores a project-root `middleware.ts` (production builds find it either way), so the locale redirect simply did not run in dev
+- **Framework:** Next.js 16.x (App Router, React 19, Turbopack) with `src/proxy.ts` for locale routing (Next 16 renamed the `middleware` file convention to `proxy`). It has to live under `src/`: with a `src/` directory present, `next dev --turbopack` silently ignores a project-root file (production builds find it either way), so the locale redirect simply did not run in dev
 - **Language:** TypeScript (strict mode)
 - **Styling:** Tailwind CSS v4 with `@theme` custom variables
 - **i18n:** i18next + react-i18next (bundled JSON, no backend) — see `i18n.md`
@@ -22,20 +22,21 @@ Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland
 ```
 src/app/            # App Router. [locale]/layout.tsx IS the root layout (owns
                     # <html>/<body>); there is no src/app/layout.tsx or page.tsx.
-                    # global-not-found.tsx, [locale]/error.tsx, sitemap.ts,
-                    # robots.ts, json-ld.tsx
+                    # global-not-found.tsx, global-error.tsx, fonts.ts,
+                    # [locale]/error.tsx, sitemap.ts, robots.ts, json-ld.tsx
 src/components/     # React components (one per file, default exports)
   icons/            # SVG icon + flag components (barrel export)
 src/lib/            # locales.ts (import-free locale primitives — the only thing
-                    # src/middleware.ts may import), i18n.ts (i18next + JSON,
+                    # src/proxy.ts may import), i18n.ts (i18next + JSON,
                     # re-exports locales.ts), cipher character sets, contact
                     # helpers, viewport-pin.ts (hold the reader's anchor across a
                     # language switch), height-ease.ts (FLIP height transition)
 src/hooks/          # useCipherTransition, useBlockHeightEase
 src/data/           # Non-translatable content metadata (experience, projects)
-src/middleware.ts   # Locale redirect (cookie -> Accept-Language -> en) and
-                    # cookie persistence; no request-header injection. Must be
-                    # under src/ or Turbopack dev never runs it
+src/proxy.ts        # Locale redirect (cookie -> Accept-Language -> en). Writes
+                    # the cookie ONLY on that redirect; localized paths get an
+                    # x-locale request header instead. Must be under src/ or
+                    # Turbopack dev never runs it
 public/locales/     # Translation JSON (en/, he/, ru/, et/)
 __tests__/          # Vitest unit tests (mirrors src/) + fixtures/translations/
 cypress/e2e/        # Cypress E2E specs

@@ -17,7 +17,7 @@ function getPathLocale(pathname: string): AppLocale | null {
   return isAppLocale(localeSegment) ? localeSegment : null;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/_next') || PUBLIC_FILE.test(pathname)) {
@@ -39,7 +39,7 @@ export function middleware(request: NextRequest) {
     redirectUrl.pathname =
       pathname === '/' ? getLocaleHref(locale) : `${getLocaleHref(locale)}${pathname}`;
 
-    // This redirect is the ONLY place the middleware writes the cookie. The
+    // This redirect is the ONLY place the proxy writes the cookie. The
     // other writer is an explicit language selection in the browser
     // (I18nProvider's languageChanged handler) — a locale in the URL is not a
     // choice, it is where a link happened to point.

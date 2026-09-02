@@ -26,7 +26,7 @@ test.describe('cipher animation performance', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await waitForPortfolioReady(page);
 
-    // Switch to Hebrew, which writes the locale cookie the middleware reads
+    // Switch to Hebrew, which writes the locale cookie the proxy reads
     await switchLanguage(page, 'he');
     await expect(page.locator('html')).toHaveAttribute('lang', 'he');
 
@@ -68,7 +68,7 @@ test.describe('cipher animation performance', () => {
       }
     });
 
-    // Come back to the bare path so the middleware's cookie redirect is the
+    // Come back to the bare path so the proxy's cookie redirect is the
     // thing being exercised, not a direct hit on /he.
     await page.goto('/');
     await page.waitForLoadState('networkidle');

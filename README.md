@@ -27,7 +27,7 @@ The site is designed around a few principles:
 
 - Sticky responsive header that condenses into a compact identity bar after scroll
 - Animated cipher-style text transitions during language changes
-- Locale routing via middleware redirects: cookie, then `Accept-Language` negotiation, then English
+- Locale routing via proxy (middleware) redirects: cookie, then `Accept-Language` negotiation, then English
 - Statically prerendered locale routes served from cache at the edge
 - English, Hebrew, Russian, and Estonian translations backed by `i18next`
 - RTL-aware layout handling for Hebrew
@@ -62,7 +62,7 @@ src/
   data/             Structured experience and project data
   hooks/            Custom animation and layout hooks
   lib/              locale primitives, i18n, cipher character sets, helpers
-  middleware.ts     Locale redirect and cookie (must live under src/)
+  proxy.ts          Locale redirect and cookie (must live under src/)
 
 public/locales/     Translation files for en / he / ru / et
 __tests__/          Unit and integration coverage
@@ -77,7 +77,9 @@ open-next.config.ts OpenNext Cloudflare adapter configuration
 
 ### Internationalization that affects routing, metadata, and layout
 
-Locales are part of the URL structure (`/en`, `/he`, `/ru`, `/et`), not just client-side state. Middleware redirects a locale-less path to the visitor's preferred locale — a stored cookie first, then an `Accept-Language` negotiation with q-values, then English — and persists the choice in a cookie. On an already-localized path the URL wins, and the cookie is only rewritten when it disagrees, so a `Set-Cookie` never lands on a cacheable HTML response.
+Locales are part of the URL structure (`/en`, `/he`, `/ru`, `/et`), not just client-side state. `src/proxy.ts` (Next 16's name for middleware) redirects a locale-less path to the visitor's preferred locale — a stored cookie first, then an `Accept-Language` negotiation with q-values, then English.
+
+The cookie records what the visitor *chose*, and a locale in a URL is not a choice. It has exactly two writers: that locale-less redirect, and an explicit language change in the browser. An already-localized path is served as it is, so following an `/en` link from a CV shows English without overwriting a stored `he` — and HTML responses never carry `Set-Cookie`, which is what would stop a CDN caching them.
 
 The locale segment's layout is the application's root layout: it owns `<html lang dir>` and derives everything from the route param rather than a per-request header, which is what lets all four locales prerender at build time and be served from cache on Cloudflare instead of re-rendering React per request. The document direction also switches correctly for Hebrew, and 404s render their own localized document with a translated title.
 
@@ -116,7 +118,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The middleware will redirect `/` to the active locale route, so expect local development to land on `/en` by default unless the locale cookie — or your browser's `Accept-Language` header — says otherwise.
+The proxy will redirect `/` to the active locale route, so expect local development to land on `/en` by default unless the locale cookie — or your browser's `Accept-Language` header — says otherwise.
 
 ## Environment variables
 

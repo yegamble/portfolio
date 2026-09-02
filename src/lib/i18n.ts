@@ -8,7 +8,7 @@ import he from '../../public/locales/he/translation.json';
 import ru from '../../public/locales/ru/translation.json';
 import et from '../../public/locales/et/translation.json';
 
-// The locale primitives live in `@/lib/locales` (no imports, so the middleware
+// The locale primitives live in `@/lib/locales` (no imports, so the proxy/edge
 // bundle stays free of i18next and the translation JSON). They are re-exported
 // here so `@/lib/i18n` remains the single import site for the React tree.
 export {

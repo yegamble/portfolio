@@ -22,7 +22,7 @@ function applyDocumentLocale(locale: string) {
 
 // Written only when the visitor actually picks a language. Rendering a locale
 // route is not a choice — someone following an /en link from a CV keeps their
-// stored `he` — and the middleware likewise only writes the cookie on the
+// stored `he` — and `src/proxy.ts` likewise only writes the cookie on the
 // redirect it serves for a locale-less path.
 function persistLocaleChoice(locale: string) {
   const secure = window.location.protocol === 'https:' ? '; Secure' : '';

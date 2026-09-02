@@ -98,7 +98,7 @@ it('works')
 2. Start: `pnpm start`
 3. Run: `pnpm test:e2e` (headless) or `pnpm test:e2e:open` (interactive)
 
-Note: the middleware redirects `/` to the locale route (`/en` by default), so specs land on localized URLs.
+Note: `src/proxy.ts` redirects `/` to the locale route (`/en` by default, or whatever `Accept-Language` asks for), so specs land on localized URLs.
 
 **E2E covers:**
 - Page load, navigation, anchor links

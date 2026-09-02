@@ -46,7 +46,7 @@ describe('GlobalNotFound', () => {
     expect(markup).toContain('404');
   });
 
-  it('localizes from the middleware x-locale header without any cookie', async () => {
+  it('localizes from the proxy x-locale header without any cookie', async () => {
     // /he/foo carries no locale cookie for a first-time visitor, so the path
     // locale has to reach the 404 some other way.
     mockRequest({ pathLocale: 'he' });

@@ -6,7 +6,7 @@ import staticAssetsIncrementalCache from '@opennextjs/cloudflare/overrides/incre
 // prerendered HTML and re-rendered every request. Reading it back out of
 // Workers static assets (`.open-next/assets/cdn-cgi/_next_cache/...`) plus
 // cache interception lets the Worker answer from the prerender before the
-// Next.js server handler runs, while the middleware still executes.
+// Next.js server handler runs, while the proxy (middleware) still executes.
 //
 // Nothing on this site revalidates, which is the one condition the static
 // assets cache requires.

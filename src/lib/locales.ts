@@ -1,8 +1,7 @@
-// Locale primitives with zero imports. `src/middleware.ts` runs in the edge bundle
+// Locale primitives with zero imports. `src/proxy.ts` runs in the edge bundle
 // and only needs these helpers; keeping them out of `src/lib/i18n.ts` (which
 // pulls in i18next, react-i18next and all four translation JSONs at module
-// scope) keeps ~120 KB of unused translation payload out of the middleware
-// bundle. `src/lib/i18n.ts` re-exports everything here, so `@/lib/i18n`
+// scope) keeps ~120 KB of unused translation payload out of the edge bundle. `src/lib/i18n.ts` re-exports everything here, so `@/lib/i18n`
 // imports keep working.
 
 export const LOCALES = ['en', 'he', 'ru', 'et'] as const;

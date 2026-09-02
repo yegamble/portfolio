@@ -13,7 +13,8 @@ import {
 import './globals.css';
 
 // A 404 is served for paths that match no route, so there is no `locale` param
-// to read. `src/middleware.ts` puts the path locale on an `x-locale` REQUEST
+// to read. `src/proxy.ts` (the Next 16 name for the middleware) puts the path
+// locale on an `x-locale` REQUEST
 // header, which is what makes `/he/foo` come back in Hebrew; the stored cookie
 // is the fallback for a path with no locale segment at all.
 //

@@ -1,19 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { middleware } from '@/middleware';
+import { proxy } from '@/proxy';
 import { NextRequest } from 'next/server';
 
-describe('middleware', () => {
+describe('proxy (locale routing)', () => {
   describe('bypass', () => {
     it('should pass through /_next requests', () => {
       const req = new NextRequest('http://localhost:3000/_next/static/chunk.js');
-      const res = middleware(req);
+      const res = proxy(req);
       expect(res.headers.get('x-middleware-next')).toBe('1');
       expect(res.headers.get('set-cookie')).toBeNull();
     });
 
     it('should pass through public files', () => {
       const req = new NextRequest('http://localhost:3000/favicon.ico');
-      const res = middleware(req);
+      const res = proxy(req);
       expect(res.headers.get('x-middleware-next')).toBe('1');
       expect(res.headers.get('set-cookie')).toBeNull();
     });
@@ -22,7 +22,7 @@ describe('middleware', () => {
   describe('locale-less paths', () => {
     it('should redirect to the default locale with no cookie and no Accept-Language', () => {
       const req = new NextRequest('http://localhost:3000/about');
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.status).toBe(307);
       expect(res.headers.get('location')).toBe('http://localhost:3000/en/about');
@@ -31,7 +31,7 @@ describe('middleware', () => {
 
     it('should redirect the root path to the default locale', () => {
       const req = new NextRequest('http://localhost:3000/');
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.status).toBe(307);
       expect(res.headers.get('location')).toBe('http://localhost:3000/en');
@@ -42,7 +42,7 @@ describe('middleware', () => {
       const req = new NextRequest('http://localhost:3000/projects', {
         headers: { cookie: 'locale=he' },
       });
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.status).toBe(307);
       expect(res.headers.get('location')).toBe('http://localhost:3000/he/projects');
@@ -53,7 +53,7 @@ describe('middleware', () => {
       const req = new NextRequest('http://localhost:3000/', {
         headers: { 'accept-language': 'he-IL,he;q=0.9,en;q=0.5' },
       });
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('location')).toBe('http://localhost:3000/he');
       expect(res.cookies.get('locale')?.value).toBe('he');
@@ -63,7 +63,7 @@ describe('middleware', () => {
       const req = new NextRequest('http://localhost:3000/', {
         headers: { 'accept-language': 'fr-FR,de;q=0.8' },
       });
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('location')).toBe('http://localhost:3000/en');
     });
@@ -72,7 +72,7 @@ describe('middleware', () => {
       const req = new NextRequest('http://localhost:3000/', {
         headers: { cookie: 'locale=ru', 'accept-language': 'he-IL,he;q=0.9' },
       });
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('location')).toBe('http://localhost:3000/ru');
     });
@@ -81,7 +81,7 @@ describe('middleware', () => {
       const req = new NextRequest('http://localhost:3000/', {
         headers: { cookie: 'locale=fr', 'accept-language': 'et;q=0.9' },
       });
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('location')).toBe('http://localhost:3000/et');
       expect(res.cookies.get('locale')?.value).toBe('et');
@@ -91,7 +91,7 @@ describe('middleware', () => {
       const req = new NextRequest('http://localhost:3000/', {
         headers: { cookie: 'locale=fr' },
       });
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('location')).toBe('http://localhost:3000/en');
       expect(res.cookies.get('locale')?.value).toBe('en');
@@ -99,14 +99,14 @@ describe('middleware', () => {
 
     it('should not mistake a path that merely starts with locale letters for a locale', () => {
       const req = new NextRequest('http://localhost:3000/english');
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('location')).toBe('http://localhost:3000/en/english');
     });
 
     it('should preserve the query string across the redirect', () => {
       const req = new NextRequest('http://localhost:3000/about?x=1&y=2');
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('location')).toBe('http://localhost:3000/en/about?x=1&y=2');
     });
@@ -115,7 +115,7 @@ describe('middleware', () => {
   describe('localized paths', () => {
     it('should pass a valid locale path through, forwarding the locale as a request header', () => {
       const req = new NextRequest('http://localhost:3000/ru/about');
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.status).toBe(200);
       expect(res.headers.get('x-middleware-next')).toBe('1');
@@ -132,7 +132,7 @@ describe('middleware', () => {
           'http://localhost:3000/en',
           cookie == null ? undefined : { headers: { cookie } }
         );
-        const res = middleware(req);
+        const res = proxy(req);
 
         expect(res.status).toBe(200);
         expect(res.headers.get('set-cookie')).toBeNull();
@@ -144,7 +144,7 @@ describe('middleware', () => {
       const req = new NextRequest('http://localhost:3000/en/about', {
         headers: { cookie: 'locale=he' },
       });
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('x-middleware-request-x-locale')).toBe('en');
       expect(res.headers.get('set-cookie')).toBeNull();
@@ -154,7 +154,7 @@ describe('middleware', () => {
   describe('redirect cookie and cache headers', () => {
     it('should scope the cookie to the site for a year without the Secure flag over http', () => {
       const req = new NextRequest('http://localhost:3000/');
-      const res = middleware(req);
+      const res = proxy(req);
       const setCookie = res.headers.get('set-cookie') ?? '';
 
       expect(setCookie).toContain('Max-Age=31536000');
@@ -165,14 +165,14 @@ describe('middleware', () => {
 
     it('should mark the cookie Secure over https', () => {
       const req = new NextRequest('https://yosefgamble.com/');
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('set-cookie')).toContain('Secure');
     });
 
     it('should vary the redirect on the inputs that choose its target', () => {
       const req = new NextRequest('http://localhost:3000/about');
-      const res = middleware(req);
+      const res = proxy(req);
 
       expect(res.headers.get('vary')).toBe('Accept-Language, Cookie');
     });
