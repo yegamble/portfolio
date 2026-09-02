@@ -69,3 +69,5 @@ export default function SectionName() {
 - `sr-only` class for screen-reader-only text (social link labels)
 - External links: `target="_blank" rel="noreferrer noopener"`
 - `tabIndex={isScrolled ? 0 : -1}` for conditional focusability
+- Never let an `aria-label` replace a control's visible text — put the description in the button's own content behind `sr-only` so the accessible name contains the visible label (WCAG 2.5.3)
+- A menu that unmounts on selection must hand focus back to its trigger, and an in-place change with no navigation needs a `role="status" aria-live="polite"` region to announce it (see `LanguageSelector`)

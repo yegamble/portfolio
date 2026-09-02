@@ -193,6 +193,8 @@ describe('LanguageSelector', () => {
     await user.click(screen.getByRole('button', { name: /select language/i }));
     const link = screen.getByRole('link', { name: /русский/i });
 
+    // jsdom logs "Not implemented: navigation to another Document" for these two
+    // clicks — that notice is the proof the default action was left intact.
     const modifierClick = createEvent.click(link, { ctrlKey: true });
     fireEvent(link, modifierClick);
     expect(modifierClick.defaultPrevented).toBe(false);
