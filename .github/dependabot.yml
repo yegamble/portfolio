@@ -1,0 +1,57 @@
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # These four are one moving part. `eslint-config-next` is pinned to the
+      # exact `next` version, and the OpenNext adapter is written against a
+      # specific Next.js output shape and a specific wrangler CLI — bumping any
+      # of them alone produces a PR that cannot pass CI.
+      next-platform:
+        patterns:
+          - next
+          - eslint-config-next
+          - '@opennextjs/*'
+          - wrangler
+      # Everything else that only runs on a developer's machine or in CI: test
+      # runners, linters, type definitions, the Tailwind toolchain. One PR a
+      # week rather than a dozen.
+      dev-tooling:
+        dependency-type: development
+        patterns:
+          - '*'
+        exclude-patterns:
+          - eslint-config-next
+          - '@opennextjs/*'
+          - wrangler
+
+  - package-ecosystem: github-actions
+    # The workflows and the composite action under .github/actions each need
+    # their own directory entry; Dependabot does not walk the tree.
+    directories:
+      - /
+      - /.github/actions/setup
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      github-actions:
+        patterns:
+          - '*'
