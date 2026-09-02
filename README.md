@@ -27,7 +27,8 @@ The site is designed around a few principles:
 
 - Sticky responsive header that condenses into a compact identity bar after scroll
 - Animated cipher-style text transitions during language changes
-- Locale persistence via cookie-based middleware redirects
+- Locale routing via middleware redirects: cookie, then `Accept-Language` negotiation, then English
+- Statically prerendered locale routes served from cache at the edge
 - English, Hebrew, Russian, and Estonian translations backed by `i18next`
 - RTL-aware layout handling for Hebrew
 - About, Experience, and Projects sections driven by structured content
@@ -55,7 +56,8 @@ The site is designed around a few principles:
 
 ```text
 src/
-  app/              App Router layouts, pages, metadata, robots, sitemap
+  app/              App Router: [locale]/ is the root layout, plus the global
+                    404, metadata, robots, and sitemap
   components/       UI building blocks and interactive client components
   data/             Structured experience and project data
   hooks/            Custom animation and layout hooks
@@ -74,7 +76,9 @@ open-next.config.ts OpenNext Cloudflare adapter configuration
 
 ### Internationalization that affects routing, metadata, and layout
 
-Locales are part of the URL structure (`/en`, `/he`, `/ru`, `/et`), not just client-side state. Middleware redirects the root path to the preferred locale, persists the choice in a cookie, and injects locale context into the request pipeline. The document direction also switches correctly for Hebrew.
+Locales are part of the URL structure (`/en`, `/he`, `/ru`, `/et`), not just client-side state. Middleware redirects a locale-less path to the visitor's preferred locale — a stored cookie first, then an `Accept-Language` negotiation with q-values, then English — and persists the choice in a cookie. On an already-localized path the URL wins, and the cookie is only rewritten when it disagrees, so a `Set-Cookie` never lands on a cacheable HTML response.
+
+The locale segment's layout is the application's root layout: it owns `<html lang dir>` and derives everything from the route param rather than a per-request header, which is what lets all four locales prerender at build time and be served from cache on Cloudflare instead of re-rendering React per request. The document direction also switches correctly for Hebrew, and 404s render their own localized document with a translated title.
 
 ### Motion that is designed, measured, and constrained
 
@@ -111,7 +115,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The middleware will redirect `/` to the active locale route, so expect local development to land on `/en` by default unless the locale cookie says otherwise.
+The middleware will redirect `/` to the active locale route, so expect local development to land on `/en` by default unless the locale cookie — or your browser's `Accept-Language` header — says otherwise.
 
 ## Environment variables
 

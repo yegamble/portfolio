@@ -14,22 +14,27 @@ Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland
 - **i18n:** i18next + react-i18next (bundled JSON, no backend) — see `i18n.md`
 - **Testing:** Vitest + Testing Library (unit), Cypress (E2E), Playwright (animation/layout-stability specs)
 - **Linting:** ESLint (next config + prettier), Prettier
-- **Deploy:** Cloudflare Workers via `@opennextjs/cloudflare` (`wrangler.jsonc`, `open-next.config.ts`)
+- **Deploy:** Cloudflare Workers via `@opennextjs/cloudflare` (`wrangler.jsonc`, `open-next.config.ts`). The four locale routes are prerendered (`● /en /he /ru /et`), and `open-next.config.ts` uses the `static-assets-incremental-cache` override with `enableCacheInterception: true` so the Worker serves that prerendered HTML (`x-opennext-cache: HIT`) instead of re-rendering React per request. `opennextjs-cloudflare deploy` / `preview` populate `.open-next/assets/cdn-cgi/_next_cache` — a bare `wrangler deploy` would not
 - **CI:** GitHub Actions (Node 22, pnpm via Corepack)
 
 ## Directory Structure
 
 ```
-src/app/            # App Router: layout, [locale]/ segment, error/not-found,
-                    # sitemap.ts, robots.ts, json-ld.tsx
+src/app/            # App Router. [locale]/layout.tsx IS the root layout (owns
+                    # <html>/<body>); there is no src/app/layout.tsx or page.tsx.
+                    # global-not-found.tsx, [locale]/error.tsx, sitemap.ts,
+                    # robots.ts, json-ld.tsx
 src/components/     # React components (one per file, default exports)
   icons/            # SVG icon + flag components (barrel export)
-src/lib/            # i18n config, cipher character sets, contact helpers,
-                    # viewport-pin.ts (hold the reader's anchor across a
+src/lib/            # locales.ts (import-free locale primitives — the only thing
+                    # middleware.ts may import), i18n.ts (i18next + bundled JSON,
+                    # re-exports locales.ts), cipher character sets, contact
+                    # helpers, viewport-pin.ts (hold the reader's anchor across a
                     # language switch), height-ease.ts (FLIP height transition)
 src/hooks/          # useCipherTransition, useBlockHeightEase
 src/data/           # Non-translatable content metadata (experience, projects)
-middleware.ts       # Locale redirect + cookie + x-locale header
+middleware.ts       # Locale redirect (cookie -> Accept-Language -> en) and
+                    # cookie persistence; no request-header injection
 public/locales/     # Translation JSON (en/, he/, ru/, et/)
 __tests__/          # Vitest unit tests (mirrors src/) + fixtures/translations/
 cypress/e2e/        # Cypress E2E specs
