@@ -23,10 +23,26 @@ describe('manifest', () => {
     expect(manifest().start_url).toBe('/');
   });
 
-  it('offers a scalable icon and the Apple touch icon', () => {
+  it('keeps a stable id so changing start_url cannot register a second app', () => {
+    expect(manifest().id).toBe('/');
+  });
+
+  it('offers the scalable icon plus the raster sizes Chrome installs from', () => {
     expect(manifest().icons).toEqual([
-      { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
-      { src: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      {
+        src: '/icons/icon-maskable-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
     ]);
+  });
+
+  // Without one, Android letterboxes the "any" icon inside a white circle.
+  it('includes a maskable icon for adaptive launcher shapes', () => {
+    expect(manifest().icons?.some((icon) => icon.purpose === 'maskable')).toBe(true);
   });
 });

@@ -8,8 +8,16 @@
 //      profile2.png, then delete that source
 //   2. derive the WebP avatar sources from profile.jpg
 //   3. rasterize src/app/icon.svg into favicon.ico and apple-icon.png
+//   4. rasterize the PWA icons the web app manifest points at
+//
+// Run this on macOS. `src/app/icon.svg` draws its "Y" with a <text> element in
+// `system-ui,sans-serif`, so librsvg resolves it against the HOST's fonts: the
+// committed PNGs are San Francisco, and a Linux run would silently re-render
+// them in DejaVu Sans. Converting the glyph to a <path> would remove the
+// dependency (and would also settle how /icon.svg renders in each visitor's
+// browser, which varies for the same reason).
 
-import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +27,20 @@ const projectRoot = resolve(__dirname, '..');
 const imagesDir = resolve(projectRoot, 'public', 'images');
 const appDir = resolve(projectRoot, 'src', 'app');
 
+// Several sharp versions can coexist in pnpm's store (Next and OpenNext pull
+// their own) and the directory names carry peer suffixes, so a lexical sort
+// would rank 0.9.0 above 0.35.4. Compare the parsed triples instead, newest
+// first.
+function byVersionDescending(a, b) {
+  for (let index = 0; index < 3; index += 1) {
+    if (a.version[index] !== b.version[index]) {
+      return b.version[index] - a.version[index];
+    }
+  }
+
+  return 0;
+}
+
 // sharp arrives as an optional dependency of Next.js. pnpm's isolated store
 // does not hoist it to node_modules/, so fall back to resolving it out of the
 // store rather than making every contributor install it separately.
@@ -27,19 +49,23 @@ async function loadSharp() {
     return (await import('sharp')).default;
   } catch {
     const storeDir = resolve(projectRoot, 'node_modules', '.pnpm');
-    const candidate = existsSync(storeDir)
-      ? readdirSync(storeDir)
-          .filter((entry) => entry.startsWith('sharp@'))
-          .sort()
-          .pop()
-      : undefined;
+    const candidate = (existsSync(storeDir) ? readdirSync(storeDir) : [])
+      .map((entry) => {
+        const match = /^sharp@(\d+)\.(\d+)\.(\d+)/.exec(entry);
+        return match === null ? null : { entry, version: match.slice(1, 4).map(Number) };
+      })
+      .filter((parsed) => parsed !== null)
+      .sort(byVersionDescending)
+      .at(0);
 
     if (candidate === undefined) {
       console.error('sharp not found. Install it with `pnpm add -D sharp` and re-run.');
       process.exit(1);
     }
 
-    const require = createRequire(resolve(storeDir, candidate, 'node_modules/sharp/package.json'));
+    const require = createRequire(
+      resolve(storeDir, candidate.entry, 'node_modules/sharp/package.json')
+    );
     return require('sharp');
   }
 }
@@ -144,5 +170,44 @@ await sharp(ICON_SOURCE, { density: 1080 })
   .png({ compressionLevel: 9 })
   .toFile(APPLE_ICON_OUTPUT);
 await report('Apple touch icon', APPLE_ICON_OUTPUT);
+
+// 4. PWA icons, referenced by `src/app/manifest.ts`. These live in `public/`
+// rather than beside `icon.svg`, because Next turns every icon file in the app
+// directory into another <link rel="icon"> in the document head.
+const PWA_ICON_DIR = resolve(projectRoot, 'public', 'icons');
+
+mkdirSync(PWA_ICON_DIR, { recursive: true });
+
+for (const size of [192, 512]) {
+  const output = resolve(PWA_ICON_DIR, `icon-${size}.png`);
+  await sharp(ICON_SOURCE, { density: size * 12 })
+    .resize(size, size, { fit: 'contain', background: BACKGROUND })
+    .png({ compressionLevel: 9 })
+    .toFile(output);
+  await report(`PWA icon ${size}px`, output);
+}
+
+// A maskable icon is cropped to whatever shape the launcher wants, and only the
+// centre circle of 80% diameter is guaranteed visible. Render the mark at 60%
+// on a full-bleed plate so nothing important can be clipped.
+const MASKABLE_SIZE = 512;
+// Rounded to an even number so the padding either side is a whole pixel.
+const MASKABLE_GLYPH = Math.round((MASKABLE_SIZE * 0.6) / 2) * 2;
+const MASKABLE_PAD = (MASKABLE_SIZE - MASKABLE_GLYPH) / 2;
+const MASKABLE_OUTPUT = resolve(PWA_ICON_DIR, 'icon-maskable-512.png');
+
+await sharp(ICON_SOURCE, { density: MASKABLE_GLYPH * 12 })
+  .resize(MASKABLE_GLYPH, MASKABLE_GLYPH, { fit: 'contain', background: BACKGROUND })
+  .extend({
+    top: MASKABLE_PAD,
+    bottom: MASKABLE_PAD,
+    left: MASKABLE_PAD,
+    right: MASKABLE_PAD,
+    background: BACKGROUND,
+  })
+  .flatten({ background: BACKGROUND })
+  .png({ compressionLevel: 9 })
+  .toFile(MASKABLE_OUTPUT);
+await report('PWA icon maskable', MASKABLE_OUTPUT);
 
 console.log('Done.');
