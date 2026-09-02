@@ -541,33 +541,34 @@ describe('CipherText', () => {
   });
   describe('block-mode height ease', () => {
     let resizeCallbacks: ResizeObserverCallback[];
+    let intersectionCallbacks: IntersectionObserverCallback[];
     let originalResizeObserver: typeof ResizeObserver | undefined;
 
     /**
      * jsdom reports a zero rect for everything, so the wrapper's height is
-     * scripted. Each render pass reads it twice (the height an in-flight ease
-     * is at, then the natural height React just committed), so the values are
-     * queued and the last one repeats.
+     * scripted. The mechanics of the ease itself are covered in
+     * __tests__/hooks/useBlockHeightEase.test.ts; what matters here is that the
+     * component hands the hook the right element and the right visibility.
      */
-    function stubHeights(element: HTMLElement, ...heights: number[]) {
-      const queue = [...heights];
-      // Inline height in effect at each read: the ease pins its start height
-      // and then forces a reflow, so this records what it pinned.
-      const inlineHeightAtRead: string[] = [];
-      element.getBoundingClientRect = vi.fn(() => {
-        inlineHeightAtRead.push(element.style.height);
-        const height = queue.length > 1 ? queue.shift()! : queue[0];
-        return { height, width: 0, top: 0, bottom: height, left: 0, right: 0 } as DOMRect;
-      });
-      return inlineHeightAtRead;
+    function stubHeight(element: HTMLElement, height: number) {
+      element.getBoundingClientRect = vi.fn(
+        () => ({ height, width: 0, top: 0, bottom: height, left: 0, right: 0 }) as DOMRect
+      );
     }
 
-    /** The settled height a ResizeObserver would have reported after layout. */
     function reportSettledHeight(height: number) {
-      resizeCallbacks.forEach((callback) =>
+      const entry = {
+        borderBoxSize: [{ blockSize: height, inlineSize: 0 }],
+        contentRect: { height },
+      } as unknown as ResizeObserverEntry;
+      resizeCallbacks.forEach((callback) => callback([entry], {} as ResizeObserver));
+    }
+
+    function reportVisibility(isIntersecting: boolean) {
+      intersectionCallbacks.forEach((callback) =>
         callback(
-          [{ contentRect: { height } } as unknown as ResizeObserverEntry],
-          {} as ResizeObserver
+          [{ isIntersecting } as IntersectionObserverEntry],
+          {} as unknown as IntersectionObserver
         )
       );
     }
@@ -578,61 +579,56 @@ describe('CipherText', () => {
       return container.querySelector<HTMLElement>('span[style]')!;
     }
 
-    function endHeightTransition(element: HTMLElement) {
-      const event = new Event('transitionend', { bubbles: true });
-      Object.defineProperty(event, 'propertyName', { value: 'height' });
-      element.dispatchEvent(event);
-    }
-
     beforeEach(() => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
       resizeCallbacks = [];
+      intersectionCallbacks = [];
+
       originalResizeObserver = global.ResizeObserver;
       global.ResizeObserver = vi.fn(function (
         this: ResizeObserver,
         callback: ResizeObserverCallback
       ) {
         resizeCallbacks.push(callback);
-        return {
-          observe: vi.fn(),
-          unobserve: vi.fn(),
-          disconnect: vi.fn(),
-        };
+        return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
       }) as unknown as typeof ResizeObserver;
+
+      global.IntersectionObserver = vi.fn(function (
+        this: IntersectionObserver,
+        callback: IntersectionObserverCallback
+      ) {
+        intersectionCallbacks.push(callback);
+        return {
+          observe: observeMock,
+          unobserve: vi.fn(),
+          disconnect: disconnectMock,
+          root: null,
+          rootMargin: '',
+          thresholds: [],
+          takeRecords: () => [],
+        };
+      }) as unknown as typeof IntersectionObserver;
+
+      // jsdom has a CSS namespace but no CSS.supports, and the ease refuses to
+      // run without `overflow-y: clip` support.
+      (globalThis.CSS as unknown as { supports?: () => boolean }).supports = () => true;
     });
 
     afterEach(() => {
+      delete (globalThis.CSS as unknown as { supports?: () => boolean }).supports;
       global.ResizeObserver = originalResizeObserver as typeof ResizeObserver;
     });
 
-    it('should ease the wrapper from the height the reader saw to the new one', () => {
+    it('should ease the block wrapper when the text changes', () => {
       const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
       const wrapper = blockWrapper(container);
 
       reportSettledHeight(240);
-      const inlineHeightAtRead = stubHeights(wrapper, 180);
+      stubHeight(wrapper, 180);
       rerender(<CipherText block>Beta</CipherText>);
 
-      // Pinned to the height the reader was looking at, then transitioned away.
-      expect(inlineHeightAtRead).toContain('240px');
       expect(wrapper.style.height).toBe('180px');
       expect(wrapper.style.transition).toBe('height 300ms ease-out');
-      // A box easing upwards is briefly shorter than its own content.
-      expect(wrapper.style.overflowY).toBe('clip');
-    });
-
-    it('should hand the wrapper back to natural sizing when the ease ends', () => {
-      const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
-      const wrapper = blockWrapper(container);
-
-      reportSettledHeight(240);
-      stubHeights(wrapper, 180);
-      rerender(<CipherText block>Beta</CipherText>);
-      endHeightTransition(wrapper);
-
-      expect(wrapper.style.height).toBe('');
-      expect(wrapper.style.transition).toBe('');
-      expect(wrapper.style.overflowY).toBe('');
     });
 
     it('should animate the same DOM node the animating branch renders into', () => {
@@ -640,7 +636,7 @@ describe('CipherText', () => {
       const wrapper = blockWrapper(container);
 
       reportSettledHeight(240);
-      stubHeights(wrapper, 180);
+      stubHeight(wrapper, 180);
 
       // The switch that matters: new text AND the branch flip to the animating
       // markup, in one commit. Both branches emit the same wrapper element, so
@@ -655,95 +651,24 @@ describe('CipherText', () => {
       expect(wrapper.style.height).toBe('180px');
     });
 
-    it('should restart cleanly from the rendered height when the text changes mid-ease', () => {
+    it('should not ease an instance the viewport observer reports as off-screen', () => {
       const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
       const wrapper = blockWrapper(container);
 
       reportSettledHeight(240);
-      stubHeights(wrapper, 180);
-      rerender(<CipherText block>Beta</CipherText>);
-      expect(wrapper.style.height).toBe('180px');
-
-      // Mid-flight: the box has animated down to 210 and the next translation
-      // is taller again. The ease must pick up from 210, not from 180 (where it
-      // was heading) and not from 240 (where it started).
-      const inlineHeightAtRead = stubHeights(wrapper, 210, 260);
-      rerender(<CipherText block>Gamma</CipherText>);
-
-      expect(inlineHeightAtRead).toContain('210px');
-      expect(wrapper.style.height).toBe('260px');
-
-      endHeightTransition(wrapper);
-      expect(wrapper.style.height).toBe('');
-    });
-
-    it('should skip the ease when the reader prefers reduced motion', () => {
-      window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-        matches: query === '(prefers-reduced-motion: reduce)',
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }));
-
-      const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
-      const wrapper = blockWrapper(container);
-
-      reportSettledHeight(240);
-      stubHeights(wrapper, 180);
-      rerender(<CipherText block>Beta</CipherText>);
-
-      expect(wrapper.style.height).toBe('');
-      expect(wrapper.style.transition).toBe('');
-    });
-
-    it('should skip the ease when the environment has no ResizeObserver', () => {
-      // @ts-expect-error deliberately removing the API the ease depends on
-      delete global.ResizeObserver;
-
-      const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
-      const wrapper = blockWrapper(container);
-
-      stubHeights(wrapper, 180);
+      reportVisibility(false);
+      stubHeight(wrapper, 180);
       rerender(<CipherText block>Beta</CipherText>);
 
       expect(wrapper.style.height).toBe('');
     });
 
-    it('should skip the ease for a sub-pixel height change', () => {
-      const { container, rerender } = render(<CipherText block>Alpha</CipherText>);
-      const wrapper = blockWrapper(container);
-
-      reportSettledHeight(240);
-      stubHeights(wrapper, 240.5);
-      rerender(<CipherText block>Beta</CipherText>);
-
-      expect(wrapper.style.height).toBe('');
-    });
-
-    it('should not observe or ease anything in inline (non-block) mode', () => {
+    it('should not observe anything in inline (non-block) mode', () => {
       const { rerender } = render(<CipherText>Alpha</CipherText>);
 
       rerender(<CipherText>Beta</CipherText>);
 
       expect(global.ResizeObserver).not.toHaveBeenCalled();
-    });
-
-    it('should stop observing and drop any inline height on unmount', () => {
-      const { container, rerender, unmount } = render(<CipherText block>Alpha</CipherText>);
-      const wrapper = blockWrapper(container);
-
-      reportSettledHeight(240);
-      stubHeights(wrapper, 180);
-      rerender(<CipherText block>Beta</CipherText>);
-
-      unmount();
-
-      expect(wrapper.style.height).toBe('');
-      expect(wrapper.style.transition).toBe('');
     });
   });
 });

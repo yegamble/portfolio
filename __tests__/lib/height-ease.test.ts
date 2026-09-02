@@ -1,6 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { cancelHeightEase, easeHeight, isHeightEasing } from '@/lib/height-ease';
 
+/**
+ * jsdom exposes a CSS namespace object but no CSS.supports, and easeHeight
+ * refuses to run without `overflow-y: clip` support. Fake the answer rather
+ * than the whole namespace, so CSS.escape and friends stay intact.
+ */
+function stubCssSupports(supported: boolean) {
+  const css = globalThis.CSS as unknown as { supports?: (p: string, v: string) => boolean };
+  css.supports = () => supported;
+  return () => {
+    delete css.supports;
+  };
+}
+
 function mountBox() {
   const element = document.createElement('span');
   element.style.display = 'inline-block';
@@ -17,13 +30,17 @@ function endHeightTransition(element: HTMLElement) {
 describe('easeHeight', () => {
   let element: HTMLElement;
 
+  let restoreCssSupports: () => void;
+
   beforeEach(() => {
     vi.useFakeTimers();
+    restoreCssSupports = stubCssSupports(true);
     element = mountBox();
   });
 
   afterEach(() => {
     cancelHeightEase(element);
+    restoreCssSupports();
     vi.useRealTimers();
     document.body.innerHTML = '';
   });
@@ -158,6 +175,30 @@ describe('easeHeight', () => {
     expect(element.style.height).toBe('');
     expect(element.style.transition).toBe('');
     expect(element.style.overflowY).toBe('');
+    expect(isHeightEasing(element)).toBe(false);
+  });
+
+  it('does not ease at all on an engine without overflow-y: clip', () => {
+    restoreCssSupports();
+    restoreCssSupports = stubCssSupports(false);
+
+    easeHeight(element, 240, 180);
+
+    // No `hidden` fallback on purpose: it would turn the wrapper into a scroll
+    // container, moving an inline-block's baseline to its bottom margin edge and
+    // inflating the line box around it for the length of the animation.
+    expect(element.style.height).toBe('');
+    expect(element.style.overflowY).toBe('');
+    expect(isHeightEasing(element)).toBe(false);
+  });
+
+  it('does not ease when the engine has no CSS.supports to ask', () => {
+    restoreCssSupports();
+    restoreCssSupports = () => {};
+
+    easeHeight(element, 240, 180);
+
+    expect(element.style.height).toBe('');
     expect(isHeightEasing(element)).toBe(false);
   });
 

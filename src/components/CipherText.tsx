@@ -1,9 +1,9 @@
 'use client';
 
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useBlockHeightEase } from '@/hooks/useBlockHeightEase';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
-import { cancelHeightEase, easeHeight, isHeightEasing } from '@/lib/height-ease';
 
 interface CipherTextProps {
   children?: string;
@@ -96,21 +96,6 @@ function segmentWords(chars: string[]): WordSegment[] {
   return segments;
 }
 
-// The height ease measures the DOM after a commit, which is client-only work.
-// useLayoutEffect warns when React renders on the server, so pick the effect
-// that fits the environment once, at module scope (never per render).
-const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
-
-const HEIGHT_EASE_EPSILON_PX = 1;
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-}
-
 const CHAR_THRESHOLD_DESKTOP = 80;
 const CHAR_THRESHOLD_MOBILE = 40;
 
@@ -145,12 +130,16 @@ function getCharThreshold(): number {
  *   height in the single commit that swaps the text, and everything below it
  *   jumps by the delta in one frame (measured: the 1280px hero <h1> 240 ->
  *   180px on en->he, #about copy 633 -> 692px on en->et). When block={true}
- *   that step is replayed as a 300ms ease instead — see the effects below and
- *   src/lib/height-ease.ts. A reader scrolled past the block is unaffected
- *   either way: the browser's own scroll anchoring absorbs a size change above
- *   the viewport, and src/lib/viewport-pin.ts cancels whatever is left of it
- *   (measured on a production build, he->en with #experience 80px above the
- *   fold: one 1px correction, section ends exactly where it started).
+ *   that step is replayed as a 300ms ease instead — see useBlockHeightEase and
+ *   src/lib/height-ease.ts. Only on-screen instances ease; the ~7-8 invisible
+ *   ones still step, since a transition nobody can see is pure cost during the
+ *   busiest 300ms on the page.
+ * - EITHER WAY a reader scrolled past the block keeps their place. Measured on
+ *   a production build, he->en with #experience 80px above the fold: the
+ *   section ends exactly where it started and src/lib/viewport-pin.ts issues a
+ *   single 1px correction. That figure is Chromium's scroll anchoring doing the
+ *   work — an engine without it (WebKit) instead gets a per-frame instant
+ *   correction from the pin, which is equally stable, just more corrections.
  *
  * When block={true}, content is wrapped in a full-width inline-block span so
  * the text behaves as its own paragraph box — that box is what the ease
@@ -163,70 +152,29 @@ export default function CipherText({ children, block = false }: CipherTextProps)
   // --- Viewport gating via IntersectionObserver ---
   const observerRef = useRef<HTMLSpanElement>(null);
   const [isVisible, setIsVisible] = useState(true);
+  // The same fact as `isVisible`, in a form the height ease can read at the
+  // moment it fires without taking a dependency on it (see useBlockHeightEase).
+  const isVisibleRef = useRef(true);
 
   useEffect(() => {
     if (!isCipherEnabled) return;
     const el = observerRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setIsVisible(e.isIntersecting), {
-      rootMargin: '200px',
-    });
+    const io = new IntersectionObserver(
+      ([e]) => {
+        isVisibleRef.current = e.isIntersecting;
+        setIsVisible(e.isIntersecting);
+      },
+      { rootMargin: '200px' }
+    );
     io.observe(el);
     return () => io.disconnect();
   }, [isCipherEnabled]);
 
   // --- Block mode: ease the wrapper's height across a text swap ---
   const blockRef = useRef<HTMLSpanElement>(null);
-  // Last height the wrapper settled at, i.e. the one the reader is looking at
-  // when the next translation arrives.
-  const settledHeightRef = useRef<number | null>(null);
   const canEaseHeight = isCipherEnabled && block;
-
-  useEffect(() => {
-    if (!canEaseHeight) return;
-    const el = blockRef.current;
-    // jsdom and any other environment without ResizeObserver simply never
-    // records a height, so the ease below stays off.
-    if (!el || typeof ResizeObserver === 'undefined') return;
-
-    const observer = new ResizeObserver((entries) => {
-      // Off the hot path on purpose: the observer delivers after layout, so
-      // reading the box here costs nothing, whereas measuring during render or
-      // per animation frame would force a reflow. The ease's own frames are not
-      // a settled height and must not be recorded as one.
-      if (isHeightEasing(el)) return;
-      settledHeightRef.current = entries[entries.length - 1]?.contentRect.height ?? null;
-    });
-    observer.observe(el);
-
-    return () => {
-      observer.disconnect();
-      cancelHeightEase(el);
-    };
-  }, [canEaseHeight]);
-
-  useIsomorphicLayoutEffect(() => {
-    if (!canEaseHeight || prefersReducedMotion()) return;
-    const el = blockRef.current;
-    if (!el) return;
-
-    const settled = settledHeightRef.current;
-    // Nothing to ease from on the first commit (or without a ResizeObserver).
-    if (settled === null) return;
-
-    // React has already committed the new text, so the box is at its natural
-    // new height; an ease still in flight is instead at whatever height it had
-    // animated to, and that — not the target it was heading for — is where the
-    // reader's eye is. Cancelling drops the inline height so the next read is
-    // the natural one again.
-    const from = isHeightEasing(el) ? el.getBoundingClientRect().height : settled;
-    cancelHeightEase(el);
-    const to = el.getBoundingClientRect().height;
-    settledHeightRef.current = to;
-
-    if (Math.abs(to - from) <= HEIGHT_EASE_EPSILON_PX) return;
-    easeHeight(el, from, to);
-  }, [text, canEaseHeight]);
+  useBlockHeightEase(blockRef, text, canEaseHeight, isVisibleRef);
 
   // --- Long text: ref for direct DOM updates (bypasses React) ---
   const longTextRef = useRef<HTMLSpanElement>(null);

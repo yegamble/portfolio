@@ -19,15 +19,14 @@
 export interface EaseHeightOptions {
   /** Length of the transition. */
   durationMs?: number;
-  /**
-   * Safety net for a `transitionend` that never arrives — a background tab, a
-   * transition the compositor drops, an element removed mid-flight. Defaults to
-   * the duration plus a small slack.
-   */
-  timeoutMs?: number;
 }
 
 const DEFAULT_DURATION_MS = 300;
+/**
+ * Slack on top of the duration before the safety net fires. It covers a
+ * `transitionend` that never arrives — a background tab, a transition the
+ * compositor drops, an element removed mid-flight.
+ */
 const TIMEOUT_SLACK_MS = 50;
 
 // Keyed by element rather than held in a module-level variable: several block
@@ -63,8 +62,22 @@ export function easeHeight(
   toPx: number,
   options: EaseHeightOptions = {}
 ): void {
+  // The ease is only safe with `overflow-y: clip`, which is what keeps a box
+  // easing upwards from painting its last line over the content below without
+  // turning the wrapper into a scroll container. An engine that lacks it gets
+  // no ease rather than a `hidden` fallback: `hidden` would move the
+  // inline-block wrapper's baseline to its bottom margin edge and inflate the
+  // line box around it for the length of the animation, which is a worse
+  // artefact than the single-frame step the ease exists to smooth.
+  if (
+    typeof CSS === 'undefined' ||
+    typeof CSS.supports !== 'function' ||
+    !CSS.supports('overflow-y', 'clip')
+  ) {
+    return;
+  }
+
   const durationMs = options.durationMs ?? DEFAULT_DURATION_MS;
-  const timeoutMs = options.timeoutMs ?? durationMs + TIMEOUT_SLACK_MS;
 
   cancelHeightEase(element);
 
@@ -106,6 +119,9 @@ export function easeHeight(
   element.style.height = `${toPx}px`;
 
   element.addEventListener('transitionend', handleTransitionEnd);
-  timeoutId = window.setTimeout(finish, timeoutMs);
+  // Registered before the timeout is scheduled: `finish` refuses to run unless
+  // it is the ease this element currently owns, so it has to be the owner
+  // before anything can call it.
   activeEases.set(element, finish);
+  timeoutId = window.setTimeout(finish, durationMs + TIMEOUT_SLACK_MS);
 }
