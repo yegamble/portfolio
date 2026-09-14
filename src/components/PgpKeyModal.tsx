@@ -40,98 +40,102 @@ const STATUS_WINDOW_MS = 2000;
 let cached: { key: string; info: PgpKeyInfo } | null = null;
 
 export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModalProps) {
+  // Focus and the scroll lock belong to the open/closed transition, not to the
+  // dialog's content: taken when the modal opens, given back when it closes,
+  // whatever the dialog inside did in between.
+  useEffect(() => {
+    if (!isOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  // The dialog mounts per open, and a different key gets a fresh one. That is
+  // what resets the parse, copy and status state between opens — the previous
+  // version undid them in an effect when `isOpen` went false, which is the
+  // set-state-in-effect pattern the React Compiler lint rules reject.
+  return <PgpKeyDialog key={armoredKey} armoredKey={armoredKey} onClose={onClose} />;
+}
+
+interface PgpKeyDialogProps {
+  armoredKey: string;
+  onClose: () => void;
+}
+
+function PgpKeyDialog({ armoredKey, onClose }: PgpKeyDialogProps) {
   const { t } = useTranslation();
-  const [keyInfo, setKeyInfo] = useState<PgpKeyInfo | null>(null);
-  const [loading, setLoading] = useState(false);
+  const decodedKey = useMemo(() => decodeArmoredKey(armoredKey), [armoredKey]);
+  // Reopening the same key is instant: the memo seeds the initial state, so
+  // the dialog never announces a load it has nothing to load for.
+  const [keyInfo, setKeyInfo] = useState<PgpKeyInfo | null>(() =>
+    cached?.key === decodedKey ? cached.info : null
+  );
+  const [loading, setLoading] = useState(() => cached?.key !== decodedKey);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const [justLoaded, setJustLoaded] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
   const focusableElementsRef = useRef<HTMLElement[]>([]);
   const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const decodedKey = useMemo(() => decodeArmoredKey(armoredKey), [armoredKey]);
-
   useEffect(() => {
-    if (!isOpen) {
-      setKeyInfo(null);
-      setError(false);
-      setCopied(false);
-      setCopyFailed(false);
-      setJustLoaded(false);
-      previousFocusRef.current?.focus();
-      return;
-    }
-
-    previousFocusRef.current = document.activeElement as HTMLElement;
+    if (cached?.key === decodedKey) return;
 
     let cancelled = false;
 
-    if (cached?.key === decodedKey) {
-      setKeyInfo(cached.info);
-      setLoading(false);
-      setError(false);
-    } else {
-      setLoading(true);
-      setError(false);
+    (async () => {
+      try {
+        const { readKey } = await import('openpgp');
+        const key = await readKey({ armoredKey: decodedKey });
+        if (cancelled) return;
 
-      (async () => {
-        try {
-          const { readKey } = await import('openpgp');
-          const key = await readKey({ armoredKey: decodedKey });
-          if (cancelled) return;
-
-          const algoInfo = key.getAlgorithmInfo();
-          const info = {
-            fingerprint: formatFingerprint(key.getFingerprint()),
-            userIds: key.getUserIDs(),
-            algorithm: `${algoInfo.algorithm}${algoInfo.bits ? ` (${algoInfo.bits}-bit)` : ''}`,
-            created: key.getCreationTime().toISOString().split('T')[0],
-            keyId: key.getKeyID().toHex(),
-          };
-          cached = { key: decodedKey, info };
-          setKeyInfo(info);
-          // A parse that finishes leaves no visible change a screen reader can
-          // notice on its own — the details it fills in are above the fold of
-          // the dialog's own scroll — so the status region says so.
-          setJustLoaded(true);
-        } catch {
-          if (!cancelled) setError(true);
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
-      })();
-    }
+        const algoInfo = key.getAlgorithmInfo();
+        const info = {
+          fingerprint: formatFingerprint(key.getFingerprint()),
+          userIds: key.getUserIDs(),
+          algorithm: `${algoInfo.algorithm}${algoInfo.bits ? ` (${algoInfo.bits}-bit)` : ''}`,
+          created: key.getCreationTime().toISOString().split('T')[0],
+          keyId: key.getKeyID().toHex(),
+        };
+        cached = { key: decodedKey, info };
+        setKeyInfo(info);
+        // A parse that finishes leaves no visible change a screen reader can
+        // notice on its own — the details it fills in are above the fold of
+        // the dialog's own scroll — so the status region says so.
+        setJustLoaded(true);
+      } catch {
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, [isOpen, decodedKey]);
+  }, [decodedKey]);
 
   useEffect(() => {
-    if (isOpen) {
-      dialogRef.current?.focus();
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+    dialogRef.current?.focus();
+  }, []);
 
   useEffect(() => {
-    if (isOpen && dialogRef.current) {
+    if (dialogRef.current) {
       focusableElementsRef.current = Array.from(
         dialogRef.current.querySelectorAll<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         )
       );
     }
-  }, [isOpen, loading, error, keyInfo]);
+  }, [loading, error, keyInfo]);
 
   useEffect(() => {
-    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -153,7 +157,7 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [onClose]);
 
   // The "loaded" line is an announcement, not a permanent label: it clears on
   // the same 2s window the copy outcome uses, leaving the region empty again.
@@ -163,8 +167,8 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     return () => clearTimeout(timer);
   }, [justLoaded]);
 
-  // The reset timer outlives a click, so it has to be cancellable: reopening the
-  // modal or unmounting mid-window would otherwise leave it running.
+  // The reset timer outlives a click, so it has to be cancellable: closing the
+  // dialog mid-window would otherwise leave it running.
   useEffect(
     () => () => {
       if (copyResetRef.current !== null) {
@@ -208,8 +212,6 @@ export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModal
     },
     [onClose]
   );
-
-  if (!isOpen) return null;
 
   const statusMessage = copyFailed
     ? t('pgp.copyFailed')
