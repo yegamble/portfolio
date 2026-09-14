@@ -175,7 +175,7 @@ rollback — workflow_dispatch from main with a non-empty rollback_version_id;
   `pnpm audit --prod`. **`critical`, not `high`**: today's three advisories are
   transitive under `next > styled-jsx > @babel/core` with nothing to upgrade to, so a
   `high` gate would fail every run for reasons nobody can fix
-- `build`: `cp .env.example .env` then `pnpm build`, uploading `.next` (minus
+- `build`: `pnpm build` (which loads the tracked `.env.production`), uploading `.next` (minus
   `.next/cache`) as an artifact. All three browser jobs download it, so they exercise a
   production build **of the same commit** — not the deployed bytes, since `pnpm run
   deploy` rebuilds through `opennextjs-cloudflare build`, but the same source at the
@@ -206,6 +206,18 @@ rollback — workflow_dispatch from main with a non-empty rollback_version_id;
   on `github.ref == 'refs/heads/main'` (the Production environment has no protection
   rules and the secrets are repository-scoped, so the ref check is the guard), then the
   **same** smoke script — an unverified rollback is a hope
+
+**A second deployer exists outside this pipeline.** Cloudflare's Workers Builds integration
+is connected to the repository and deploys every push to `main` about 90 seconds after the
+push, authored by the account's own identity rather than the CI token, and it also runs on
+the pushes whose CI run failed or was cancelled. It runs none of the jobs above and no smoke
+test, and its build sees only what is committed — which is why the build configuration is a
+tracked `.env.production` and not a file CI copies into place. Between 2026-09-02 (PR #39
+untracked `.env`) and 2026-09-14 that builder shipped bundles without
+`NEXT_PUBLIC_CIPHER_TRANSITION`, so the cipher animation was off in production while every
+CI deploy that briefly restored it was overwritten within two minutes. Two writers to one
+production Worker is a race; the owner should disconnect Workers Builds (or point its
+production branch at nothing) so `deploy` is the only path
 
 All jobs on `ubuntu-latest` with a `timeout-minutes`, Node from `.nvmrc`, pnpm from the
 `packageManager` pin, `permissions: contents: read` at the top level, and every action
