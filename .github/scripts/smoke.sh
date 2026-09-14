@@ -47,6 +47,37 @@ smoke() {
     --max-time 20 "$BASE/")" || { echo '  / did not answer'; return 1; }
   [ "$redirect" = "307 $BASE/en" ] \
     || { echo "  / returned '$redirect', expected '307 $BASE/en'"; return 1; }
+
+  cipher_flag_was_inlined
+}
+
+# NEXT_PUBLIC_CIPHER_TRANSITION is read at build time and baked into the
+# bundle. A build that never saw it (no `.env.production` in the checkout)
+# leaves a runtime `process.env` lookup in the client chunk instead, which is
+# always undefined in a browser: the site renders, every header is right, and
+# the cipher animation has silently vanished. That is what production shipped
+# between 2026-09-02 and 2026-09-14, so the check is on the deployed bytes, not
+# on the build log.
+cipher_flag_was_inlined() {
+  local path body
+
+  for path in $(curl -sS --max-time 20 "$BASE/en" \
+      | grep -oE '/_next/static/chunks/[A-Za-z0-9_.-]+\.js' | sort -u); do
+    body="$(curl -sS --max-time 20 "$BASE$path")" || continue
+    case "$body" in
+      *cipher-word*) ;;
+      *) continue ;;
+    esac
+    case "$body" in
+      *NEXT_PUBLIC_CIPHER_TRANSITION*)
+        echo "  $path still reads NEXT_PUBLIC_CIPHER_TRANSITION at runtime: the build did not see .env.production"
+        return 1 ;;
+    esac
+    return 0
+  done
+
+  echo '  /en references no client chunk carrying the cipher overlay markup'
+  return 1
 }
 
 echo "Smoke testing $BASE"

@@ -42,14 +42,10 @@ export function pinViewportDuringReflow(durationMs = DEFAULT_DURATION_MS) {
   cancelActivePin?.();
 
   const centerY = window.innerHeight / 2;
-  let anchor: HTMLElement | undefined;
-  for (const el of document.querySelectorAll<HTMLElement>(ANCHOR_SELECTOR)) {
+  const anchor = Array.from(document.querySelectorAll<HTMLElement>(ANCHOR_SELECTOR)).find((el) => {
     const rect = el.getBoundingClientRect();
-    if (rect.top <= centerY && rect.bottom >= centerY) {
-      anchor = el;
-      break;
-    }
-  }
+    return rect.top <= centerY && rect.bottom >= centerY;
+  });
   if (!anchor) return;
 
   const startTop = anchor.getBoundingClientRect().top;

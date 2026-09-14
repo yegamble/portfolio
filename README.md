@@ -122,7 +122,7 @@ nvm use
 
 ```bash
 pnpm install
-cp .env.example .env.local
+cp .env.production .env.local
 pnpm dev
 ```
 
@@ -134,10 +134,13 @@ The proxy will redirect `/` to the active locale route, so expect local developm
 
 ### Application variables
 
-`.env.example` is the checked-in production build configuration: every value in it is public,
-and CI copies it to `.env` (`cp .env.example .env`) before building, so it has to stay in sync
-with what the app needs at build time. For local development, copy it to `.env.local` and
-override values there — `.env` and `.env*.local` are git-ignored.
+`.env.production` is the checked-in build configuration: every value in it is public, and
+`next build` loads it on its own — in CI, in Cloudflare's Workers Builds and on a fresh clone —
+so it has to stay in sync with what the app needs at build time. `NEXT_PUBLIC_*` values are
+baked into the bundle at build time, so a build that cannot see this file ships without them
+(that is how the cipher animation once disappeared from production). `pnpm dev` does not read
+`.env.production`, so for local development copy it to `.env.local` and override values there —
+`.env` and `.env*.local` are git-ignored.
 
 | Variable | Purpose |
 | --- | --- |
@@ -209,7 +212,7 @@ build ──┬── e2e (Cypress) ────────────┤
 | --- | --- |
 | `lint-and-typecheck` | `pnpm lint`, `pnpm typecheck`, `pnpm format:check` |
 | `unit-tests` | `pnpm test:coverage` (thresholds live in `vitest.config.ts`; the summary is published to the run page), then `pnpm audit --prod` — blocking at `critical`, plus a non-blocking full report |
-| `build` | `pnpm build` against `.env.example`, uploaded as an artifact, then `pnpm build:worker` — the one place in the pipeline that exercises `open-next.config.ts`, `wrangler.jsonc` and `@opennextjs/cloudflare` before the deploy job builds with them for real |
+| `build` | `pnpm build` (which loads `.env.production`), uploaded as an artifact, then `pnpm build:worker` — the one place in the pipeline that exercises `open-next.config.ts`, `wrangler.jsonc` and `@opennextjs/cloudflare` before the deploy job builds with them for real |
 | `e2e` | Cypress against `pnpm start` serving that artifact |
 | `playwright` | The `layout` project — layout-stability geometry **and** the axe accessibility specs — against `next start` serving that artifact, not `next dev`, whose frame budget is a different number entirely. Both are deterministic, so this one blocks |
 | `playwright-perf` | Frame rate, long tasks and animation shape, on a runner of its own. `continue-on-error`, because the budgets were tuned on a laptop and have never been observed on a 4-vCPU runner |
