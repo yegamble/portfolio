@@ -194,7 +194,14 @@ describe('easeHeight', () => {
 
   it('does not ease when the engine has no CSS.supports to ask', () => {
     restoreCssSupports();
-    restoreCssSupports = () => {};
+    // Temporarily remove CSS.supports from the global namespace
+    const originalSupports = globalThis.CSS.supports;
+    // @ts-expect-error deliberately setting to undefined for test
+    globalThis.CSS.supports = undefined;
+
+    restoreCssSupports = () => {
+      globalThis.CSS.supports = originalSupports;
+    };
 
     easeHeight(element, 240, 180);
 
