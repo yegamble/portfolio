@@ -22,6 +22,32 @@ describe('validateMailto', () => {
     expect(validateMailto('@example.com')).toBeNull();
     expect(validateMailto('spaces in@example.com')).toBeNull();
   });
+
+  it('returns a mailto href for valid emails with special characters', () => {
+    expect(validateMailto('user+tag@example.co.uk')).toBe('mailto:user+tag@example.co.uk');
+    expect(validateMailto('user.name_with-dash@example.com')).toBe(
+      'mailto:user.name_with-dash@example.com'
+    );
+  });
+
+  it('returns a mailto href for very short valid emails', () => {
+    expect(validateMailto('a@b.c')).toBe('mailto:a@b.c');
+  });
+
+  it('returns null for strings with multiple @ signs', () => {
+    expect(validateMailto('user@domain@example.com')).toBeNull();
+    expect(validateMailto('test@@example.com')).toBeNull();
+  });
+
+  it('returns null for strings missing a TLD', () => {
+    expect(validateMailto('user@example')).toBeNull();
+  });
+
+  it('returns null for strings exceeding the 254 character limit', () => {
+    const longLocalPart = 'a'.repeat(200);
+    const longDomain = 'b'.repeat(50) + '.com';
+    expect(validateMailto(`${longLocalPart}@${longDomain}`)).toBeNull(); // 255 chars
+  });
 });
 
 describe('environment variables resolution', () => {

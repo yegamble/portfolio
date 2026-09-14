@@ -11,7 +11,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Returns a `mailto:` href for a valid email, or null for empty/invalid input. */
 export function validateMailto(email: string | undefined): string | null {
   const trimmed = email?.trim();
-  if (!trimmed) return null;
+  if (!trimmed || trimmed.length > 254) return null;
   return EMAIL_PATTERN.test(trimmed) ? `mailto:${trimmed}` : null;
 }
 
