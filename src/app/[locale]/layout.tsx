@@ -58,9 +58,7 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
       siteName: 'Yosef Gamble',
       locale: OG_LOCALES[locale],
       // The three other translations of this same page.
-      alternateLocale: LOCALES.filter((other) => other !== locale).map(
-        (other) => OG_LOCALES[other]
-      ),
+      alternateLocale: LOCALES.flatMap((other) => (other === locale ? [] : [OG_LOCALES[other]])),
       type: 'website',
       images: [
         {

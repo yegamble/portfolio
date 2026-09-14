@@ -45,7 +45,10 @@ function initI18nInstance(instance: I18nInstance, locale: AppLocale) {
     react: {
       useSuspense: false,
     },
-    initImmediate: false,
+    // Synchronous init: the resources are bundled, so there is nothing to wait
+    // for, and the first render must already have its strings. (`initImmediate`
+    // was this option's pre-v24 name; i18next 26 drops the alias.)
+    initAsync: false,
   });
 
   return instance;
