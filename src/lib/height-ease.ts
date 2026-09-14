@@ -69,11 +69,10 @@ export function easeHeight(
   // inline-block wrapper's baseline to its bottom margin edge and inflate the
   // line box around it for the length of the animation, which is a worse
   // artefact than the single-frame step the ease exists to smooth.
-  const cssObj = typeof CSS !== 'undefined' ? CSS : undefined;
   if (
-    !cssObj ||
-    typeof cssObj.supports !== 'function' ||
-    !cssObj.supports('overflow-y', 'clip')
+    typeof CSS === 'undefined' ||
+    typeof CSS.supports !== 'function' ||
+    !CSS.supports('overflow-y', 'clip')
   ) {
     return;
   }

@@ -55,7 +55,8 @@ worker-configuration.d.ts
 package-lock.json
 .worktrees/
 
-# local env (.env.example is tracked as the CI/production build config)
+# local env. The build configuration is the tracked .env.production, which
+# `next build` loads on its own; personal overrides go in .env or .env*.local
 .env
 
 # logs
