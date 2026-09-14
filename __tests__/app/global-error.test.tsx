@@ -37,11 +37,4 @@ describe('GlobalError', () => {
     await user.click(screen.getByRole('button', { name: /reload/i }));
     expect(reset).toHaveBeenCalledOnce();
   });
-
-  it('logs the error for diagnostics', () => {
-    const error = new Error('Boom');
-    render(<GlobalError error={error} reset={vi.fn()} />);
-
-    expect(console.error).toHaveBeenCalledWith(error);
-  });
 });

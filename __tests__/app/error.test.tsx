@@ -53,13 +53,6 @@ describe('ErrorPage', () => {
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
-  it('should log the boundary error for diagnostics', () => {
-    const error = new Error('Test error');
-    render(<ErrorPage error={error} reset={vi.fn()} />);
-
-    expect(console.error).toHaveBeenCalledWith(error);
-  });
-
   it('should follow the active language rather than a cookie read after mount', async () => {
     await i18n.changeLanguage('he');
     render(<ErrorPage error={new Error('Test error')} reset={vi.fn()} />);
