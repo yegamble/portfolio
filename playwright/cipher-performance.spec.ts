@@ -132,13 +132,13 @@ test.describe('cipher animation performance', () => {
     // Assertions: animation should not cause excessive long tasks
     expect(
       results.longTaskCount,
-      `Animation caused ${results.longTaskCount} long tasks (>50ms). Expected fewer than 20.`
-    ).toBeLessThan(20);
+      `Animation caused ${results.longTaskCount} long tasks (>50ms). Expected fewer than 5.`
+    ).toBeLessThan(5);
 
     expect(
       results.totalBlockingTime,
-      `Total blocking time was ${results.totalBlockingTime}ms. Expected less than 500ms.`
-    ).toBeLessThan(500);
+      `Total blocking time was ${results.totalBlockingTime}ms. Expected less than 200ms.`
+    ).toBeLessThan(200);
   });
 
   test('mobile language switch does not freeze', async ({ page }) => {
@@ -183,13 +183,13 @@ test.describe('cipher animation performance', () => {
     // Mobile should have minimal long tasks after optimization
     expect(
       results.longTaskCount,
-      `Mobile: ${results.longTaskCount} long tasks. Expected fewer than 10.`
-    ).toBeLessThan(10);
+      `Mobile: ${results.longTaskCount} long tasks. Expected fewer than 3.`
+    ).toBeLessThan(3);
 
     expect(
       results.totalBlockingTime,
-      `Mobile: ${results.totalBlockingTime}ms blocking time. Expected less than 300ms.`
-    ).toBeLessThan(300);
+      `Mobile: ${results.totalBlockingTime}ms blocking time. Expected less than 100ms.`
+    ).toBeLessThan(100);
   });
 
   test('frame rate stays above threshold during animation', async ({ page }) => {
@@ -267,11 +267,10 @@ test.describe('cipher animation performance', () => {
       `Average FPS was ${fpsData.avgFps}. Expected at least 30.`
     ).toBeGreaterThanOrEqual(30);
 
-    // Dropped frames (< 30fps) should be minimal. Relaxed threshold to
-    // account for CI environments running headlessly and without GPU acceleration
+    // Dropped frames (< 30fps) should be minimal
     expect(
       fpsData.droppedFrames,
       `${fpsData.droppedFrames} frames dropped below 30fps.`
-    ).toBeLessThan(25);
+    ).toBeLessThan(10);
   });
 });

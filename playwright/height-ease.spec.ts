@@ -130,7 +130,7 @@ function expectEasedHeightChange(
   expect(
     intermediates.size,
     `expected the height to pass through intermediate values, saw ${heights.join(', ')}`
-  ).toBeGreaterThanOrEqual(1);
+  ).toBeGreaterThanOrEqual(3);
 
   const direction = Math.sign(endHeight - startHeight);
   for (let index = 1; index < heights.length; index++) {
