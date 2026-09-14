@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import MainRegion from '@/components/MainRegion';
 
@@ -14,11 +13,6 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   // above it: the active language comes from the route, not from a cookie read
   // after mount.
   const { t } = useTranslation();
-
-  useEffect(() => {
-    // Surface the boundary error for diagnostics (it is not shown to the user).
-    console.error(error);
-  }, [error]);
 
   return (
     // This boundary replaces the page inside the locale layout, and that layout
