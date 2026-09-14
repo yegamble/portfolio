@@ -25,7 +25,9 @@ describe('validateMailto', () => {
 
   it('returns a mailto href for valid emails with special characters', () => {
     expect(validateMailto('user+tag@example.co.uk')).toBe('mailto:user+tag@example.co.uk');
-    expect(validateMailto('user.name_with-dash@example.com')).toBe('mailto:user.name_with-dash@example.com');
+    expect(validateMailto('user.name_with-dash@example.com')).toBe(
+      'mailto:user.name_with-dash@example.com'
+    );
   });
 
   it('returns a mailto href for very short valid emails', () => {
