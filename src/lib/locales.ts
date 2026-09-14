@@ -81,9 +81,14 @@ export function negotiateLocale(acceptLanguage: string | null | undefined): AppL
     const primarySubtag = tag.split('-')[0];
     if (!isAppLocale(primarySubtag)) continue;
 
-    const qualityParameter = parameters
-      .map((parameter) => parameter.trim().toLowerCase())
-      .find((parameter) => parameter.startsWith('q='));
+    let qualityParameter: string | undefined;
+    for (const parameter of parameters) {
+      const p = parameter.trim().toLowerCase();
+      if (p.startsWith('q=')) {
+        qualityParameter = p;
+        break;
+      }
+    }
     const quality =
       qualityParameter == null ? 1 : Number.parseFloat(qualityParameter.slice('q='.length));
 
