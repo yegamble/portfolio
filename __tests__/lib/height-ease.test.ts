@@ -7,10 +7,18 @@ import { cancelHeightEase, easeHeight, isHeightEasing } from '@/lib/height-ease'
  * than the whole namespace, so CSS.escape and friends stay intact.
  */
 function stubCssSupports(supported: boolean) {
-  const css = globalThis.CSS as unknown as { supports?: (p: string, v: string) => boolean };
+  if (typeof globalThis.CSS === 'undefined') {
+    (globalThis as any).CSS = {};
+  }
+  const css = globalThis.CSS as any;
+  const originalSupports = css.supports;
   css.supports = () => supported;
   return () => {
-    delete css.supports;
+    if (originalSupports !== undefined) {
+      css.supports = originalSupports;
+    } else {
+      delete css.supports;
+    }
   };
 }
 
@@ -194,7 +202,14 @@ describe('easeHeight', () => {
 
   it('does not ease when the engine has no CSS.supports to ask', () => {
     restoreCssSupports();
-    restoreCssSupports = () => {};
+
+    // Completely remove CSS from globalThis to simulate older engine
+    const originalCSS = globalThis.CSS;
+    delete (globalThis as any).CSS;
+
+    restoreCssSupports = () => {
+      (globalThis as any).CSS = originalCSS;
+    };
 
     easeHeight(element, 240, 180);
 
