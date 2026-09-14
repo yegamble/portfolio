@@ -227,14 +227,11 @@ function useCipherLoop(
         return cachedOverlays;
       }
       cachedRoot = el;
-      cachedOverlays = Array.from(
-        el.querySelectorAll<HTMLElement>('.cipher-word'),
-        (overlay) => {
-          const start = Number(overlay.dataset.start);
-          const end = Number(overlay.dataset.end);
-          return { el: overlay, start, end, target: newChars.slice(start, end).join('') };
-        }
-      );
+      cachedOverlays = Array.from(el.querySelectorAll<HTMLElement>('.cipher-word'), (overlay) => {
+        const start = Number(overlay.dataset.start);
+        const end = Number(overlay.dataset.end);
+        return { el: overlay, start, end, target: newChars.slice(start, end).join('') };
+      });
       return cachedOverlays;
     };
 
