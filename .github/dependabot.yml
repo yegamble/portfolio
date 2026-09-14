@@ -13,6 +13,19 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      # TypeScript 7 is the Go compiler with a new API. `eslint-config-next`
+      # pins typescript-eslint, whose peer range stops at 6.x and which crashes
+      # at load time on 7 (`Cannot read properties of undefined (reading
+      # 'Cjs')`), so the bump fails `lint-and-typecheck` on every run. Lift this
+      # once typescript-eslint supports 7 and Next has picked that release up.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # Same shape: `eslint-plugin-react` under `eslint-config-next` still calls
+      # `context.getFilename()`, which ESLint 10 removed, so ESLint 10 crashes
+      # on the first rule it loads. Lift this once eslint-config-next moves.
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
     groups:
       # These four are one moving part. `eslint-config-next` is pinned to the
       # exact `next` version, and the OpenNext adapter is written against a

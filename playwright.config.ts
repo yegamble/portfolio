@@ -55,8 +55,9 @@ export default defineConfig({
     //
     // NEXT_PUBLIC_CIPHER_TRANSITION is inlined into the bundle at build time,
     // which is why the CI command does not set it: the value that matters was
-    // fixed by `pnpm build` in the `build` job, from the `.env.example` copied
-    // there. Only the dev server, which compiles on demand, reads it here.
+    // fixed by `pnpm build` in the `build` job, from the tracked
+    // `.env.production`. The dev server compiles on demand and never loads
+    // that file (Next reads it for production builds only), so it is set here.
     command: isCI
       ? `pnpm exec next start -p ${PORT}`
       : `NEXT_PUBLIC_CIPHER_TRANSITION=true ` +
