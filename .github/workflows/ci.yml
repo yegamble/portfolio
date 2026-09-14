@@ -105,9 +105,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
 
-      - name: Set up environment
-        run: cp .env.example .env
-
       - name: Build
         run: pnpm build
 
@@ -178,9 +175,6 @@ jobs:
           name: next-build
           path: .next
 
-      - name: Set up environment
-        run: cp .env.example .env
-
       # `install: false` because the shared setup already installed everything;
       # the action's own install path would find the lockfile satisfied, skip
       # cypress's postinstall, and then fail its binary verification.
@@ -229,9 +223,6 @@ jobs:
           name: next-build
           path: .next
 
-      - name: Set up environment
-        run: cp .env.example .env
-
       # playwright.config.ts starts `next start` (not `next dev`) when CI is
       # set, so these assertions describe the production bundle.
       - name: Run layout and accessibility specs
@@ -269,9 +260,6 @@ jobs:
           name: next-build
           path: .next
 
-      - name: Set up environment
-        run: cp .env.example .env
-
       - name: Run performance specs
         run: pnpm exec playwright test --project=perf
 
@@ -307,9 +295,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-
-      - name: Set up environment
-        run: cp .env.example .env
 
       - name: Deploy to Cloudflare Workers
         id: deploy

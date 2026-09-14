@@ -2,13 +2,22 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { cancelHeightEase, easeHeight, isHeightEasing } from '@/lib/height-ease';
 
 /**
- * jsdom exposes a CSS namespace object but no CSS.supports, and easeHeight
- * refuses to run without `overflow-y: clip` support. Fake the answer rather
- * than the whole namespace, so CSS.escape and friends stay intact.
+ * easeHeight refuses to run without `overflow-y: clip` support, so the tests
+ * fake the answer rather than the whole CSS namespace (CSS.escape and friends
+ * stay intact). jsdom 30 ships its own CSS.supports on the namespace's
+ * prototype, so the fake has to be an own property that shadows it, and
+ * `undefined` stands in for an engine that has no CSS.supports at all —
+ * assigning `css.supports = undefined` would not do: deleting an own property
+ * only reveals the inherited one again.
  */
-function stubCssSupports(supported: boolean) {
+function stubCssSupports(supported: boolean | undefined) {
   const css = globalThis.CSS as unknown as { supports?: (p: string, v: string) => boolean };
-  css.supports = () => supported;
+  Object.defineProperty(css, 'supports', {
+    value: supported === undefined ? undefined : () => supported,
+    configurable: true,
+    enumerable: true,
+    writable: true,
+  });
   return () => {
     delete css.supports;
   };
@@ -194,15 +203,7 @@ describe('easeHeight', () => {
 
   it('does not ease when the engine has no CSS.supports to ask', () => {
     restoreCssSupports();
-    // Temporarily remove CSS from the global namespace entirely
-    // to test the typeof CSS === 'undefined' branch
-    const originalCSS = globalThis.CSS;
-    // @ts-expect-error deliberately setting to undefined for test
-    globalThis.CSS = undefined;
-
-    restoreCssSupports = () => {
-      globalThis.CSS = originalCSS;
-    };
+    restoreCssSupports = stubCssSupports(undefined);
 
     easeHeight(element, 240, 180);
 
