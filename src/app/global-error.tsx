@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-
 interface GlobalErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
@@ -12,10 +10,6 @@ interface GlobalErrorProps {
 // the app is available here — no I18nProvider, no globals.css — so the copy is
 // English and the styling is inline.
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
-
   return (
     <html lang="en" dir="ltr">
       <body
