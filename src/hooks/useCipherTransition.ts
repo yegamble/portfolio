@@ -227,7 +227,8 @@ function useCipherLoop(
         return cachedOverlays;
       }
       cachedRoot = el;
-      cachedOverlays = Array.from(el.querySelectorAll<HTMLElement>('.cipher-word')).map(
+      cachedOverlays = Array.from(
+        el.querySelectorAll<HTMLElement>('.cipher-word'),
         (overlay) => {
           const start = Number(overlay.dataset.start);
           const end = Number(overlay.dataset.end);
