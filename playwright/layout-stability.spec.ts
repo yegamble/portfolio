@@ -481,3 +481,71 @@ test.describe('mobile viewport stability', () => {
     });
   }
 });
+
+// The sticky header hosts the language menu, which is absolutely positioned and
+// hangs below the header's own box. Any overflow clipping on the header — or on
+// anything between the menu and <body> — cuts it off at that box's edge. The
+// WebKit on iPhones does exactly that to a lone `overflow-x: clip` (it clips
+// both axes; Chromium and WebKit trunk leave the y axis visible), which is how
+// globals.css's landmark clip rule hid the menu in production on 2026-09-14
+// while every Chromium run here painted it fine. So the guard is on the
+// computed styles, which this engine reports the same way, and only then on
+// what it paints.
+test.describe('language menu', () => {
+  test('hangs below the header without anything clipping it', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await waitForPortfolioReady(page);
+
+    await page.evaluate(() => {
+      document.querySelector<HTMLButtonElement>('header button[aria-expanded]')?.click();
+    });
+    await page.locator('header a[hreflang="he"]').waitFor({ state: 'attached' });
+
+    const geometry = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('header a[hreflang]'));
+      const header = document.querySelector<HTMLElement>('body > header');
+      if (!header || links.length === 0) throw new Error('menu did not open');
+
+      const clippingAncestors: string[] = [];
+      let node: HTMLElement | null = links[0].parentElement;
+      while (node && node !== document.body) {
+        const style = getComputedStyle(node);
+        if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
+          clippingAncestors.push(
+            `${node.tagName.toLowerCase()}${node.className ? '.' + String(node.className).split(' ')[0] : ''}: ${style.overflowX}/${style.overflowY}`
+          );
+        }
+        node = node.parentElement;
+      }
+
+      const hiddenLinks = links
+        .filter((link) => {
+          const rect = link.getBoundingClientRect();
+          const hit = document.elementFromPoint(
+            rect.left + rect.width / 2,
+            rect.top + rect.height / 2
+          );
+          return !(hit === link || link.contains(hit));
+        })
+        .map((link) => link.hreflang);
+
+      return {
+        clippingAncestors,
+        hiddenLinks,
+        headerBottom: header.getBoundingClientRect().bottom,
+        menuBottom: Math.max(...links.map((link) => link.getBoundingClientRect().bottom)),
+      };
+    });
+
+    expect(
+      geometry.clippingAncestors,
+      'an ancestor of the menu clips overflow (the iPhone WebKit clips both axes for a lone overflow-x: clip)'
+    ).toEqual([]);
+    expect(geometry.menuBottom, 'the menu should extend below the header box').toBeGreaterThan(
+      geometry.headerBottom
+    );
+    expect(geometry.hiddenLinks, 'menu links whose centre is covered by something else').toEqual(
+      []
+    );
+  });
+});

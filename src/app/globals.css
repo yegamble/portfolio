@@ -84,13 +84,26 @@ html:lang(he) body {
   overflow-x: clip;
 }
 
-/* Second line of defence for the same problem: nothing inside the landmarks may
-   widen the document while the scramble runs. overflow-x: clip leaves
-   overflow-y visible, so the language dropdown still escapes the header.
-   Scoped to `body > header` on purpose — a bare `header` would also catch the
-   per-job <header> elements inside Experience, whose grid items rely on
-   min-width: auto and would start truncating a long localized date. */
-body > header,
+/* Second line of defence for the same problem: nothing inside these landmarks
+   may widen the document while the scramble runs.
+
+   The sticky <header> is deliberately NOT in this list. It hosts the language
+   menu, which is absolutely positioned and hangs below the header's box, and
+   on an iPhone (2026-09-14) the open menu was cut off exactly at the header's
+   bottom edge, leaving a 15px sliver — a two-axis clip, which is what that
+   WebKit makes of a lone `overflow-x: clip`. The spec says the y axis stays
+   visible, and Chromium and current WebKit trunk agree, so nothing in the
+   Chromium-only browser suites ever showed it. The header does not need the
+   rule anyway: its scrambling name sits in a block that is already
+   overflow-hidden with a max-width, and the nav links are hidden below `sm`,
+   the only widths where the viewport rescale this rule guards against occurs.
+   playwright/layout-stability.spec.ts pins it: no ancestor of the open menu
+   may clip either axis.
+
+   `header + section` is the hero, not "any section after any header" — the
+   per-job <header> elements inside Experience have no section sibling, and
+   their grid items rely on min-width: auto to avoid truncating a long
+   localized date. */
 header + section,
 main,
 footer {
