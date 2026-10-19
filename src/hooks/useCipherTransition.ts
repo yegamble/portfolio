@@ -87,7 +87,7 @@ function unregisterTick(fn: TickFn) {
 // ---------------------------------------------------------------------------
 
 function calculateResolveTimes(maxLen: number, profile: AnimationProfile): number[] {
-  const resolveTimes: number[] = [];
+  const resolveTimes = new Array<number>(maxLen);
   for (let i = 0; i < maxLen; i++) {
     const progress = maxLen > 1 ? i / (maxLen - 1) : 0;
     const randomJitter = (Math.random() - 0.5) * 2 * profile.jitter;
@@ -253,7 +253,11 @@ function useCipherLoop(
         return true;
       }
       for (const overlay of overlays) {
-        const slice = chars.slice(overlay.start, overlay.end).join('');
+        // Indices are code points, not UTF-16 offsets: keep astral glyphs intact.
+        let slice = '';
+        for (let i = overlay.start; i < overlay.end; i++) {
+          slice += chars[i];
+        }
         overlay.el.textContent = slice;
         // Per-word decrypt feedback: a word that has landed on its target stops
         // being dimmed while its neighbours keep cycling.

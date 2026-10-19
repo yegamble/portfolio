@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -49,12 +49,11 @@ function mockReducedMotion(matches: boolean) {
   return stubMatchMedia((query) => query === REDUCED_MOTION_QUERY && matches);
 }
 
-// The carousel tracks the visible card with an IntersectionObserver, which
-// jsdom does not implement; nothing here delivers an entry, so the default
-// (first card active) is what the dots are asserted against.
+let viewport: ReturnType<typeof stubIntersectionObserver>;
 beforeEach(() => {
-  stubIntersectionObserver();
+  viewport = stubIntersectionObserver();
 });
+afterEach(() => viewport.restore());
 
 import i18n from '@/lib/i18n';
 import Projects from '@/components/Projects';
@@ -209,6 +208,29 @@ describe('Projects', () => {
       render(<Projects />);
       expect(dot(/project alpha/i)).toHaveAttribute('aria-current', 'true');
       expect(dot(/project beta/i)).not.toHaveAttribute('aria-current');
+    });
+
+    it('tracks intersecting cards and ignores cards leaving the viewport', () => {
+      const { unmount } = render(<Projects />);
+      const notify = (index: number, isIntersecting: boolean) => {
+        act(() =>
+          viewport.callbacks
+            .slice(-4)
+            [index]([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver)
+        );
+      };
+
+      notify(1, true);
+      expect(dot(/project beta/i)).toHaveAttribute('aria-current', 'true');
+      expect(dot(/project alpha/i)).not.toHaveAttribute('aria-current');
+      notify(0, false);
+      expect(dot(/project beta/i)).toHaveAttribute('aria-current', 'true');
+      notify(2, true);
+      expect(dot(/project gamma/i)).toHaveAttribute('aria-current', 'true');
+      expect(dot(/project beta/i)).not.toHaveAttribute('aria-current');
+      const disconnects = viewport.disconnect.mock.calls.length;
+      unmount();
+      expect(viewport.disconnect).toHaveBeenCalledTimes(disconnects + 4);
     });
 
     it('should scroll the chosen card into view smoothly by default', async () => {
