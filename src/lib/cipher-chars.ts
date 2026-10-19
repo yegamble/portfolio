@@ -77,12 +77,17 @@ function poolsForTarget(target: string): string[][] {
  * Pass the character the scramble is heading towards and the draw becomes
  * width-aware: narrow, case-matched pools for Latin/Cyrillic/Greek/Hebrew
  * targets, the full multi-script mix for everything else (and for calls with no
- * target). Pools are pre-computed as arrays for the animation hot path.
+ * target). The target itself is excluded so an unresolved character cannot
+ * reveal the answer early. Pools are pre-computed for the animation hot path.
  */
 export function getRandomCipherChar(target?: string): string {
   const pools = target ? poolsForTarget(target) : CHARACTER_POOLS;
   const pool = pools[Math.floor(Math.random() * pools.length)];
-  return pool[Math.floor(Math.random() * pool.length)];
+  const targetIndex = target ? pool.indexOf(target) : -1;
+  const index = Math.floor(Math.random() * (pool.length - (targetIndex >= 0 ? 1 : 0)));
+  // Skip the target's slot rather than rerolling: every eligible glyph keeps
+  // the same chance, and even a fixed random source always finishes.
+  return pool[targetIndex >= 0 && index >= targetIndex ? index + 1 : index];
 }
 
 /**
