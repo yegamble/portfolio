@@ -16,6 +16,7 @@ vi.mock('@/data/experience', async () => {
 
 import Experience from '@/components/Experience';
 import i18n from '@/lib/i18n';
+import { experienceEntries } from '@/data/experience';
 
 describe('Experience', () => {
   describe('Section structure', () => {
@@ -108,6 +109,25 @@ describe('Experience', () => {
         })
       ).not.toBeInTheDocument();
     });
+
+    it.each(['not a URL', 'https://', 'javascript:alert(1)', 'mailto:test@example.com'])(
+      'renders a company with URL %s as plain text',
+      (companyUrl) => {
+        const entry = experienceEntries[0];
+        const original = entry.companyUrl;
+        entry.companyUrl = companyUrl;
+        try {
+          render(<Experience />);
+          const heading = screen.getByRole('heading', {
+            name: 'Principal Engineer & Architect · Edge Corp',
+          });
+          expect(heading).toBeInTheDocument();
+          expect(within(heading).queryByRole('link')).not.toBeInTheDocument();
+        } finally {
+          entry.companyUrl = original;
+        }
+      }
+    );
 
     it('should open company links in new tabs', () => {
       render(<Experience />);

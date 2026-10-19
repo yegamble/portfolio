@@ -30,15 +30,14 @@ const OG_LOCALES: Record<AppLocale, string> = {
   et: 'et_EE',
 };
 
+const ALTERNATE_LANGUAGES = {
+  ...Object.fromEntries(LOCALES.map((locale) => [locale, `${SITE_URL}${getLocaleHref(locale)}`])),
+  'x-default': `${SITE_URL}${getLocaleHref(DEFAULT_LOCALE)}`,
+};
+
 function getMetadataForLocale(locale: AppLocale): Metadata {
   const href = `${SITE_URL}${getLocaleHref(locale)}`;
   const meta = getLocaleMessages(locale).meta;
-  const languages = Object.fromEntries(
-    LOCALES.map((supportedLocale) => [
-      supportedLocale,
-      `${SITE_URL}${getLocaleHref(supportedLocale)}`,
-    ])
-  );
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -46,10 +45,7 @@ function getMetadataForLocale(locale: AppLocale): Metadata {
     description: meta.description,
     alternates: {
       canonical: href,
-      languages: {
-        ...languages,
-        'x-default': `${SITE_URL}${getLocaleHref(DEFAULT_LOCALE)}`,
-      },
+      languages: ALTERNATE_LANGUAGES,
     },
     openGraph: {
       title: meta.title,

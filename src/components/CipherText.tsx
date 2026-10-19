@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useBlockHeightEase } from '@/hooks/useBlockHeightEase';
 import { useCipherTransition } from '@/hooks/useCipherTransition';
+import { observeCipherVisibility } from '@/lib/cipher-visibility';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 import { COARSE_POINTER_QUERY, isCoarsePointerOrNarrow, NARROW_VIEWPORT_QUERY } from '@/lib/media';
 
@@ -155,15 +156,10 @@ export default function CipherText({ children, block = false }: CipherTextProps)
     if (!isCipherEnabled) return;
     const el = observerRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        isVisibleRef.current = e.isIntersecting;
-        setIsVisible(e.isIntersecting);
-      },
-      { rootMargin: '200px' }
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    return observeCipherVisibility(el, (visible) => {
+      isVisibleRef.current = visible;
+      setIsVisible(visible);
+    });
   }, [isCipherEnabled]);
 
   // --- Block mode: ease the wrapper's height across a text swap ---

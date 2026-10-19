@@ -30,16 +30,28 @@ export interface IntersectionObserverStub {
 export function stubIntersectionObserver(): IntersectionObserverStub {
   const previous = globalThis.IntersectionObserver;
   const callbacks: IntersectionObserverCallback[] = [];
+  const targets: Set<Element>[] = [];
   const observe = vi.fn();
   const unobserve = vi.fn();
   const disconnect = vi.fn();
 
   const ctor = vi.fn(function (this: IntersectionObserver, callback: IntersectionObserverCallback) {
     callbacks.push(callback);
+    const observed = new Set<Element>();
+    targets.push(observed);
     return {
-      observe,
-      unobserve,
-      disconnect,
+      observe(element: Element) {
+        observed.add(element);
+        observe(element);
+      },
+      unobserve(element: Element) {
+        observed.delete(element);
+        unobserve(element);
+      },
+      disconnect() {
+        observed.clear();
+        disconnect();
+      },
       root: null,
       rootMargin: '',
       thresholds: [],
@@ -56,9 +68,17 @@ export function stubIntersectionObserver(): IntersectionObserverStub {
     disconnect,
     callbacks,
     emit(isIntersecting: boolean) {
-      callbacks.forEach((callback) =>
-        callback([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver)
-      );
+      callbacks.forEach((callback, index) => {
+        const entries = Array.from(
+          targets[index],
+          (target) =>
+            ({
+              target,
+              isIntersecting,
+            }) as IntersectionObserverEntry
+        );
+        if (entries.length) callback(entries, {} as IntersectionObserver);
+      });
     },
     restore() {
       globalThis.IntersectionObserver = previous;
