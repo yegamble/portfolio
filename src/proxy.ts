@@ -3,6 +3,7 @@ import { applySecurityHeaders } from '@/lib/security-headers';
 import {
   DEFAULT_LOCALE,
   getLocaleHref,
+  getLocalizedPathname,
   isAppLocale,
   LOCALE_COOKIE_MAX_AGE,
   LOCALE_COOKIE_NAME,
@@ -38,7 +39,7 @@ export function proxy(request: NextRequest) {
       DEFAULT_LOCALE;
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname =
-      pathname === '/' ? getLocaleHref(locale) : `${getLocaleHref(locale)}${pathname}`;
+      pathname === '/' ? getLocaleHref(locale) : getLocalizedPathname(pathname, locale);
 
     // This redirect is the ONLY place the proxy writes the cookie. The
     // other writer is an explicit language selection in the browser

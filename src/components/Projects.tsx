@@ -28,14 +28,13 @@ export default function Projects() {
 
   const items = t('projects.items', { returnObjects: true }) as ProjectItem[];
 
-  const itemsWithMetadata = useMemo(
-    () =>
-      (Array.isArray(items) ? items : []).flatMap((project) => {
-        const meta = METADATA_BY_ID.get(project.id);
-        return meta ? [{ project, meta }] : [];
-      }),
-    [items]
-  );
+  const itemsWithMetadata = useMemo(() => {
+    if (!Array.isArray(items)) return [];
+    return items.flatMap((project) => {
+      const meta = METADATA_BY_ID.get(project.id);
+      return meta ? [{ project, meta }] : [];
+    });
+  }, [items]);
 
   useEffect(() => {
     if (itemsWithMetadata.length === 0) return;

@@ -330,6 +330,30 @@ describe('useCipherTransition', () => {
       expect(overlays[1]).toHaveClass('cipher-resolved');
     });
 
+    it('preserves code-point boundaries in word overlays containing astral characters', () => {
+      process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
+      const frames: FrameRequestCallback[] = [];
+      global.requestAnimationFrame = vi.fn((callback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+      const element = document.createElement('span');
+      element.innerHTML =
+        '<span class="cipher-word" data-start="0" data-end="2"></span> ' +
+        '<span class="cipher-word" data-start="3" data-end="5"></span>';
+      const elementRef = { current: element };
+      const { rerender } = renderHook(({ text }) => useCipherTransition(text, { elementRef }), {
+        initialProps: { text: 'AB CD' },
+      });
+      rerender({ text: '😀A B🚀' });
+      act(() => frames.shift()?.(100));
+      act(() => frames.shift()?.(5000));
+      const words = element.querySelectorAll('.cipher-word');
+      expect(words[0]).toHaveTextContent('😀A');
+      expect(words[1]).toHaveTextContent('B🚀');
+      words.forEach((word) => expect(word).toHaveClass('cipher-resolved'));
+    });
+
     it('should not wipe overlays the incoming render owns when text changes mid-animation', () => {
       process.env.NEXT_PUBLIC_CIPHER_TRANSITION = 'true';
 
