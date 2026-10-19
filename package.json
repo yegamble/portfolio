@@ -23,7 +23,7 @@
   "dependencies": {
     "i18next": "^26.4.2",
     "next": "16.3.8",
-    "openpgp": "^6.3.1",
+    "openpgp": "^6.3.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-i18next": "^17.0.13"
