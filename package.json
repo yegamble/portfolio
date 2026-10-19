@@ -21,12 +21,12 @@
     "preview": "pnpm run build:worker && opennextjs-cloudflare preview"
   },
   "dependencies": {
-    "i18next": "^26.4.2",
+    "i18next": "^26.4.7",
     "next": "16.3.5",
     "openpgp": "^6.3.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-i18next": "^17.0.13"
+    "react-i18next": "^17.0.19"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
