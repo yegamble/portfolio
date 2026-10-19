@@ -21,48 +21,41 @@
     "preview": "pnpm run build:worker && opennextjs-cloudflare preview"
   },
   "dependencies": {
-    "i18next": "^26.4.7",
-    "next": "16.3.8",
+    "i18next": "^26.5.3",
+    "next": "16.4.2",
     "openpgp": "^6.3.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-i18next": "^17.0.20"
+    "react-i18next": "^17.1.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
-    "@opennextjs/cloudflare": "^1.20.7",
+    "@opennextjs/cloudflare": "^1.20.12",
     "@playwright/test": "^1.64.1",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@types/node": "^26.6.5",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.5",
     "cypress": "^16.2.0",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "16.3.8",
+    "eslint": "^10.13.0",
+    "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^30.1.3",
     "prettier": "^3.9.10",
-    "tailwindcss": "^4",
-    "typescript": "^5.9.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
     "vitest": "^5.0.5",
-    "wrangler": "^4.146.0"
+    "wrangler": "^4.151.2"
   },
-  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "cypress",
-      "esbuild",
-      "unrs-resolver",
-      "workerd"
-    ],
-    "ignoredBuiltDependencies": [
-      "sharp"
-    ]
+  "packageManager": "pnpm@12.14.0+sha512.c18ba6d87993d3d164cb5e8948f32b2c06ee854487e06cd8d86781342fb3e5bb4634367034711e86802baa9c37bea906ce1929ad08d70884c97d801df13389a6",
+  "engines": {
+    "node": ">=26.12.0",
+    "pnpm": ">=12.14.0"
   }
 }

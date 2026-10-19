@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { getRandomCipherChar, isScramblable } from '@/lib/cipher-chars';
 
 describe('cipher-chars utility', () => {
@@ -79,6 +79,35 @@ describe('cipher-chars utility', () => {
     it('should still return exactly one code point when a target is given', () => {
       for (const target of ['a', 'Z', '\u05d0', '\u4e2d']) {
         expect(Array.from(getRandomCipherChar(target)).length).toBe(1);
+      }
+    });
+
+    it.each([
+      { target: 'א', draw: 0 },
+      { target: 'ל', draw: 0.5 },
+      { target: 'ת', draw: 1 - Number.EPSILON },
+    ])('should exclude target $target even when its pool is selected', ({ target, draw }) => {
+      // The fourth narrow pool is Hebrew. These draws used to select the
+      // target itself, making short Hebrew word overlays reveal their answer
+      // before the animation's resolve time.
+      const random = vi.spyOn(Math, 'random').mockReturnValueOnce(0.65).mockReturnValueOnce(draw);
+
+      try {
+        const char = getRandomCipherChar(target);
+        expect(char).not.toBe(target);
+        expect(Array.from(char)).toHaveLength(1);
+      } finally {
+        random.mockRestore();
+      }
+    });
+
+    it('should preserve untargeted draws from the same pool', () => {
+      const random = vi.spyOn(Math, 'random').mockReturnValueOnce(0.65).mockReturnValueOnce(0);
+
+      try {
+        expect(getRandomCipherChar()).toBe('א');
+      } finally {
+        random.mockRestore();
       }
     });
   });
