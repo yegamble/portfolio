@@ -84,11 +84,8 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Blocking at `critical` only, deliberately. The three advisories open
-      # today (2 high, 1 low) are all transitive under
-      # next > styled-jsx > @babel/core with no upstream release to move to, so
-      # a `high` gate would fail every run without anyone being able to fix it.
-      # The informational step below keeps them visible in the log.
+      # Block critical advisories and publish a separate report covering all
+      # severities, including advisories in upstream transitive dependencies.
       - name: Audit production dependencies (blocking)
         run: pnpm audit --prod --audit-level=critical
 

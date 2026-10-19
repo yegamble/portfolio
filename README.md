@@ -50,7 +50,8 @@ The site is designed around a few principles:
 | End-to-end tests | Cypress |
 | Accessibility, layout, and animation verification | Playwright + axe-core |
 | Language | TypeScript |
-| Package manager | pnpm 10 |
+| Node.js | 26.12.0 |
+| Package manager | pnpm 12.14.0 |
 
 ## Architecture at a glance
 
@@ -109,14 +110,20 @@ If a public PGP key is configured, the UI exposes a modal that parses and displa
 
 ### Prerequisites
 
-- Node.js 22
-- pnpm 10
+- Node.js 26.12.0 (pinned in `.nvmrc`)
+- pnpm 12.14.0 (pinned in `package.json`)
 
 If you use `nvm`:
 
 ```bash
 nvm use
+npm install --global pnpm@12.14.0
 ```
+
+TypeScript 7 runs typechecks and production builds. `.pnpmfile.cjs` gives only
+ESLint the official `@typescript/typescript6` compatibility API until
+`typescript-eslint` supports the native compiler API. pnpm settings and approved
+dependency build scripts live in `pnpm-workspace.yaml`.
 
 ### Local development
 
@@ -222,7 +229,7 @@ The browser jobs consume the `build` artifact instead of compiling their own, so
 
 Dependencies are updated weekly by Dependabot (`.github/dependabot.yml`). `next`, `eslint-config-next`, `@opennextjs/*` and `wrangler` arrive in a single pull request, because a version bump to any one of them alone cannot pass CI.
 
-The audit gate blocks on `critical` rather than `high` deliberately: the advisories open today are all transitive under `next > styled-jsx > @babel/core`, with no published version to move to. A `high` gate would fail every run without anyone being able to fix it, which trains people to ignore it.
+The audit gate blocks on `critical`; the informational audit reports all severities so upstream transitive advisories remain visible.
 
 ## Deployment
 
