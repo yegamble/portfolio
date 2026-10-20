@@ -31,6 +31,27 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  // Every app-router page loads Next's polyfill module: `app-globals.js`
+  // requires `../build/polyfills/polyfill-module`. Nine of its ten polyfills
+  // are for built-ins that every browser Next 16 compiles for already has (the
+  // default targets are Chrome/Edge 111, Firefox 111 and Safari 16.4, and this
+  // repo sets no browserslist), so they ship 1.4 KB that never runs and get the
+  // runtime chunk flagged as legacy JavaScript by Lighthouse. The stand-in keeps
+  // the tenth, `URL.canParse`, which those targets predate.
+  //
+  // The key is the request exactly as Next writes it. Turbopack matches aliases
+  // against the request string: `next/dist/build/polyfills/polyfill-module` and
+  // the file's absolute path both match nothing, and an alias that matches
+  // nothing is ignored without a word. `__tests__/config/next-config.test.ts`
+  // therefore pins the import, the module's contents and the targets, and the CI
+  // `build` job greps the emitted chunks. When a Next upgrade trips one of
+  // those, re-check every polyfill in the new module against the targets before
+  // touching the expectations.
+  turbopack: {
+    resolveAlias: {
+      '../build/polyfills/polyfill-module': './src/lib/polyfill-module.ts',
+    },
+  },
   compiler: {
     removeConsole: {
       exclude: ['error', 'warn'],
@@ -41,6 +62,12 @@ const nextConfig: NextConfig = {
     // Serves `app/global-not-found.tsx` for unmatched paths, which renders its
     // own <html lang/dir> and <title> instead of Next's __next_error__ shell.
     globalNotFound: true,
+    // `inlineCss` was measured and left off (2026-10-20). It removes the
+    // render-blocking <link>, but Next also serializes the CSS into the RSC
+    // payload, so /en goes from 11.6 to 29.3 KB gzip, the [locale] layout's
+    // prefetch segment outgrows prefetch inlining's 2 KB cap into a request of
+    // its own, repeat visits lose the immutable stylesheet, and Lighthouse's
+    // simulated FCP/LCP did not improve (the bigger document costs a round trip).
   },
   // `SECURITY_HEADERS` is the single source of truth and is shared with
   // `src/proxy.ts`, which re-applies it to the bare-domain redirect this layer

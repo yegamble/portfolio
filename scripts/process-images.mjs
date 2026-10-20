@@ -6,7 +6,8 @@
 // Steps:
 //   1. (optional) re-derive og-image.jpg and profile.jpg from a full-resolution
 //      profile2.png, then delete that source
-//   2. derive the WebP avatar sources from profile.jpg
+//   2. derive the WebP avatar sources from profile.jpg, content-hashed into
+//      public/media/, and record their URLs in src/data/avatar.json
 //   3. rasterize src/app/icon.svg into favicon.ico and apple-icon.png
 //   4. rasterize the PWA icons the web app manifest points at
 //
@@ -17,6 +18,7 @@
 // dependency (and would also settle how /icon.svg renders in each visitor's
 // browser, which varies for the same reason).
 
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
@@ -106,19 +108,47 @@ if (existsSync(FULL_RESOLUTION_SOURCE)) {
 // 2. WebP avatar sources. The hero renders the avatar at 128px (160px from the
 // `sm` breakpoint up), so 256 covers 1x and 320 covers 2x. profile.jpg stays as
 // the <img> fallback.
+//
+// The file name carries a hash of the bytes, so new bytes always get a new URL
+// and public/_headers can cache /media/* as immutable for a year. They get a
+// directory of their own because Cloudflare applies every _headers rule a path
+// matches: under /images/ they would also pick up the weekly rule, and the two
+// Cache-Control values would be comma-joined into one conflicting header.
+// ProfilePicture reads the names from src/data/avatar.json, and
+// __tests__/data/avatar.test.ts fails if a file is edited without being renamed.
+const MEDIA_DIR = resolve(projectRoot, 'public', 'media');
+const AVATAR_MANIFEST = resolve(projectRoot, 'src', 'data', 'avatar.json');
+const HASHED_AVATAR = /^profile-\d+\.[0-9a-f]{10}\.webp$/;
+
 if (!existsSync(AVATAR_OUTPUT)) {
   console.error(`Avatar source not found: ${AVATAR_OUTPUT}`);
   process.exit(1);
 }
 
+mkdirSync(MEDIA_DIR, { recursive: true });
+
+// Drop the previous generation, or every superseded hash keeps shipping.
+for (const entry of readdirSync(MEDIA_DIR)) {
+  if (HASHED_AVATAR.test(entry)) unlinkSync(resolve(MEDIA_DIR, entry));
+}
+
+const avatarSources = {};
+
 for (const size of [256, 320]) {
-  const output = resolve(imagesDir, `profile-${size}.webp`);
-  await sharp(AVATAR_OUTPUT)
+  const webp = await sharp(AVATAR_OUTPUT)
     .resize(size, size, { fit: 'cover', position: 'centre' })
     .webp({ quality: 82, effort: 6 })
-    .toFile(output);
+    .toBuffer();
+  const hash = createHash('sha256').update(webp).digest('hex').slice(0, 10);
+  const output = resolve(MEDIA_DIR, `profile-${size}.${hash}.webp`);
+
+  writeFileSync(output, webp);
+  avatarSources[size] = `/media/profile-${size}.${hash}.webp`;
   await report(`Avatar ${size}px`, output);
 }
+
+writeFileSync(AVATAR_MANIFEST, `${JSON.stringify(avatarSources, null, 2)}\n`);
+console.log(`Avatar manifest -> ${AVATAR_MANIFEST}`);
 
 // 3. App icons. `src/app/icon.svg` is the source of truth; Next serves whatever
 // icon files sit beside it, so these two only exist because .ico and Apple's

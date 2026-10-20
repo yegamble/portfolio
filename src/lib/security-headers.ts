@@ -30,6 +30,14 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 // serves `beacon.min.js` and the RUM payload is posted to `/cdn-cgi/rum` on this
 // origin, with `cloudflareinsights.com` as the cross-origin fallback.
 //
+// Google Analytics 4 (loaded by src/lib/analytics.ts after `load`) needs the
+// hosts Google documents for Analytics without Ads features
+// (https://developers.google.com/tag-platform/security/guides/csp): gtag.js
+// from www.googletagmanager.com, hits to *.google-analytics.com (including the
+// region1. endpoints) and *.google.com, and the image-pixel fallback. Ads
+// features stay off in the tag config, so no doubleclick or per-TLD
+// google.<tld> hosts are needed.
+//
 // `'unsafe-inline'` stays: the prerendered documents carry Next's inline
 // bootstrap and the two JSON-LD blocks, and a nonce would have to be minted per
 // request, which is exactly what makes a route dynamic.
@@ -38,6 +46,7 @@ const scriptSrc = [
   "'unsafe-inline'",
   "'wasm-unsafe-eval'",
   'https://static.cloudflareinsights.com',
+  'https://www.googletagmanager.com',
   ...(isDevelopment ? ["'unsafe-eval'"] : []),
 ];
 
@@ -46,10 +55,10 @@ const CONTENT_SECURITY_POLICY = [
   `script-src ${scriptSrc.join(' ')}`,
   "style-src 'self' 'unsafe-inline'",
   // Every image this site renders is same-origin; `data:`/`blob:` cover inline
-  // SVG placeholders and canvas output.
-  "img-src 'self' data: blob:",
+  // SVG placeholders and canvas output. The Google hosts are GA's pixel fallback.
+  "img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://cloudflareinsights.com",
+  "connect-src 'self' https://cloudflareinsights.com https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -60,7 +60,8 @@ src/
   app/              App Router: [locale]/ is the root layout, plus the global
                     404, metadata, robots, and sitemap
   components/       UI building blocks and interactive client components
-  data/             Structured experience and project data
+  data/             Structured experience and project data, and the generated
+                    avatar URLs
   hooks/            Custom animation and layout hooks
   lib/              locale primitives, i18n, cipher character sets, helpers
   proxy.ts          Locale redirect and cookie (must live under src/)
@@ -95,12 +96,21 @@ The project ships with strict response headers, structured data, robots and site
 Response headers come from two places, because they reach different responses:
 
 - `src/lib/security-headers.ts` holds the list once. `next.config.ts` applies it to everything the Next server answers, and `src/proxy.ts` re-applies it to the `/` → `/en` redirect, which short-circuits before that layer — HSTS preload requires the redirect itself to carry `Strict-Transport-Security`.
-- `public/_headers` covers Cloudflare's static assets, which the ASSETS binding serves before the Worker runs. Hashed build output (`/_next/static/*`, including `next/font` woff2 files) is `immutable` for a year; hand-managed images and PWA icons get a week with a day of `stale-while-revalidate`; `/favicon.ico` gets a day.
+- `public/_headers` covers Cloudflare's static assets, which the ASSETS binding serves before the Worker runs. Hashed build output (`/_next/static/*`, including `next/font` woff2 files) and the avatar's content-hashed WebP sources (`/media/*`) are `immutable` for a year; the stable-URL images under `/images/*` (the Open Graph and JSON-LD images) and the PWA icons get a week with a day of `stale-while-revalidate`; `/favicon.ico` gets a day.
 
 Two CSP decisions are deliberate:
 
 - `script-src` keeps `'unsafe-inline'`. The locale routes are prerendered, and their HTML carries Next's inline bootstrap plus the two JSON-LD blocks. A nonce has to be minted per request, which is exactly what would make those routes dynamic — trading a real caching win for a directive that `'strict-dynamic'` cannot rescue while the bootstrap is inline.
-- `'unsafe-eval'` is added only when `NODE_ENV` is `development`, for the dev overlay and Fast Refresh. Production ships `'wasm-unsafe-eval'` instead, which is all openpgp's argon2 WASM needs and does not permit `eval()`. `static.cloudflareinsights.com` is allow-listed because the zone injects the Web Analytics beacon into the response itself.
+- `'unsafe-eval'` is added only when `NODE_ENV` is `development`, for the dev overlay and Fast Refresh. Production ships `'wasm-unsafe-eval'` instead, which is all openpgp's argon2 WASM needs and does not permit `eval()`. `static.cloudflareinsights.com` is allow-listed for the Cloudflare Web Analytics beacon, and Google's documented hosts for Analytics without Ads features (`www.googletagmanager.com`, `*.google-analytics.com`, `*.google.com`) for GA4.
+
+### Analytics
+
+`src/lib/analytics.ts` holds a self-contained loader that `src/app/analytics.tsx` inlines into the prerendered HTML, so it adds nothing to the client bundle. It runs only on `yosefgamble.com`; CI, `next dev`, `wrangler dev` and local Lighthouse runs send nothing. It waits for `load` plus an idle callback, then loads:
+
+- **Google Analytics 4** (`G-CRKCRY9DXE`) with Consent Mode v2 defaults: ads signals denied everywhere, and analytics storage denied in the EEA, the UK and Switzerland, where there is no banner to ask for consent. Visitors there send cookieless pings only.
+- **Cloudflare Web Analytics**, but only if the zone has not already injected its beacon. With automatic setup switched off in the dashboard (Web Analytics → Manage site → Enable with JS Snippet installation, or Disable), this loads the same beacon after `load`. While automatic setup stays on, it sees the injected tag and does nothing, so the two never double-count. The auto-injected `type="module"` beacon is counted as render-blocking by Lighthouse's simulation; loading it late keeps it off the critical path.
+
+Visitors who leave within a second or two of arriving are not counted.
 
 ### Optional secure contact workflow
 
@@ -191,7 +201,7 @@ If you later add route mappings or custom domains to the Worker configuration, a
 | `pnpm build:worker` | Generates the Cloudflare Worker build with OpenNext |
 | `pnpm preview` | Builds and previews the Cloudflare Worker locally |
 | `pnpm deploy` | Builds and deploys the Worker to Cloudflare |
-| `node scripts/process-images.mjs` | Regenerates the avatar WebP sources, the favicon, the Apple touch icon and the PWA icons. Not part of any build — the output is committed. Run it on macOS: `src/app/icon.svg` sets its glyph in `system-ui`, so the rasterizer resolves the font against the host |
+| `node scripts/process-images.mjs` | Regenerates the avatar WebP sources (named after a hash of their bytes in `public/media/`, with the URLs written to `src/data/avatar.json`), the favicon, the Apple touch icon and the PWA icons. Not part of any build — the output is committed. Run it on macOS: `src/app/icon.svg` sets its glyph in `system-ui`, so the rasterizer resolves the font against the host |
 
 ## Quality bar
 
@@ -199,7 +209,7 @@ This repository is tested at multiple levels:
 
 - Unit and integration tests validate components, hooks, data modules, metadata generation, and i18n behavior
 - Cypress covers major user-facing flows such as navigation, hero rendering, responsiveness, and the PGP modal
-- Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics. The `layout` project (`playwright/layout-stability.spec.ts` and `playwright/a11y.spec.ts`, 16 tests) gates the deploy; the `perf` project reports without blocking
+- Playwright verifies the more fragile parts of the experience: layout envelopes during language transitions, scroll-header stability, reduced-motion behavior, and animation performance characteristics. The `layout` project (`playwright/layout-stability.spec.ts` and `playwright/a11y.spec.ts`, 18 tests) gates the deploy; the `perf` project reports without blocking
 - axe-core (`playwright/a11y.spec.ts`) runs over `/en` and `/he` at desktop and phone widths, asserting zero WCAG 2.0/2.1/2.2 A and AA violations. It runs inside the `layout` project, so it is deploy-gating
 
 ## Continuous integration

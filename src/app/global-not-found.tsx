@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
+import Analytics from '@/app/analytics';
 import { fontVariables } from '@/app/fonts';
 import {
   getDirection,
@@ -62,6 +63,7 @@ export default async function GlobalNotFound() {
             </a>
           </div>
         </main>
+        <Analytics />
       </body>
     </html>
   );

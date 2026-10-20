@@ -21,14 +21,15 @@ describe('ProfilePicture', () => {
       expect(getAvatar()).toHaveAttribute('src', '/images/profile.jpg');
     });
 
-    it('should offer WebP sources for standard and retina displays', () => {
+    // Content-hashed names under /media/, which public/_headers caches as
+    // immutable. The hashes change with the bytes, so match the shape only.
+    it('should offer content-hashed WebP sources for standard and retina displays', () => {
       const { container } = render(<ProfilePicture />);
       const source = container.querySelector('picture > source');
 
       expect(source).toHaveAttribute('type', 'image/webp');
-      expect(source).toHaveAttribute(
-        'srcset',
-        '/images/profile-256.webp 1x, /images/profile-320.webp 2x'
+      expect(source?.getAttribute('srcset')).toMatch(
+        /^\/media\/profile-256\.[0-9a-f]{10}\.webp 1x, \/media\/profile-320\.[0-9a-f]{10}\.webp 2x$/
       );
     });
 

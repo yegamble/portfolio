@@ -549,3 +549,35 @@ test.describe('language menu', () => {
     );
   });
 });
+
+test.describe('PGP key dialog', () => {
+  // openpgp (~330 KB) is fetched on the first open, and the key details used to
+  // appear only once it parsed: the vertically centred dialog grew by the whole
+  // details block and every line in it jumped. A same-shaped placeholder now
+  // holds that space. The chunk is held back so the loading phase is long
+  // enough to measure; each test gets a fresh context, so nothing is cached.
+  test('opens at its final size and does not move when the key details load', async ({ page }) => {
+    await waitForPortfolioReady(page, '/en');
+    await page.route('**/_next/static/chunks/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      await route.continue();
+    });
+
+    await page
+      .locator('button[aria-label*="PGP"]')
+      .first()
+      .evaluate((el: HTMLElement) => el.click());
+    const dialog = page.getByRole('dialog');
+    const status = dialog.getByRole('status');
+
+    await expect(status).toHaveText(/loading/i);
+    const opened = await dialog.boundingBox();
+
+    await expect(status).toHaveText(/loaded/i, { timeout: 15_000 });
+    const loaded = await dialog.boundingBox();
+
+    expect(opened).not.toBeNull();
+    expect(Math.abs(loaded!.y - opened!.y)).toBeLessThan(1);
+    expect(Math.abs(loaded!.height - opened!.height)).toBeLessThan(1);
+  });
+});

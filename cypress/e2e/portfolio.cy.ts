@@ -362,6 +362,20 @@ describe('Hero Contact Icons & PGP Modal', () => {
     cy.get('[role="dialog"]').should('not.exist');
   });
 
+  // Tailwind v4's preflight no longer gives buttons a pointer; globals.css
+  // restores it. Only a real browser computes the cursor.
+  it('should show a pointer over the dialog buttons', () => {
+    cy.get('section')
+      .first()
+      .within(() => {
+        cy.get('button[aria-label*="PGP"]').should('have.css', 'cursor', 'pointer').click();
+      });
+    cy.get('[role="dialog"]').within(() => {
+      cy.get('button[aria-label*="lose"]').should('have.css', 'cursor', 'pointer');
+      cy.contains('button', 'Copy Key').should('have.css', 'cursor', 'pointer');
+    });
+  });
+
   it('should close PGP modal when backdrop is clicked', () => {
     cy.get('section')
       .first()

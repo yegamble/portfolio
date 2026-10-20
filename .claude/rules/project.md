@@ -1,6 +1,6 @@
 # Project: Portfolio — yosefgamble.com
 
-**Last Updated:** 2026-09-02
+**Last Updated:** 2026-10-20
 
 ## Overview
 
@@ -9,7 +9,8 @@ Personal portfolio for Yosef Gamble — Senior Software Engineer (NYC / Auckland
 ## Technology Stack
 
 - **Framework:** Next.js 16.x (App Router, React 19, Turbopack) with `src/proxy.ts` for locale routing (Next 16 renamed the `middleware` file convention to `proxy`). It has to live under `src/`: with a `src/` directory present, `next dev --turbopack` silently ignores a project-root file (production builds find it either way), so the locale redirect simply did not run in dev
-- **Build config:** `next.config.ts` sets `agentRules: false` (Next 16.3's `next dev` otherwise writes `AGENTS.md` and `CLAUDE.md` into the project root, and a root `CLAUDE.md` is picked up as agent instructions for this repo) and `images.unoptimized` (there is no IMAGES binding on this deployment, so `/_next/image` is a pass-through: same bytes, no `Cache-Control`, one extra Worker hop). Nothing imports `next/image`
+- **Build config:** `next.config.ts` sets `agentRules: false` (Next 16.3's `next dev` otherwise writes `AGENTS.md` and `CLAUDE.md` into the project root, and a root `CLAUDE.md` is picked up as agent instructions for this repo) and `images.unoptimized` (there is no IMAGES binding on this deployment, so `/_next/image` is a pass-through: same bytes, no `Cache-Control`, one extra Worker hop). Nothing imports `next/image`. It also sets `turbopack.resolveAlias` to swap Next's client polyfill module (`next/dist/build/polyfills/polyfill-module.js`, ten polyfills, nine of them for built-ins every default target already has) for `src/lib/polyfill-module.ts`, which keeps only `URL.canParse`, the one feature Chrome/Edge 111, Firefox 111 and Safari 16.4 lack. The key is the relative request `app-globals.js` writes, because Turbopack matches aliases against request strings, and an alias that matches nothing is ignored silently. `__tests__/config/next-config.test.ts` pins the import, the module's contents (feature list + SHA-256) and the targets, and the CI `build` job greps the chunks for the original module. A Next upgrade that trips those means re-checking the new module against the targets, not updating the hash. `experimental.inlineCss` was measured and left off (see the comment in `next.config.ts`)
+- **Analytics:** `src/lib/analytics.ts` + `src/app/analytics.tsx` (inline loader in both documents). Production host only, after `load` + idle. GA4 with Consent Mode v2 (EEA/UK/CH analytics denied by default, ads denied everywhere), plus the Cloudflare Web Analytics beacon only when the zone has not injected one. `loadAnalytics` is serialized with `toString()`, so it must not reference anything outside its own body
 - **Language:** TypeScript (strict mode)
 - **Styling:** Tailwind CSS v4 with `@theme` custom variables
 - **i18n:** i18next + react-i18next (bundled JSON, no backend) — see `i18n.md`
@@ -41,9 +42,14 @@ src/lib/            # locales.ts (import-free locale primitives + SITE_URL, the
                     # sets, contact helpers, media.ts (the reduced-motion and
                     # phone-profile media queries, asked in one place),
                     # viewport-pin.ts (hold the reader's anchor across a
-                    # language switch), height-ease.ts (FLIP height transition)
+                    # language switch), height-ease.ts (FLIP height transition),
+                    # polyfill-module.ts (stand-in for Next's client polyfill
+                    # module via turbopack.resolveAlias; URL.canParse only),
+                    # analytics.ts (the inline GA4 + Cloudflare beacon loader)
 src/hooks/          # useCipherTransition, useBlockHeightEase
-src/data/           # Non-translatable content metadata (experience, projects)
+src/data/           # Non-translatable content metadata (experience, projects),
+                    # plus avatar.json: the hashed avatar URLs, written by
+                    # scripts/process-images.mjs — never edited by hand
 src/proxy.ts        # Locale redirect (cookie -> Accept-Language -> en). Writes
                     # the cookie ONLY on that redirect; localized paths get an
                     # x-locale request header instead. Must be under src/ or
@@ -51,8 +57,14 @@ src/proxy.ts        # Locale redirect (cookie -> Accept-Language -> en). Writes
 public/_headers     # Cloudflare Workers static-asset response headers. OpenNext
                     # copies public/ into .open-next/assets, so this ships as
                     # .open-next/assets/_headers
-public/images/      # og-image.jpg, profile.jpg (the <img> fallback) and the
-                    # profile-256/320.webp avatar sources
+public/images/      # og-image.jpg and profile.jpg: stable URLs other sites
+                    # reference (Open Graph, JSON-LD); profile.jpg is also the
+                    # avatar's <img> fallback. Cached for a week
+public/media/       # Content-hashed files (the avatar's WebP sources,
+                    # profile-256/320.<sha256>.webp), written by
+                    # scripts/process-images.mjs. Cached as immutable for a year,
+                    # so a file's name must change whenever its bytes do;
+                    # __tests__/data/avatar.test.ts checks every name
 public/icons/       # PWA icons the manifest points at (192, 512, maskable-512).
                     # Not in src/app/, or Next would add a <link rel="icon"> for
                     # each one
@@ -124,11 +136,18 @@ tier assuming it covers the other.
 |------|--------|---------|
 | HTML / route responses | `next.config.ts` `headers()`, from the shared list in `src/lib/security-headers.ts` | Everything the Next server answers — **including** the prerendered HTML that OpenNext's cache interception serves without running React (`x-opennext-cache: HIT`) |
 | The `/` → `/en` redirect | `src/proxy.ts`, applying the same shared list | Only that redirect. The proxy short-circuits before `headers()` runs, and HSTS preload requires `Strict-Transport-Security` on the redirect itself |
-| Static assets | `public/_headers` | `/_next/static/*`, `/images/*`, `/icons/*`, `/favicon.ico` — served by the Workers ASSETS binding **before** the Worker runs, so `next.config.ts` cannot touch them |
+| Static assets | `public/_headers` | `/_next/static/*`, `/media/*`, `/images/*`, `/icons/*`, `/favicon.ico` — served by the Workers ASSETS binding **before** the Worker runs, so `next.config.ts` cannot touch them |
 
 `/icon.svg` and `/apple-icon.png` are routes, not assets, so their `Cache-Control`
 lives in `next.config.ts`; `/favicon.ico` is an asset, so its rule is in
 `public/_headers`. A test in `__tests__/config/next-config.test.ts` pins that split.
+
+A path in `public/_headers` inherits the headers of **every** rule it matches,
+and a header two of them set is comma-joined, not replaced: a hashed file under
+`/images/*` would go out as `public, max-age=604800, stale-while-revalidate=86400,
+public, max-age=31536000, immutable`. That is why content-hashed files live in
+`public/media/`. `__tests__/config/asset-headers.test.ts` fails if any file in
+`public/` matches two rules that both set `Cache-Control`.
 
 Verify a header change end to end rather than trusting `next start`:
 
@@ -189,13 +208,13 @@ rollback — workflow_dispatch from main with a non-empty rollback_version_id;
 - `playwright` / `playwright-perf`: `playwright.config.ts` switches
   `webServer.command` to `next start` when `CI` is set and refuses to reuse an existing
   server. The two projects run as two jobs: `layout` is deterministic geometry **plus**
-  the axe accessibility specs (`playwright/a11y.spec.ts`), 16 tests in total, and gates
+  the axe accessibility specs (`playwright/a11y.spec.ts`), 18 tests in total, and gates
   the deploy — which is why the CI step is named "Run layout and accessibility specs";
   `perf` is wall-clock budgets tuned on a laptop, so it runs `continue-on-error` on a
   runner of its own (one worker) and is not in `deploy`'s `needs`.
   `dependencies: ['layout']` on the perf project therefore applies **only** outside CI,
   where a single `pnpm test:playwright` runs both projects in one process — in CI it
-  would just re-run the 16 layout specs inside the perf job
+  would just re-run the 18 layout specs inside the perf job
 - `deploy`: `environment: Production`, its own `production-deploy` concurrency group
   (`cancel-in-progress: false`, so two merges cannot deploy at once — that is how
   production went backwards on 2026-08-16), records the Worker's `Current Version ID`

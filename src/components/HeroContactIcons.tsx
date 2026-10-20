@@ -34,7 +34,7 @@ export default function HeroContactIcons({ className = '' }: HeroContactIconsPro
       {pgpPublicKey && (
         <>
           <button
-            className={`${linkClass} cursor-pointer`}
+            className={linkClass}
             onClick={() => setShowPgpModal(true)}
             aria-label={t('social.pgpKey')}
           >
