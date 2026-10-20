@@ -49,7 +49,9 @@ export const ANALYTICS_CONFIG: AnalyticsConfig = {
   host: new URL(SITE_URL).hostname,
   measurementId: 'G-CRKCRY9DXE',
   consentDeniedRegions: CONSENT_DENIED_REGIONS,
-  cloudflareToken: 'c49dc66b66db42cbb465a7bec309a063',
+  // Not a secret: the Web Analytics site token is public by design and is
+  // already in every page's HTML via the zone-injected beacon's data-cf-beacon.
+  cloudflareToken: 'c49dc66b66db42cbb465a7bec309a063', // ggignore
 };
 
 type AnalyticsWindow = Window & {
