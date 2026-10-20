@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface PgpKeyInfo {
@@ -35,6 +35,24 @@ function decodeArmoredKey(raw: string): string {
 // How long an outcome stays in the status region before it goes back to empty.
 const STATUS_WINDOW_MS = 2000;
 
+// useLayoutEffect warns when React renders on the server, so pick the effect
+// once at module load (the same guard as src/hooks/useBlockHeightEase.ts).
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
+// Stands in for the parsed details while openpgp loads, rendered invisible and
+// hidden from assistive tech. The details block sits above the key, inside a
+// vertically centred dialog: without a same-shaped placeholder, the first open
+// grew the dialog by the whole block once the parse landed and every line in it
+// jumped. Values match the real ones' shape (a 40-hex fingerprint in groups of
+// four, one user ID) so the reserved height is the parsed height.
+const PLACEHOLDER_INFO: PgpKeyInfo = {
+  fingerprint: formatFingerprint('0'.repeat(40)),
+  userIds: ['Placeholder <user@example.com>'],
+  algorithm: 'rsaEncryptSign (2048-bit)',
+  created: '0000-00-00',
+  keyId: '0000000000000000',
+};
+
 // Single-entry memo: the modal renders one key at a time, so remembering the
 // most recently parsed key is enough to make reopening it instant.
 let cached: { key: string; info: PgpKeyInfo } | null = null;
@@ -42,8 +60,12 @@ let cached: { key: string; info: PgpKeyInfo } | null = null;
 export default function PgpKeyModal({ isOpen, onClose, armoredKey }: PgpKeyModalProps) {
   // Focus and the scroll lock belong to the open/closed transition, not to the
   // dialog's content: taken when the modal opens, given back when it closes,
-  // whatever the dialog inside did in between.
-  useEffect(() => {
+  // whatever the dialog inside did in between. A layout effect, because the
+  // dialog focuses itself in a passive effect and a parent's passive effects
+  // run after its children's: as a useEffect this read document.activeElement
+  // after the dialog had already taken focus, so closing "restored" focus to
+  // the removed dialog and dropped it on <body>.
+  useIsomorphicLayoutEffect(() => {
     if (!isOpen) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
     document.body.style.overflow = 'hidden';
@@ -213,6 +235,8 @@ function PgpKeyDialog({ armoredKey, onClose }: PgpKeyDialogProps) {
     [onClose]
   );
 
+  const shownInfo = keyInfo ?? PLACEHOLDER_INFO;
+
   const statusMessage = copyFailed
     ? t('pgp.copyFailed')
     : copied
@@ -260,15 +284,18 @@ function PgpKeyDialog({ armoredKey, onClose }: PgpKeyDialogProps) {
           </p>
         )}
 
-        {keyInfo && (
-          <div className="mb-4 space-y-2 text-sm">
+        {(keyInfo || loading) && (
+          <div
+            className={`mb-4 space-y-2 text-sm ${keyInfo ? '' : 'invisible'}`}
+            aria-hidden={keyInfo ? undefined : true}
+          >
             <div>
               <span className="font-medium text-text-muted">{t('pgp.fingerprint')}: </span>
               <code className="break-all font-mono text-xs text-primary">
-                {keyInfo.fingerprint}
+                {shownInfo.fingerprint}
               </code>
             </div>
-            {keyInfo.userIds.map((uid) => (
+            {shownInfo.userIds.map((uid) => (
               <div key={uid}>
                 <span className="font-medium text-text-muted">{t('pgp.userId')}: </span>
                 <span className="text-text-primary">{uid}</span>
@@ -276,15 +303,15 @@ function PgpKeyDialog({ armoredKey, onClose }: PgpKeyDialogProps) {
             ))}
             <div>
               <span className="font-medium text-text-muted">{t('pgp.algorithm')}: </span>
-              <span className="text-text-primary">{keyInfo.algorithm}</span>
+              <span className="text-text-primary">{shownInfo.algorithm}</span>
             </div>
             <div>
               <span className="font-medium text-text-muted">{t('pgp.created')}: </span>
-              <span className="text-text-primary">{keyInfo.created}</span>
+              <span className="text-text-primary">{shownInfo.created}</span>
             </div>
             <div>
               <span className="font-medium text-text-muted">{t('pgp.keyId')}: </span>
-              <code className="font-mono text-xs text-text-primary">{keyInfo.keyId}</code>
+              <code className="font-mono text-xs text-text-primary">{shownInfo.keyId}</code>
             </div>
             <p className="mt-3 text-xs text-text-muted italic">{t('pgp.verifyNotice')}</p>
           </div>

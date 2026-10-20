@@ -38,6 +38,9 @@ export default function Component({ title, className = '' }: ComponentProps) {
 - Animations that need a measurement (the block-mode `CipherText` height ease) belong in `src/lib/` as a pure element-in/element-out helper — `src/lib/height-ease.ts` — with the measure-and-call glue in a hook (`src/hooks/useBlockHeightEase.ts`) so the component stays at composition level. Measure in a `useLayoutEffect` (fall back to `useEffect` when there is no `window`, or React warns during SSR), never during render, and take the settled size from a `ResizeObserver` so nothing forces a reflow on the hot path
 - An element carrying imperative inline styles must be the *same DOM node* across every render branch that can produce it — same element type, same position, no key — or React remounts it mid-animation and the styles vanish (see the `block` wrapper in `CipherText`)
 - Hover states on interactive elements: `hover:text-primary`, `hover:border-primary`
+- Buttons get `cursor: pointer` from a base rule in `globals.css` (Tailwind v4's preflight dropped it); don't add `cursor-pointer` per button
+- Use `next/link` only for a link that actually navigates. Link prefetches its href when it scrolls into view, so a link whose click is always intercepted (the ScrollHeader brand link scrolls to top) is a plain `<a>`
+- Content that arrives after a dialog or panel is already visible must not resize it: reserve its space with a same-shaped `invisible`, `aria-hidden` placeholder (see the key details in `PgpKeyModal`)
 
 ### Section Component Pattern
 

@@ -52,6 +52,17 @@ describe('HeroContactIcons', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
+    it('should hand focus back to the key button when the dialog closes', async () => {
+      const user = userEvent.setup();
+      render(<HeroContactIcons />);
+      const pgpButton = screen.getByRole('button', { name: /pgp key/i });
+      await user.click(pgpButton);
+      expect(await screen.findByRole('dialog')).toHaveFocus();
+      await user.keyboard('{Escape}');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(pgpButton).toHaveFocus();
+    });
+
     it('should apply custom className', () => {
       const { container } = render(<HeroContactIcons className="mt-3" />);
       expect(container.firstChild).toHaveClass('mt-3');

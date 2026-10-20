@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import SocialLinks from '@/components/SocialLinks';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -49,8 +48,13 @@ export default function ScrollHeader() {
               sit on the link itself: with them on the inner block the link
               stayed in the accessibility tree at scroll 0, so a screen reader
               announced a "Yosef Gamble" link nobody could see. No aria-label
-              either — the visible name inside is the accessible name. */}
-          <Link
+              either — the visible name inside is the accessible name.
+              A plain <a>, not next/link: the click handler always cancels the
+              navigation and scrolls to the top, so Link never navigated. All it
+              did was prefetch this same page's RSC payload (two requests on
+              every load, one more after each language switch) and ship ~3 KB
+              gzipped of link code. */}
+          <a
             className="min-w-0 flex-1 text-base font-bold tracking-tight text-text-primary"
             href={homeHref}
             aria-hidden={!isScrolled}
@@ -78,7 +82,7 @@ export default function ScrollHeader() {
                 <CipherText>{t('hero.title')}</CipherText>
               </span>
             </div>
-          </Link>
+          </a>
 
           {/* Nav links + social icons + language toggle — always visible */}
           <div className="flex shrink-0 items-center gap-4 md:gap-5 lg:gap-6">

@@ -22,6 +22,17 @@ html {
 
 /* Honor reduced-motion: only animate in-page anchor scrolling when the user
    hasn't asked the system to minimize motion. */
+/* Tailwind v4's preflight dropped `cursor: pointer` from buttons, so every
+   button showed the arrow (the PGP dialog's Close and Copy Key among them).
+   Restored once here, as Tailwind's upgrade guide suggests, rather than with a
+   `cursor-pointer` on each button. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;

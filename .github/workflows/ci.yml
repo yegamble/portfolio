@@ -105,6 +105,17 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # next.config.ts swaps Next's client polyfill module for a URL.canParse-only
+      # stand-in through a Turbopack alias, and an alias that stops matching is
+      # ignored without a word. The unit tests pin what the alias depends on in
+      # node_modules; only the emitted chunks can show it still took effect.
+      - name: Check Next's legacy polyfills stayed out of the client bundle
+        run: |
+          if grep -l 'String.prototype.trimStart=String.prototype.trimLeft' .next/static/chunks/*.js; then
+            echo "::error::Next's polyfill module is back in the client bundle; the turbopack.resolveAlias in next.config.ts no longer matches."
+            exit 1
+          fi
+
       # `next build` cannot exercise the Cloudflare adapter, and until this step
       # existed `opennextjs-cloudflare build` ran for the FIRST time inside the
       # deploy job — on main, after merge, with nothing left to gate. This is

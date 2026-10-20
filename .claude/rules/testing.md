@@ -119,7 +119,7 @@ spec files by name**:
 
 | Project | `testMatch` | Runs | Gates the deploy? |
 |---------|-------------|------|-------------------|
-| `layout` | `/(layout-stability\|a11y)\.spec\.ts/` | 16 tests — geometry and axe | Yes (`playwright` job) |
+| `layout` | `/(layout-stability\|a11y)\.spec\.ts/` | 18 tests — geometry and axe | Yes (`playwright` job) |
 | `perf` | `/(cipher-performance\|height-ease)\.spec\.ts/` | 6 tests — frame rate, long tasks, animation shape | No (`playwright-perf`, `continue-on-error`) |
 
 Those regexes are closed lists, not patterns: **a new `playwright/<name>.spec.ts` matches

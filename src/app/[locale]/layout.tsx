@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { fontVariables } from '@/app/fonts';
+import Analytics from '@/app/analytics';
 import JsonLd from '@/app/json-ld';
 import I18nProvider from '@/components/I18nProvider';
 import SkipLink from '@/components/SkipLink';
@@ -131,6 +132,7 @@ export default async function LocaleLayout({
           <SkipLink />
           {children}
         </I18nProvider>
+        <Analytics />
       </body>
     </html>
   );
