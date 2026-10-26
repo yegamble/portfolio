@@ -189,7 +189,7 @@ jobs:
       # `/en` rather than `/` — the proxy answers `/` with a redirect, which
       # wait-on would accept before the app can actually render a page.
       - name: Run Cypress
-        uses: cypress-io/github-action@c541a95ea92d9239347a2355f2e895cd4b3f8060 # v7.4.6
+        uses: cypress-io/github-action@bc982daf1fc26474fa0cf2c355d6c910616ce411 # v7.4.7
         with:
           install: false
           start: pnpm start
