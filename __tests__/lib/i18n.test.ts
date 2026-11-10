@@ -41,6 +41,15 @@ describe('i18n initialization', () => {
     });
     expect(result).toBe('Hello <script>alert("xss")</script>');
   });
+
+  it('returns an intentionally empty translation instead of falling back to English', () => {
+    // Locales that put the word "font" before the name leave footer.font empty;
+    // i18next 27 treats "" as missing by default and would print the English word.
+    i18n.addResource('he', 'translation', 'empty_test', '');
+    i18n.addResource('en', 'translation', 'empty_test', 'fallback');
+
+    expect(i18n.t('empty_test', { lng: 'he' })).toBe('');
+  });
 });
 
 describe('getLocaleMessages', () => {
