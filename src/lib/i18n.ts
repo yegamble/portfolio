@@ -42,6 +42,10 @@ function initI18nInstance(instance: I18nInstance, locale: AppLocale) {
     interpolation: {
       escapeValue: false,
     },
+    // An empty string is a deliberate translation (footer.font in he/ru), not a
+    // missing one. i18next 27 flipped this default to false, which made those
+    // locales fall back to the English word.
+    returnEmptyString: true,
     react: {
       useSuspense: false,
     },
